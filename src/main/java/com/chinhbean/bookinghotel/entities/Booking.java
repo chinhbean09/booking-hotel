@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 @Entity
 @Table(name = "bookings")
@@ -46,8 +47,15 @@ public class Booking {
     @Column(name = "payment_method", nullable = false)
     private String paymentMethod;
 
+
     @ManyToOne
-    @JoinColumn(name = "hotel_id", nullable = false)
-    private Hotel hotel;
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
+
+    @Column(name = "expiration_date")
+    private LocalDateTime expirationDate;
+
+    @Column(name = "extend_expiration_date")
+    private LocalDateTime extendExpirationDate;
 
 }

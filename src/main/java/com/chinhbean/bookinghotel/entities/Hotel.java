@@ -3,6 +3,7 @@ package com.chinhbean.bookinghotel.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -32,6 +33,7 @@ public class Hotel {
 
     @Column(nullable = false)
     private String brand;
+
 
     @ManyToMany
     @JoinTable(
