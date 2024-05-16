@@ -47,7 +47,6 @@ public class Booking {
     @Column(name = "payment_method", nullable = false)
     private String paymentMethod;
 
-
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
