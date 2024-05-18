@@ -11,6 +11,7 @@ import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.RoleRepository;
 import com.chinhbean.bookinghotel.repositories.UserRepository;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,40 +35,50 @@ public class UserService implements IUserService {
     private final AuthenticationManager authenticationManager;
 
     @Override
+    @Transactional
     public User registerUser(UserDTO userDTO) throws Exception {
-        String phoneNumber = userDTO.getPhoneNumber();
-        if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new DataIntegrityViolationException("Phone number already exists");
-        }
-        Role role = roleRepository.findById(userDTO.getRoleId())
-                .orElseThrow(() -> new DataNotFoundException(
-                        localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS))).getRole();
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (role.getRoleName().toUpperCase().equals(Role.ADMIN)) {
-            throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
+            String phoneNumber = userDTO.getPhoneNumber();
+            if (userRepository.existsByPhoneNumber(phoneNumber)) {
+                throw new DataIntegrityViolationException(localizationUtils.getLocalizedMessage(MessageKeys.PHONENUMBER_ALREADY_EXISTS));
+            }
+
+            // Sử dụng roleId mặc định là 2 nếu không được truyền vào
+            Long roleId = userDTO.getRoleId() != null ? userDTO.getRoleId() : 2L;
+            Role role = roleRepository.findById(roleId)
+                    .orElseThrow(() -> new DataNotFoundException(
+                            localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
+
+            // Check if the current user has permission to register users with the specified role
+//            if (role.getRoleName().toUpperCase().equals("ADMIN")) {
+//                throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
+//            }
+
+            User newUser = User.builder()
+                    .fullName(userDTO.getFullName())
+                    .email(userDTO.getEmail())
+                    .phoneNumber(userDTO.getPhoneNumber())
+                    .password(userDTO.getPassword())
+                    .address(userDTO.getAddress())
+                    .dateOfBirth(userDTO.getDateOfBirth())
+                    .gender(userDTO.getGender())
+                    .active(true)
+                    .city(userDTO.getCity())
+                    .facebookAccountId(userDTO.getFacebookAccountId())
+                    .googleAccountId(userDTO.getGoogleAccountId())
+                    .build();
+            newUser.setRole(role);
+
+            // Kiểm tra nếu có accountId, không yêu cầu password
+            if (userDTO.getFacebookAccountId() == 0 && userDTO.getGoogleAccountId() == 0) {
+                String password = userDTO.getPassword();
+                String encodedPassword = passwordEncoder.encode(password);
+                newUser.setPassword(encodedPassword);
+            }
+            return userRepository.save(newUser);
         }
 
-        User newUser = User.builder()
-                .fullName(userDTO.getFullName())
-                .email(userDTO.getEmail())
-                .phoneNumber(userDTO.getPhoneNumber())
-                .password(userDTO.getPassword())
-                .address(userDTO.getAddress())
-                .dateOfBirth(userDTO.getDateOfBirth())
-                .createdBy(currentUser.getFullName())
-                .gender(userDTO.getGender())
-                .active(true)
-                .build();
-        newUser.setRole(role);
 
-        // Kiểm tra nếu có accountId, không yêu cầu password
-        if (userDTO.getFacebookAccountId() == 0 && userDTO.getGoogleAccountId() == 0) {
-            String password = userDTO.getPassword();
-            String encodedPassword = passwordEncoder.encode(password);
-            newUser.setPassword(encodedPassword);
-        }
-        return userRepository.save(newUser);
-    }
+
     @Override
     public String login(
             String phoneNumber,

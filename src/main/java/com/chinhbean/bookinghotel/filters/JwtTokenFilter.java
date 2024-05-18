@@ -34,7 +34,6 @@ public class JwtTokenFilter extends OncePerRequestFilter{
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-        try {
             if(isBypassToken(request)) {
                 filterChain.doFilter(request, response); //enable bypass
                 return;
@@ -58,21 +57,14 @@ public class JwtTokenFilter extends OncePerRequestFilter{
                 }
             }
             filterChain.doFilter(request, response); //enable bypass
-        }catch (Exception e) {
-            //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write(e.getMessage());
         }
 
-    }
+
     private boolean isBypassToken(@NonNull HttpServletRequest request) {
         final List<Pair<String, String>> bypassTokens = Arrays.asList(
                 Pair.of(String.format("%s/users/generate-secret-key", apiPrefix), "GET"),
                 Pair.of(String.format("%s/users/login", apiPrefix), "POST"),
-                Pair.of(String.format("%s/users/refresh-token", apiPrefix), "POST"),
-                Pair.of(String.format("%s/forgotPassword/verifyMail/**", apiPrefix), "POST"),
-                Pair.of(String.format("%s/forgotPassword/verifyOtp/**", apiPrefix), "POST"),
-                Pair.of(String.format("%s/forgotPassword/changePassword/**", apiPrefix), "POST"),
+                Pair.of(String.format("%s/users/register", apiPrefix), "POST"),
                 Pair.of("/api-docs","GET"),
                 Pair.of("/api-docs/**","GET"),
                 Pair.of("/swagger-resources","GET"),

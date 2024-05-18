@@ -14,15 +14,16 @@ import java.util.Date;
 @Setter
 public class UserDTO {
 
-    private String userName;
+    @JsonProperty("phone_number")
+    @NotBlank(message = "Phone number is required")
+    private String phoneNumber;
 
+    @JsonProperty("full_name")
     private String fullName;
 
     @NotBlank(message = "email is required")
     private String email;
 
-    @JsonProperty("phone_number")
-    private String phoneNumber;
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
@@ -40,8 +41,6 @@ public class UserDTO {
     private Long roleId;
 
     private String gender;
-
-    private boolean active;
 
     private String city;
 

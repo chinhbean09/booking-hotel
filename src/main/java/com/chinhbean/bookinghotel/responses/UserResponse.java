@@ -1,6 +1,7 @@
 package com.chinhbean.bookinghotel.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.Date;
@@ -14,7 +15,13 @@ public class UserResponse {
     @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("fullname")
+    @JsonProperty("user_name")
+    private String userName;
+
+    @NotBlank(message = "email is required")
+    private String email;
+
+    @JsonProperty("full_name")
     private String fullName;
 
     @JsonProperty("phone_number")
@@ -35,11 +42,14 @@ public class UserResponse {
     @JsonProperty("google_account_id")
     private int googleAccountId;
 
+    private String city;
+
     @JsonProperty("role")
     private com.chinhbean.bookinghotel.entities.Role role;
     public static UserResponse fromUser(com.chinhbean.bookinghotel.entities.User user) {
         return UserResponse.builder()
                 .id(user.getId())
+                .email(user.getEmail())
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
@@ -48,6 +58,7 @@ public class UserResponse {
                 .facebookAccountId(user.getFacebookAccountId())
                 .googleAccountId(user.getGoogleAccountId())
                 .role(user.getRole())
+                .city(user.getCity())
                 .build();
     }
 }

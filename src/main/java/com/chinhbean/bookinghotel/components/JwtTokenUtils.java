@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -32,14 +33,14 @@ public class JwtTokenUtils {
 
     @Value("${jwt.secretKey}")
     private String secretKey;
-    private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtils.class);
+
     private final TokenRepository tokenRepository;
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtils.class);
     public String generateToken(com.chinhbean.bookinghotel.entities.User user) throws Exception{
         //properties => claims
         Map<String, Object> claims = new HashMap<>();
-        //this.generateSecretKey();
+//        this.generateSecretKey();
         claims.put("phoneNumber", user.getPhoneNumber());
-        claims.put("userId", user.getId());
         try {
             String token = Jwts.builder()
                     .setClaims(claims) //how to extract claims from this ?
@@ -54,17 +55,25 @@ public class JwtTokenUtils {
             //return null;
         }
     }
-    private Key getSignInKey() {
-        byte[] bytes = Decoders.BASE64.decode(secretKey);
-        //Keys.hmacShaKeyFor(Decoders.BASE64.decode("TaqlmGv1iEDMRiFp/pHuID1+T84IABfuA0xXh4GhiUI="));
-        return Keys.hmacShaKeyFor(bytes);
-    }
     public String generateSecretKey() {
         SecureRandom random = new SecureRandom();
         byte[] keyBytes = new byte[32]; // 256-bit key
         random.nextBytes(keyBytes);
         String secretKey = Encoders.BASE64.encode(keyBytes);
         return secretKey;
+    }
+    private Key getSignInKey() {
+        byte[] bytes = Decoders.BASE64.decode(secretKey);
+        //Keys.hmacShaKeyFor(Decoders.BASE64.decode("TaqlmGv1iEDMRiFp/pHuID1+T84IABfuA0xXh4GhiUI="));
+        return Keys.hmacShaKeyFor(bytes);
+    }
+    public boolean isTokenExpired(String token) {
+        Date expirationDate = this.extractClaim(token, Claims::getExpiration);
+        return expirationDate.before(new Date());
+    }
+    public  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = this.extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
@@ -73,27 +82,15 @@ public class JwtTokenUtils {
                 .parseClaimsJws(token)
                 .getBody();
     }
-    public  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = this.extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
 
-    //check expiration
-    public boolean isTokenExpired(String token) {
-        Date expirationDate = this.extractClaim(token, Claims::getExpiration);
-        return expirationDate.before(new Date());
-    }
     public String extractPhoneNumber(String token) {
         return extractClaim(token, Claims::getSubject);
     }
-    public boolean validateToken(String token, User userDetails) {
+    public boolean validateToken(String token, UserDetails userDetails) {
         try {
             String phoneNumber = extractPhoneNumber(token);
             Token existingToken = tokenRepository.findByToken(token);
-            if(existingToken == null ||
-                    existingToken.isRevoked() == true ||
-                    !userDetails.isActive()
-            ) {
+            if(existingToken == null || existingToken.isRevoked() == true) {
                 return false;
             }
             return (phoneNumber.equals(userDetails.getUsername()))

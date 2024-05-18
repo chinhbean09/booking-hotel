@@ -16,14 +16,10 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-
 public class User extends BaseEntity implements UserDetails, OAuth2User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "user_name", length = 100)
-    private String userName;
 
     @Column(name = "full_name", length = 100)
     private String fullName;
@@ -52,16 +48,12 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @Column(name = "gender")
     private String gender;
 
-    //thành phố đang ở
     @Column(name = "city")
     private String city;
 
     @ManyToOne
     @JoinColumn(name = "role_id", columnDefinition = "bigint")
     private Role role;
-
-    @Column(name = "created_by")
-    private String createdBy;
 
     @Column(name = "modified_by")
     private String modifiedBy;
@@ -73,11 +65,6 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     private int googleAccountId;
 
     @Override
-    public String getName() {
-        return null;
-    }
-
-    @Override
     public Map<String, Object> getAttributes() {
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("fullname", this.fullName);
@@ -87,7 +74,9 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorityList = new ArrayList<>();
-        authorityList.add(new SimpleGrantedAuthority("ROLE_"+getRole().getRoleName()));
+        if (role != null) {
+            authorityList.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
+        }
         return authorityList;
     }
 
@@ -116,4 +105,8 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
         return true;
     }
 
+    @Override
+    public String getName() {
+        return null;
+    }
 }

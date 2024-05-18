@@ -14,18 +14,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final UserRepository userRepository;
-    //user's detail object
     @Bean
     public UserDetailsService userDetailsService() {
-        return phoneNumber -> userRepository
+            return phoneNumber -> userRepository
                 .findByPhoneNumber(phoneNumber)
                 .orElseThrow(() ->
                         new UsernameNotFoundException(
-                                "Cannot find user with phone number = "+phoneNumber));
+                                "Cannot find user with phone number = "+ phoneNumber));
     }
     @Bean
     public PasswordEncoder passwordEncoder() {

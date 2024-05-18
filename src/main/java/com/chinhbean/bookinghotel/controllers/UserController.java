@@ -28,6 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/v1/users")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 
 public class UserController {
     private final IUserService userService;
@@ -58,19 +59,18 @@ public class UserController {
                     .build());
         }
         if (!userDTO.getPassword().equals(userDTO.getRetypePassword())) {
-            //registerResponse.setMessage();
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .status(HttpStatus.BAD_REQUEST)
                     .data(null)
                     .message(localizationUtils.getLocalizedMessage(MessageKeys.PASSWORD_NOT_MATCH))
                     .build());
         }
-            User user = userService.registerUser(userDTO);
-            return ResponseEntity.ok(ResponseObject.builder()
-                    .status(HttpStatus.CREATED)
-                    .data(UserResponse.fromUser(user))
-                    .message("Đăng ký tài khoản thành công")
-                    .build());
+        User user = userService.registerUser(userDTO);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .status(HttpStatus.CREATED)
+                .data(UserResponse.fromUser(user))
+                .message(MessageKeys.REGISTER_SUCCESSFULLY)
+                .build());
     }
 
     @PostMapping("/login")
@@ -98,7 +98,6 @@ public class UserController {
                     .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                     .id(userDetail.getId())
                     .build();
-
             return ResponseEntity.ok().body(ResponseObject.builder()
                 .message("Login successfully")
                 .data(loginResponse)
