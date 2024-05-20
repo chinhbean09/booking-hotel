@@ -7,12 +7,15 @@ import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.entities.Role;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.RoleRepository;
 import com.chinhbean.bookinghotel.repositories.UserRepository;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -34,6 +37,8 @@ public class UserService implements IUserService {
     private final JwtTokenUtils jwtTokenUtils;
     private final AuthenticationManager authenticationManager;
 
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     @Override
     @Transactional
     public User registerUser(UserDTO userDTO) throws Exception {
@@ -49,9 +54,9 @@ public class UserService implements IUserService {
                             localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
 
             // Check if the current user has permission to register users with the specified role
-//            if (role.getRoleName().toUpperCase().equals("ADMIN")) {
-//                throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
-//            }
+            if (role.getRoleName().toUpperCase().equals("ADMIN")) {
+                throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
+            }
 
             User newUser = User.builder()
                     .fullName(userDTO.getFullName())
@@ -96,12 +101,10 @@ public class UserService implements IUserService {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
         }
-        /*
         Optional<Role> optionalRole = roleRepository.findById(roleId);
         if(optionalRole.isEmpty() || !roleId.equals(existingUser.getRole().getId())) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS));
         }
-        */
         if(!optionalUser.get().isActive()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_IS_LOCKED));
         }
@@ -110,10 +113,11 @@ public class UserService implements IUserService {
                 existingUser.getAuthorities()
         );
 
-        //authenticate with Java Spring security
+        // authenticate with Java Spring security
         authenticationManager.authenticate(authenticationToken);
-        return jwtTokenUtils.generateToken(existingUser);
+         return jwtTokenUtils.generateToken(existingUser);
     }
+
 
     @Override
     public User getUserDetailsFromToken(String token) throws Exception {

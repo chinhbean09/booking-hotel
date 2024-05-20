@@ -67,7 +67,7 @@ public class UserController {
         }
         User user = userService.registerUser(userDTO);
         return ResponseEntity.ok(ResponseObject.builder()
-                .status(HttpStatus.CREATED)
+                .status(HttpStatus.OK)
                 .data(UserResponse.fromUser(user))
                 .message(MessageKeys.REGISTER_SUCCESSFULLY)
                 .build());
@@ -90,7 +90,7 @@ public class UserController {
             Token jwtToken = tokenService.addToken(userDetail, token, isMobileDevice(userAgent));
 
             LoginResponse loginResponse = LoginResponse.builder()
-                    .message(localizationUtils.getLocalizedMessage(MessageKeys.LOGIN_SUCCESSFULLY))
+                    .message(MessageKeys.LOGIN_SUCCESSFULLY)
                     .token(jwtToken.getToken())
                     .tokenType(jwtToken.getTokenType())
                     .refreshToken(jwtToken.getRefreshToken())
@@ -99,7 +99,7 @@ public class UserController {
                     .id(userDetail.getId())
                     .build();
             return ResponseEntity.ok().body(ResponseObject.builder()
-                .message("Login successfully")
+                .message(MessageKeys.LOGIN_SUCCESSFULLY)
                 .data(loginResponse)
                 .status(HttpStatus.OK)
                 .build());

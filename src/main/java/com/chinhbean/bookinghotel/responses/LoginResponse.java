@@ -22,6 +22,7 @@ public class LoginResponse {
     private String tokenType = "Bearer";
     //user's detail
     private Long id;
+
     private String username;
 
     private List<String> roles;

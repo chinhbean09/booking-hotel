@@ -1,9 +1,9 @@
 package com.chinhbean.bookinghotel.components;
 
 import com.chinhbean.bookinghotel.entities.Token;
-import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.repositories.TokenRepository;
+import com.chinhbean.bookinghotel.utils.MessageKeys;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Encoders;
@@ -25,6 +25,8 @@ import java.util.function.Function;
 @Component
 @RequiredArgsConstructor
 public class JwtTokenUtils {
+//    private final LocalizationUtils localizationUtils;
+
     @Value("${jwt.expiration}")
     private int expiration; //save to an environment variable
 
@@ -36,23 +38,22 @@ public class JwtTokenUtils {
 
     private final TokenRepository tokenRepository;
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtils.class);
-    public String generateToken(com.chinhbean.bookinghotel.entities.User user) throws Exception{
-        //properties => claims
+    public String generateToken(com.chinhbean.bookinghotel.entities.User user) throws InvalidParamException {
         Map<String, Object> claims = new HashMap<>();
-//        this.generateSecretKey();
         claims.put("phoneNumber", user.getPhoneNumber());
+
         try {
-            String token = Jwts.builder()
-                    .setClaims(claims) //how to extract claims from this ?
+            return Jwts.builder()
+                    .setClaims(claims)
                     .setSubject(user.getPhoneNumber())
                     .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000L))
                     .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                     .compact();
-            return token;
-        }catch (Exception e) {
-            //you can "inject" Logger, instead System.out.println
-            throw new InvalidParamException("Cannot create jwt token, error: "+e.getMessage());
-            //return null;
+        } catch (Exception e) {
+            // Log the error
+            // logger.error("Cannot create JWT token", e);
+            // Throw a new InvalidParamException with the original exception as the cause
+            throw new InvalidParamException(MessageKeys.TOKEN_GENERATION_FAILED,e);
         }
     }
     public String generateSecretKey() {
