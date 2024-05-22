@@ -17,11 +17,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -107,6 +109,18 @@ public class UserController {
 
     private boolean isMobileDevice(String userAgent) {
         return userAgent.toLowerCase().contains("mobile");
+    }
+
+    //@PreAuthorize("hasAnyAuthority('ADMIN', 'PARTNER', 'CUSTOMER')")
+    @PutMapping(value = "/update-avatar/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseObject> updateUserAvatar(@PathVariable long id,
+                                                           @RequestParam("avatar") MultipartFile avatar) {
+        User user = userService.updateUserAvatar(id, avatar);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .status(HttpStatus.OK)
+                .data(UserResponse.fromUser(user))
+                .message(MessageKeys.UPDATE_AVATAR_SUCCESSFULLY)
+                .build());
     }
 
 
