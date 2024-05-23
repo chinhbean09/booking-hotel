@@ -37,7 +37,7 @@ public class UserController {
     private final LocalizationUtils localizationUtils;
 
     @GetMapping("/generate-secret-key")
-    public ResponseEntity<?> generateSecretKey(){
+    public ResponseEntity<?> generateSecretKey() {
         return ResponseEntity.ok(jwtTokenUtils.generateSecretKey());
     }
 
@@ -78,27 +78,27 @@ public class UserController {
             @Valid @RequestBody UserLoginDTO userLoginDTO,
             HttpServletRequest request
     ) throws Exception {
-            String token = userService.login(
-                    userLoginDTO.getPhoneNumber(),
-                    userLoginDTO.getPassword(),
-                    userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId()
-            );
-            String userAgent = request.getHeader("User-Agent");
+        String token = userService.login(
+                userLoginDTO.getPhoneNumber(),
+                userLoginDTO.getPassword(),
+                userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId()
+        );
+        String userAgent = request.getHeader("User-Agent");
 
-            User userDetail = userService.getUserDetailsFromToken(token);
+        User userDetail = userService.getUserDetailsFromToken(token);
 
-            Token jwtToken = tokenService.addToken(userDetail, token, isMobileDevice(userAgent));
+        Token jwtToken = tokenService.addToken(userDetail, token, isMobileDevice(userAgent));
 
-            LoginResponse loginResponse = LoginResponse.builder()
-                    .message(MessageKeys.LOGIN_SUCCESSFULLY)
-                    .token(jwtToken.getToken())
-                    .tokenType(jwtToken.getTokenType())
-                    .refreshToken(jwtToken.getRefreshToken())
-                    .username(userDetail.getUsername())
-                    .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
-                    .id(userDetail.getId())
-                    .build();
-            return ResponseEntity.ok().body(ResponseObject.builder()
+        LoginResponse loginResponse = LoginResponse.builder()
+                .message(MessageKeys.LOGIN_SUCCESSFULLY)
+                .token(jwtToken.getToken())
+                .tokenType(jwtToken.getTokenType())
+                .refreshToken(jwtToken.getRefreshToken())
+                .username(userDetail.getUsername())
+                .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
+                .id(userDetail.getId())
+                .build();
+        return ResponseEntity.ok().body(ResponseObject.builder()
                 .message(MessageKeys.LOGIN_SUCCESSFULLY)
                 .data(loginResponse)
                 .status(HttpStatus.OK)

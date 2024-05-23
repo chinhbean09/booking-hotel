@@ -24,40 +24,41 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 
-public class JwtTokenFilter extends OncePerRequestFilter{
+public class JwtTokenFilter extends OncePerRequestFilter {
     @Value("${api.prefix}")
     private String apiPrefix;
     private final UserDetailsService userDetailsService;
     private final JwtTokenUtils jwtTokenUtils;
+
     @Override
-    protected void doFilterInternal(@NonNull  HttpServletRequest request,
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-            if(isBypassToken(request)) {
-                filterChain.doFilter(request, response); //enable bypass
-                return;
-            }
-            final String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                response.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "authHeader null or not started with Bearer");
-                return;
-            }
-            final String token = authHeader.substring(7);
-            final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
-            if (phoneNumber != null
-                        && SecurityContextHolder.getContext().getAuthentication() == null) {
-                User userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
-                if(jwtTokenUtils.validateToken(token, userDetails)) {
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken( userDetails, null, userDetails.getAuthorities());
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                }
-            }
+        if (isBypassToken(request)) {
             filterChain.doFilter(request, response); //enable bypass
+            return;
         }
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "authHeader null or not started with Bearer");
+            return;
+        }
+        final String token = authHeader.substring(7);
+        final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
+        if (phoneNumber != null
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
+            User userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
+            if (jwtTokenUtils.validateToken(token, userDetails)) {
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
+        }
+        filterChain.doFilter(request, response); //enable bypass
+    }
 
 
     private boolean isBypassToken(@NonNull HttpServletRequest request) {
@@ -65,20 +66,20 @@ public class JwtTokenFilter extends OncePerRequestFilter{
                 Pair.of(String.format("%s/users/generate-secret-key", apiPrefix), "GET"),
                 Pair.of(String.format("%s/users/login", apiPrefix), "POST"),
                 Pair.of(String.format("%s/users/register", apiPrefix), "POST"),
-                Pair.of("/api-docs","GET"),
-                Pair.of("/api-docs/**","GET"),
-                Pair.of("/swagger-resources","GET"),
-                Pair.of("/swagger-resources/**","GET"),
-                Pair.of("/configuration/ui","GET"),
-                Pair.of("/configuration/security","GET"),
-                Pair.of("/swagger-ui/**","GET"),
+                Pair.of("/api-docs", "GET"),
+                Pair.of("/api-docs/**", "GET"),
+                Pair.of("/swagger-resources", "GET"),
+                Pair.of("/swagger-resources/**", "GET"),
+                Pair.of("/configuration/ui", "GET"),
+                Pair.of("/configuration/security", "GET"),
+                Pair.of("/swagger-ui/**", "GET"),
                 Pair.of("/swagger-ui.html", "GET"),
                 Pair.of("/swagger-ui/index.html", "GET"),
                 Pair.of(String.format("%s/hotels/**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/hotels/**", apiPrefix), "POST"),
                 Pair.of(String.format("%s/hotels/**", apiPrefix), "PUT"),
                 Pair.of(String.format("%s/hotels/**", apiPrefix), "DELETE")
-                );
+        );
         String requestPath = request.getServletPath();
         String requestMethod = request.getMethod();
         for (Pair<String, String> token : bypassTokens) {

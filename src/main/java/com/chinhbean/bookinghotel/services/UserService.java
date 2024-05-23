@@ -40,46 +40,45 @@ public class UserService implements IUserService {
     @Override
     @Transactional
     public User registerUser(UserDTO userDTO) throws Exception {
-            String phoneNumber = userDTO.getPhoneNumber();
-            if (userRepository.existsByPhoneNumber(phoneNumber)) {
-                throw new DataIntegrityViolationException(localizationUtils.getLocalizedMessage(MessageKeys.PHONE_NUMBER_ALREADY_EXISTS));
-            }
-
-            // Sử dụng roleId mặc định là 2 nếu không được truyền vào
-            Long roleId = userDTO.getRoleId() != null ? userDTO.getRoleId() : 2L;
-            Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new DataNotFoundException(
-                            localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
-
-            // Check if the current user has permission to register users with the specified role
-            if (role.getRoleName().equalsIgnoreCase("ADMIN")) {
-                throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
-            }
-
-            User newUser = User.builder()
-                    .fullName(userDTO.getFullName())
-                    .email(userDTO.getEmail())
-                    .phoneNumber(userDTO.getPhoneNumber())
-                    .password(userDTO.getPassword())
-                    .address(userDTO.getAddress())
-                    .dateOfBirth(userDTO.getDateOfBirth())
-                    .gender(userDTO.getGender())
-                    .active(true)
-                    .city(userDTO.getCity())
-                    .facebookAccountId(userDTO.getFacebookAccountId())
-                    .googleAccountId(userDTO.getGoogleAccountId())
-                    .build();
-            newUser.setRole(role);
-
-            // Kiểm tra nếu có accountId, không yêu cầu password
-            if (userDTO.getFacebookAccountId() == 0 && userDTO.getGoogleAccountId() == 0) {
-                String password = userDTO.getPassword();
-                String encodedPassword = passwordEncoder.encode(password);
-                newUser.setPassword(encodedPassword);
-            }
-            return userRepository.save(newUser);
+        String phoneNumber = userDTO.getPhoneNumber();
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new DataIntegrityViolationException(localizationUtils.getLocalizedMessage(MessageKeys.PHONE_NUMBER_ALREADY_EXISTS));
         }
 
+        // Sử dụng roleId mặc định là 2 nếu không được truyền vào
+        Long roleId = userDTO.getRoleId() != null ? userDTO.getRoleId() : 2L;
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
+
+        // Check if the current user has permission to register users with the specified role
+        if (role.getRoleName().equalsIgnoreCase("ADMIN")) {
+            throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
+        }
+
+        User newUser = User.builder()
+                .fullName(userDTO.getFullName())
+                .email(userDTO.getEmail())
+                .phoneNumber(userDTO.getPhoneNumber())
+                .password(userDTO.getPassword())
+                .address(userDTO.getAddress())
+                .dateOfBirth(userDTO.getDateOfBirth())
+                .gender(userDTO.getGender())
+                .active(true)
+                .city(userDTO.getCity())
+                .facebookAccountId(userDTO.getFacebookAccountId())
+                .googleAccountId(userDTO.getGoogleAccountId())
+                .build();
+        newUser.setRole(role);
+
+        // Kiểm tra nếu có accountId, không yêu cầu password
+        if (userDTO.getFacebookAccountId() == 0 && userDTO.getGoogleAccountId() == 0) {
+            String password = userDTO.getPassword();
+            String encodedPassword = passwordEncoder.encode(password);
+            newUser.setPassword(encodedPassword);
+        }
+        return userRepository.save(newUser);
+    }
 
 
     @Override
@@ -89,21 +88,21 @@ public class UserService implements IUserService {
             Long roleId
     ) throws Exception {
         Optional<User> optionalUser = userRepository.findByPhoneNumber(phoneNumber);
-        if(optionalUser.isEmpty()) {
+        if (optionalUser.isEmpty()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
         }
         User existingUser = optionalUser.get();
         if (existingUser.getFacebookAccountId() == 0
                 && existingUser.getGoogleAccountId() == 0) {
-            if(!passwordEncoder.matches(password, existingUser.getPassword())) {
+            if (!passwordEncoder.matches(password, existingUser.getPassword())) {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
         }
         Optional<Role> optionalRole = roleRepository.findById(roleId);
-        if(optionalRole.isEmpty() || !roleId.equals(existingUser.getRole().getId())) {
+        if (optionalRole.isEmpty() || !roleId.equals(existingUser.getRole().getId())) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS));
         }
-        if(!optionalUser.get().isActive()) {
+        if (!optionalUser.get().isActive()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_IS_LOCKED));
         }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -113,7 +112,7 @@ public class UserService implements IUserService {
 
         // authenticate with Java Spring security
         authenticationManager.authenticate(authenticationToken);
-         return jwtTokenUtils.generateToken(existingUser);
+        return jwtTokenUtils.generateToken(existingUser);
     }
 
 

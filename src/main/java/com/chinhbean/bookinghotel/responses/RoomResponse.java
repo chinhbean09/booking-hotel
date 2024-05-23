@@ -1,7 +1,6 @@
 package com.chinhbean.bookinghotel.responses;
 
 import com.chinhbean.bookinghotel.entities.Room;
-import com.chinhbean.bookinghotel.entities.Type;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

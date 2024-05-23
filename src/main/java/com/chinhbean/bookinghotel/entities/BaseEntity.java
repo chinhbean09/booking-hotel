@@ -7,6 +7,7 @@ import jakarta.persistence.PreUpdate;
 import lombok.*;
 
 import java.util.Date;
+
 @Data
 @Getter
 @Setter
@@ -23,12 +24,12 @@ public class BaseEntity {
     private Date modifiedDate;
 
     @PrePersist
-    protected void onCreate(){
+    protected void onCreate() {
         createdDate = new Date();
     }
 
     @PreUpdate
-    protected void onUpdate(){
+    protected void onUpdate() {
         modifiedDate = new Date();
     }
 

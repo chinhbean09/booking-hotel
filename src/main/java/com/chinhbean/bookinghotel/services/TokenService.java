@@ -1,4 +1,5 @@
 package com.chinhbean.bookinghotel.services;
+
 import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class TokenService implements ITokenService{
+public class TokenService implements ITokenService {
     private static final int MAX_TOKENS = 3;
     @Value("${jwt.expiration}")
     private int expiration; //save to an environment variable
@@ -67,10 +68,10 @@ public class TokenService implements ITokenService{
     @Override
     public Token refreshToken(String refreshToken, User user) throws Exception {
         Token existingToken = tokenRepository.findByRefreshToken(refreshToken);
-        if(existingToken == null) {
+        if (existingToken == null) {
             throw new DataNotFoundException("Refresh token does not exist");
         }
-        if(existingToken.getRefreshExpirationDate().isBefore(LocalDateTime.now())){
+        if (existingToken.getRefreshExpirationDate().isBefore(LocalDateTime.now())) {
             tokenRepository.delete(existingToken);
             throw new ExpiredTokenException("Refresh token is expired");
         }

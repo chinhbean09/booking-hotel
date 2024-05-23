@@ -60,7 +60,7 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse createHotel(HotelDTO hotelDTO) throws DataNotFoundException {
+    public HotelResponse createHotel(HotelDTO hotelDTO) {
         logger.info("Creating a new hotel with name: {}", hotelDTO.getHotelName());
         Hotel hotel = convertToEntity(hotelDTO);
         Set<Convenience> newConveniences = hotel.getConveniences().stream()
@@ -73,7 +73,7 @@ public class HotelService implements IHotelService {
     }
 
 
-    private Hotel convertToEntity(HotelDTO hotelDTO) throws DataNotFoundException {
+    private Hotel convertToEntity(HotelDTO hotelDTO) {
         // Create and set the hotel location from DTO
         HotelLocation location = new HotelLocation();
         location.setAddress(hotelDTO.getLocation().getAddress());

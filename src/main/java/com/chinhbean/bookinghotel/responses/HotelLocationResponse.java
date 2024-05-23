@@ -2,7 +2,10 @@ package com.chinhbean.bookinghotel.responses;
 
 import com.chinhbean.bookinghotel.entities.HotelLocation;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor

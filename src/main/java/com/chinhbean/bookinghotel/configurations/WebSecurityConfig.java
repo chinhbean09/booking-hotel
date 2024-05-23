@@ -31,7 +31,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     private String apiPrefix;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)  throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(requests -> requests

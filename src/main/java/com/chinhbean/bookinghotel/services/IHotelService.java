@@ -6,7 +6,6 @@ import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
