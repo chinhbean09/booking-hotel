@@ -1,5 +1,6 @@
 package com.chinhbean.bookinghotel.services;
 
+import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
@@ -10,6 +11,7 @@ import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.ConvenienceRepository;
 import com.chinhbean.bookinghotel.repositories.HotelRepository;
+import com.chinhbean.bookinghotel.repositories.UserRepository;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.transaction.Transactional;
@@ -27,8 +29,10 @@ import java.util.stream.Collectors;
 public class HotelService implements IHotelService {
 
     private final HotelRepository hotelRepository;
+    private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
     private final ConvenienceRepository convenienceRepository;
+    private final UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
 
@@ -60,9 +64,12 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse createHotel(HotelDTO hotelDTO) {
+    public HotelResponse createHotel(HotelDTO hotelDTO, String token) throws DataNotFoundException {
+        User user = getUserDetailsFromToken(token);
+
         logger.info("Creating a new hotel with name: {}", hotelDTO.getHotelName());
         Hotel hotel = convertToEntity(hotelDTO);
+        hotel.setPartner(user);
         Set<Convenience> newConveniences = hotel.getConveniences().stream()
                 .filter(convenience -> convenience.getId() == null)
                 .collect(Collectors.toSet());
@@ -123,10 +130,13 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO) throws DataNotFoundException {
+    public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException {
+        User user = getUserDetailsFromToken(token);
+
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
 
+        hotel.setPartner(user);
         if (updateDTO.getHotelName() != null) {
             hotel.setHotelName(updateDTO.getHotelName());
         }
@@ -156,6 +166,16 @@ public class HotelService implements IHotelService {
 
         Hotel updatedHotel = hotelRepository.save(hotel);
         return HotelResponse.fromHotel(updatedHotel);
+    }
+
+    @Override
+    public User getUserDetailsFromToken(String token) throws DataNotFoundException {
+        if (jwtTokenUtils.isTokenExpired(token)) {
+            throw new DataNotFoundException("Token is expired");
+        }
+        Long id = jwtTokenUtils.extractUserId(token);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("User not found"));
     }
 
     @Override

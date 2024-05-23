@@ -35,7 +35,7 @@ public class HotelController {
                 .build());
     }
 
-    @GetMapping("/{hotelId}/detail")
+    @GetMapping("/detail/{hotelId}")
     public ResponseEntity<ResponseObject> getHotelDetail(@PathVariable Long hotelId) {
         try {
             HotelResponse hotelDetail = hotelService.getHotelDetail(hotelId);
@@ -53,13 +53,19 @@ public class HotelController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ResponseObject> createHotel(@RequestBody HotelDTO hotelDTO) {
+    public ResponseEntity<ResponseObject> createHotel(@RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
-            HotelResponse createdHotel = hotelService.createHotel(hotelDTO);
+            String token = authHeader.substring(7);
+            HotelResponse createdHotel = hotelService.createHotel(hotelDTO, token);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
                     .status(HttpStatus.CREATED)
                     .data(createdHotel)
                     .message(MessageKeys.INSERT_HOTEL_SUCCESSFULLY)
+                    .build());
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+                    .status(HttpStatus.BAD_REQUEST)
+                    .message(e.getMessage())
                     .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
@@ -69,10 +75,11 @@ public class HotelController {
         }
     }
 
-    @PutMapping("/{hotelId}")
-    public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO) {
+    @PutMapping("updateHotel/{hotelId}")
+    public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
-            HotelResponse updatedHotel = hotelService.updateHotel(hotelId, hotelDTO);
+            String token = authHeader.substring(7);
+            HotelResponse updatedHotel = hotelService.updateHotel(hotelId, hotelDTO, token);
             return ResponseEntity.ok().body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .message(MessageKeys.UPDATE_HOTEL_SUCCESSFULLY)
@@ -91,7 +98,8 @@ public class HotelController {
         }
     }
 
-    @PutMapping("/{hotelId}/status")
+
+    @PutMapping("/updateStatus/{hotelId}")
     public ResponseEntity<ResponseObject> updateHotelStatus(@PathVariable Long hotelId, @RequestBody HotelStatus newStatus, @AuthenticationPrincipal User user) {
         try {
             hotelService.updateStatus(hotelId, newStatus, user);

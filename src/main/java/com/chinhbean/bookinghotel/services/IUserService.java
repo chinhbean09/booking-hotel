@@ -14,6 +14,6 @@ public interface IUserService {
 
     User updateUserAvatar(long id, MultipartFile avatar);
 
-    Boolean sendMailForRegisterSuccess(String name, String email, String password);
+    void sendMailForRegisterSuccess(String name, String email, String password);
 
 }

@@ -3,8 +3,8 @@ package com.chinhbean.bookinghotel.services.sendmails;
 import com.chinhbean.bookinghotel.dtos.DataMailDTO;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -13,12 +13,11 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MailService implements IMailService {
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
-    @Autowired
-    private SpringTemplateEngine templateEngine;
+    private final SpringTemplateEngine templateEngine;
 
     @Override
     public void sendHtmlMail(DataMailDTO dataMail, String templateName) throws MessagingException {

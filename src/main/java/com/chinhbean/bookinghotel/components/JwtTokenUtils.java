@@ -42,6 +42,7 @@ public class JwtTokenUtils {
     public String generateToken(com.chinhbean.bookinghotel.entities.User user) throws InvalidParamException {
         Map<String, Object> claims = new HashMap<>();
         claims.put("phoneNumber", user.getPhoneNumber());
+        claims.put("userId", user.getId());
 
         try {
             return Jwts.builder()
@@ -91,6 +92,15 @@ public class JwtTokenUtils {
 
     public String extractPhoneNumber(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long extractUserId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return Long.parseLong(claims.get("userId").toString());
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
