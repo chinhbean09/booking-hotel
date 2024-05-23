@@ -10,8 +10,6 @@ import java.util.Date;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
 public class UserDTO {
 
     @JsonProperty("phone_number")

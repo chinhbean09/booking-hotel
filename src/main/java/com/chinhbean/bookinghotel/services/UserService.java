@@ -7,7 +7,6 @@ import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.entities.Role;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.RoleRepository;
 import com.chinhbean.bookinghotel.repositories.UserRepository;
@@ -20,7 +19,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +42,7 @@ public class UserService implements IUserService {
     public User registerUser(UserDTO userDTO) throws Exception {
             String phoneNumber = userDTO.getPhoneNumber();
             if (userRepository.existsByPhoneNumber(phoneNumber)) {
-                throw new DataIntegrityViolationException(localizationUtils.getLocalizedMessage(MessageKeys.PHONENUMBER_ALREADY_EXISTS));
+                throw new DataIntegrityViolationException(localizationUtils.getLocalizedMessage(MessageKeys.PHONE_NUMBER_ALREADY_EXISTS));
             }
 
             // Sử dụng roleId mặc định là 2 nếu không được truyền vào
@@ -54,7 +52,7 @@ public class UserService implements IUserService {
                             localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
 
             // Check if the current user has permission to register users with the specified role
-            if (role.getRoleName().toUpperCase().equals("ADMIN")) {
+            if (role.getRoleName().equalsIgnoreCase("ADMIN")) {
                 throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
             }
 

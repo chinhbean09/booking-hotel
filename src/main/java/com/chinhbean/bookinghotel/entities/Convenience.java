@@ -19,31 +19,29 @@ public class Convenience {
     private Long id;
 
     @Column(name = "free_breakfast", nullable = false)
-    private Boolean freeBreakfast;
+    private Boolean freeBreakfast = false;
 
     @Column(name = "pick_up_drop_off", nullable = false)
-    private Boolean pickUpDropOff;
+    private Boolean pickUpDropOff = false;
 
     @Column(nullable = false)
-    private Boolean restaurant;
+    private Boolean restaurant = false;
 
     @Column(nullable = false)
-    private Boolean bar;
+    private Boolean bar = false;
 
     @Column(nullable = false)
-    private Boolean pool;
+    private Boolean pool = false;
 
     @Column(name = "free_internet", nullable = false)
-    private Boolean freeInternet;
+    private Boolean freeInternet = false;
 
     @Column(name = "reception_24h", nullable = false)
-    private Boolean reception24h;
+    private Boolean reception24h = false;
 
     @Column(nullable = false)
-    private Boolean laundry;
+    private Boolean laundry = false;
 
-    @ManyToMany(mappedBy = "conveniences")
+    @ManyToMany(mappedBy = "conveniences", cascade = CascadeType.ALL)
     private Set<Hotel> hotel;
-
-
 }

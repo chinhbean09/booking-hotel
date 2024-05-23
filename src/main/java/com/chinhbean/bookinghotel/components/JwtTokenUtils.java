@@ -60,8 +60,7 @@ public class JwtTokenUtils {
         SecureRandom random = new SecureRandom();
         byte[] keyBytes = new byte[32]; // 256-bit key
         random.nextBytes(keyBytes);
-        String secretKey = Encoders.BASE64.encode(keyBytes);
-        return secretKey;
+        return Encoders.BASE64.encode(keyBytes);
     }
     private Key getSignInKey() {
         byte[] bytes = Decoders.BASE64.decode(secretKey);
@@ -91,7 +90,7 @@ public class JwtTokenUtils {
         try {
             String phoneNumber = extractPhoneNumber(token);
             Token existingToken = tokenRepository.findByToken(token);
-            if(existingToken == null || existingToken.isRevoked() == true) {
+            if(existingToken == null || existingToken.isRevoked()) {
                 return false;
             }
             return (phoneNumber.equals(userDetails.getUsername()))

@@ -1,9 +1,11 @@
 package com.chinhbean.bookinghotel.entities;
 
+import com.chinhbean.bookinghotel.enums.HotelStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -22,7 +24,7 @@ public class Hotel {
     private String hotelName;
 
     @Column(nullable = false)
-    private Integer rating;
+    private Double rating;
 
     @Column(nullable = false)
     private String description;
@@ -34,6 +36,9 @@ public class Hotel {
     @Column(nullable = false)
     private String brand;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private HotelStatus status;
 
     @ManyToMany
     @JoinTable(
@@ -43,7 +48,9 @@ public class Hotel {
     )
     private Set<Convenience> conveniences;
 
+    @OneToOne(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private HotelLocation location;
 
-    //Set được sử dụng để đại diện cho mối quan hệ nhiều-nhiều giữa hai đối tượng.
-    //đại diện cho tập hợp các convenience mà hotel cung cấp.
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Room> rooms;
 }
