@@ -38,9 +38,11 @@ public class JwtTokenUtils {
 
     private final TokenRepository tokenRepository;
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtils.class);
+
     public String generateToken(com.chinhbean.bookinghotel.entities.User user) throws InvalidParamException {
         Map<String, Object> claims = new HashMap<>();
         claims.put("phoneNumber", user.getPhoneNumber());
+        claims.put("userId", user.getId());
 
         try {
             return Jwts.builder()
@@ -53,29 +55,33 @@ public class JwtTokenUtils {
             // Log the error
             // logger.error("Cannot create JWT token", e);
             // Throw a new InvalidParamException with the original exception as the cause
-            throw new InvalidParamException(MessageKeys.TOKEN_GENERATION_FAILED,e);
+            throw new InvalidParamException(MessageKeys.TOKEN_GENERATION_FAILED, e);
         }
     }
+
     public String generateSecretKey() {
         SecureRandom random = new SecureRandom();
         byte[] keyBytes = new byte[32]; // 256-bit key
         random.nextBytes(keyBytes);
-        String secretKey = Encoders.BASE64.encode(keyBytes);
-        return secretKey;
+        return Encoders.BASE64.encode(keyBytes);
     }
+
     private Key getSignInKey() {
         byte[] bytes = Decoders.BASE64.decode(secretKey);
         //Keys.hmacShaKeyFor(Decoders.BASE64.decode("TaqlmGv1iEDMRiFp/pHuID1+T84IABfuA0xXh4GhiUI="));
         return Keys.hmacShaKeyFor(bytes);
     }
+
     public boolean isTokenExpired(String token) {
         Date expirationDate = this.extractClaim(token, Claims::getExpiration);
         return expirationDate.before(new Date());
     }
-    public  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = this.extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
@@ -87,11 +93,21 @@ public class JwtTokenUtils {
     public String extractPhoneNumber(String token) {
         return extractClaim(token, Claims::getSubject);
     }
+
+    public Long extractUserId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return Long.parseLong(claims.get("userId").toString());
+    }
+
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
             String phoneNumber = extractPhoneNumber(token);
             Token existingToken = tokenRepository.findByToken(token);
-            if(existingToken == null || existingToken.isRevoked() == true) {
+            if (existingToken == null || existingToken.isRevoked()) {
                 return false;
             }
             return (phoneNumber.equals(userDetails.getUsername()))

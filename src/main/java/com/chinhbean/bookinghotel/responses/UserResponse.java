@@ -34,7 +34,7 @@ public class UserResponse {
     private boolean active;
 
     @JsonProperty("date_of_birth")
-    private Date dateOfBirth;   
+    private Date dateOfBirth;
 
     @JsonProperty("facebook_account_id")
     private int facebookAccountId;
@@ -49,6 +49,7 @@ public class UserResponse {
 
     @JsonProperty("role")
     private com.chinhbean.bookinghotel.entities.Role role;
+
     public static UserResponse fromUser(com.chinhbean.bookinghotel.entities.User user) {
         return UserResponse.builder()
                 .id(user.getId())

@@ -14,6 +14,7 @@ import java.util.Locale;
 public class LocalizationUtils {
     private final MessageSource messageSource;
     private final LocaleResolver localeResolver;
+
     public String getLocalizedMessage(String messageKey, Object... params) {//spread operator
         HttpServletRequest request = WebUtils.getCurrentRequest();
         Locale locale = localeResolver.resolveLocale(request);

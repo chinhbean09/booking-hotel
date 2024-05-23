@@ -16,7 +16,8 @@ public class HotelLocation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
     @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 

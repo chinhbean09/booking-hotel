@@ -10,17 +10,15 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-
+@IdClass(HotelConvenienceId.class)
 public class HotelConvenience {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @ManyToOne
     @JoinColumn(name = "hotel_id")
     private Hotel hotel;
 
+    @Id
     @ManyToOne
     @JoinColumn(name = "convenience_id")
     private Convenience convenience;
