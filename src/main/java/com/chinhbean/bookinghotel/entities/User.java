@@ -63,6 +63,8 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
 
     @Column(name = "google_account_id")
     private int googleAccountId;
+    @Column(name = "avatar")
+    private String avatar;
 
     @Override
     public Map<String, Object> getAttributes() {

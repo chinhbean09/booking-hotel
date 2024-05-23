@@ -51,4 +51,7 @@ public class UserDTO {
 
     @JsonProperty("google_account_id")
     private int googleAccountId;
+
+    @JsonProperty("avatar")
+    private String avatar;
 }

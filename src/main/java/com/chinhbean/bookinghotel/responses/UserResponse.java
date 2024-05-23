@@ -44,6 +44,9 @@ public class UserResponse {
 
     private String city;
 
+    @JsonProperty("avatar")
+    private String avatar;
+
     @JsonProperty("role")
     private com.chinhbean.bookinghotel.entities.Role role;
 
@@ -60,6 +63,7 @@ public class UserResponse {
                 .googleAccountId(user.getGoogleAccountId())
                 .role(user.getRole())
                 .city(user.getCity())
+                .avatar(user.getAvatar())
                 .build();
     }
 }
