@@ -21,6 +21,8 @@ public class MessageKeys {
     public static final String DELETE_ORDER_DETAIL_SUCCESSFULLY = "order.delete_order_detail.delete_successfully";
     public static final String UPLOAD_IMAGES_MAX_5 = "product.upload_images.error_max_5_images";
     public static final String UPLOAD_IMAGES_FILE_LARGE = "product.upload_images.file_large";
+
+    public static final String UPDATE_AVATAR_SUCCESSFULLY = "user.update_avatar.update_avatar_successfully";
     public static final String UPLOAD_IMAGES_FILE_MUST_BE_IMAGE = "product.upload_images.file_must_be_image";
     public static final String INSERT_CATEGORY_FAILED = "category.create_category.create_failed";
     public static final String WRONG_PHONE_PASSWORD = "user.login.wrong_phone_password";
