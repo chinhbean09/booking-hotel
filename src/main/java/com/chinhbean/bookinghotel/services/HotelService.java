@@ -170,17 +170,17 @@ public class HotelService implements IHotelService {
     @Override
     public User getUserDetailsFromToken(String token) throws DataNotFoundException {
         if (jwtTokenUtils.isTokenExpired(token)) {
-            throw new DataNotFoundException("Token is expired");
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.TOKEN_IS_EXPIRED));
         }
         Long id = jwtTokenUtils.extractUserId(token);
         return userRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException("User not found"));
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_EXISTS)));
     }
 
     @Override
     public void updateStatus(Long hotelId, HotelStatus newStatus, User user) throws DataNotFoundException, PermissionDenyException {
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new DataNotFoundException("Hotel not found"));
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
         String userRole = user.getRole().getRoleName();
         if (Role.ADMIN.equals(userRole)) {
             hotel.setStatus(newStatus);
@@ -188,10 +188,10 @@ public class HotelService implements IHotelService {
             if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE) {
                 hotel.setStatus(newStatus);
             } else {
-                throw new PermissionDenyException("Partner cannot change status to " + newStatus);
+                throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.PARTNER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
             }
         } else {
-            throw new PermissionDenyException("User does not have permission to change status");
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
         }
         hotelRepository.save(hotel);
     }

@@ -39,8 +39,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                                 String.format("%s/users/register", apiPrefix),
                                 String.format("%s/users/login", apiPrefix),
                                 String.format("%s/users/generate-secret-key", apiPrefix),
-                                String.format("%s/hotels/getListHotels", apiPrefix),
-                                String.format("%s/hotels/**", apiPrefix))
+                                String.format("%s/hotels/**", apiPrefix)
+                        )
                         .permitAll()
                         .anyRequest()
                         .authenticated())

@@ -14,9 +14,7 @@ public class MessageKeys {
     public static final String PASSWORD_NOT_MATCH = "user.register.password_not_match";
     public static final String USER_IS_LOCKED = "user.login.user_is_locked";
 
-    public static final String INSERT_HOTEL_SUCCESSFULLY = "hotel.create_hotel.create_successfully";
     public static final String DELETE_HOTEL_SUCCESSFULLY = "hotel.delete_hotel.delete_successfully";
-    public static final String UPDATE_HOTEL_SUCCESSFULLY = "hotel.update_hotel.update_successfully";
     public static final String INSERT_HOTEL_FAILED = "hotel.create_hotel.create_failed";
     public static final String DELETE_HOTEL_FAILED = "hotel.delete_hotel.delete_failed";
     public static final String UPDATE_HOTEL_FAILED = "hotel.update_hotel.update_failed";
@@ -30,11 +28,16 @@ public class MessageKeys {
     public static final String WRONG_PHONE_PASSWORD = "user.login.wrong_phone_password";
     public static final String ROLE_DOES_NOT_EXISTS = "user.login.role_not_exist";
     public static final String USER_DOES_NOT_EXISTS = "user.get_user.user_not_exist";
+
+    public static final String TOKEN_IS_EXPIRED = "user.jwt.token_is_expired";
+    public static final String TOKEN_GENERATION_FAILED = "user.login.jwt.token_can_not_create";
+
+    public static final String UPDATE_HOTEL_STATUS_SUCCESSFULLY = "hotel.update_status.update_hotel_status_successfully";
+    public static final String PARTNER_CANNOT_CHANGE_STATUS_TO = "hotel.update_status.partner_cannot_change_status_to";
+    public static final String INSERT_HOTEL_SUCCESSFULLY = "hotel.create_hotel.create_successfully";
+    public static final String UPDATE_HOTEL_SUCCESSFULLY = "hotel.update_hotel.update_successfully";
     public static final String HOTEL_DOES_NOT_EXISTS = "hotel.list_hotel.hotel_not_exist";
     public static final String RETRIEVED_ALL_HOTELS_SUCCESSFULLY = "hotel.list_hotel.retrieved_all_hotels_successfully";
     public static final String RETRIEVED_HOTEL_DETAILS_SUCCESSFULLY = "hotel.hotel_detail.retrieved_hotel_details_successfully";
-
-
-    public static final String TOKEN_GENERATION_FAILED = "user.login.jwt.token_can_not_create";
-    public static final String UPDATE_HOTEL_STATUS_SUCCESSFULLY = "hotel.update_status.update_hotel_status_successfully";
+    public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS = "hotel.update_status.user_does_not_have_permission_to_change_status";
 }

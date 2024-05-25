@@ -53,9 +53,10 @@ public class HotelResponse {
                 .map(ConvenienceResponse::fromConvenience)
                 .toList();
 
-        List<RoomResponse> roomResponses = hotel.getRooms().stream()
+        List<RoomResponse> roomResponses = (hotel.getRooms() != null) ? hotel.getRooms().stream()
                 .map(RoomResponse::fromRoom)
-                .toList();
+                .toList() : List.of();
+
         return HotelResponse.builder()
                 .id(hotel.getId())
                 .hotelName(hotel.getHotelName())
