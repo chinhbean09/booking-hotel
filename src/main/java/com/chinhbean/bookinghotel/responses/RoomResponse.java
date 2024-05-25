@@ -22,6 +22,9 @@ public class RoomResponse {
     @JsonProperty("availability")
     private String availability;
 
+    @JsonProperty("room_number")
+    private String roomNumber;
+
     @JsonProperty("price")
     private BigDecimal price;
 
@@ -36,6 +39,7 @@ public class RoomResponse {
         return RoomResponse.builder()
                 .id(room.getId())
                 .availability(room.getAvailability())
+                .roomNumber(room.getRoomNumber())
                 .price(room.getPrice())
                 .types(typeResponses)
                 .build();

@@ -34,7 +34,18 @@ public class MessageKeys {
     public static final String RETRIEVED_ALL_HOTELS_SUCCESSFULLY = "hotel.list_hotel.retrieved_all_hotels_successfully";
     public static final String RETRIEVED_HOTEL_DETAILS_SUCCESSFULLY = "hotel.hotel_detail.retrieved_hotel_details_successfully";
 
+    public static final String ROOM_DOES_NOT_EXISTS = "room.list_room.room_not_exist";
 
     public static final String TOKEN_GENERATION_FAILED = "user.login.jwt.token_can_not_create";
     public static final String UPDATE_HOTEL_STATUS_SUCCESSFULLY = "hotel.update_status.update_hotel_status_successfully";
+
+    public static final String INSERT_ROOM_SUCCESSFULLY = "room.create_room.create_successfully";
+
+    public static final String NO_ROOMS_FOUND = "room.list_room.no_rooms_found";
+
+    public static final String RETRIEVED_ROOMS_SUCCESSFULLY = "room.list_room.retrieved_rooms_successfully";
+
+    public static final String UPDATE_ROOM_SUCCESSFULLY = "room.update_room.update_successfully";
+
+    public static final String DELETE_ROOM_SUCCESSFULLY = "room.delete_room.delete_successfully";
 }

@@ -22,6 +22,9 @@ public class Room {
     @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
+    @Column(name = "room_number", nullable = false)
+    private String roomNumber;
+
     @Column(nullable = false)
     private BigDecimal price;
 
