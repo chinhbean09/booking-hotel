@@ -81,17 +81,14 @@ public class HotelService implements IHotelService {
 
 
     private Hotel convertToEntity(HotelDTO hotelDTO) {
-        // Create and set the hotel location from DTO
         HotelLocation location = new HotelLocation();
         location.setAddress(hotelDTO.getLocation().getAddress());
         location.setCity(hotelDTO.getLocation().getCity());
         location.setDistrict(hotelDTO.getLocation().getDistrict());
-
-        // Create and set the hotel conveniences from DTO
         Set<Convenience> conveniences = hotelDTO.getConveniences().stream()
                 .map(this::convertToConvenienceEntity)
                 .collect(Collectors.toSet());
-        return Hotel.builder()
+        Hotel hotel = Hotel.builder()
                 .hotelName(hotelDTO.getHotelName())
                 .rating(hotelDTO.getRating())
                 .description(hotelDTO.getDescription())
@@ -100,6 +97,8 @@ public class HotelService implements IHotelService {
                 .conveniences(conveniences)
                 .location(location)
                 .build();
+        location.setHotel(hotel);
+        return hotel;
     }
 
     private Convenience convertToConvenienceEntity(ConvenienceDTO dto) {
