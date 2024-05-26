@@ -181,10 +181,10 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public void updateStatus(Long hotelId, HotelStatus newStatus, User user) throws DataNotFoundException, PermissionDenyException {
+    public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
-        String userRole = user.getRole().getRoleName();
+        String userRole = jwtTokenUtils.extractUserRole(token);
         if (Role.ADMIN.equals(userRole)) {
             hotel.setStatus(newStatus);
         } else if (Role.PARTNER.equals(userRole)) {
