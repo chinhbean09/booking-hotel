@@ -36,6 +36,7 @@ public class HotelService implements IHotelService {
 
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
 
+    @Transactional
     @Override
     public List<HotelResponse> getAllHotels() throws DataNotFoundException {
         logger.info("Fetching all hotels from the database.");
@@ -50,6 +51,7 @@ public class HotelService implements IHotelService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException {
         logger.info("Fetching details for hotel with ID: {}", hotelId);
@@ -177,6 +179,7 @@ public class HotelService implements IHotelService {
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_EXISTS)));
     }
 
+    @Transactional
     @Override
     public void updateStatus(Long hotelId, HotelStatus newStatus, User user) throws DataNotFoundException, PermissionDenyException {
         Hotel hotel = hotelRepository.findById(hotelId)
