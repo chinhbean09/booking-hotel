@@ -1,7 +1,6 @@
 package com.chinhbean.bookinghotel.controllers;
 
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
-import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
@@ -9,10 +8,10 @@ import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,6 +51,7 @@ public class HotelController {
         }
     }
 
+    @SecurityRequirement(name = "bearer-key")
     @PostMapping("/create")
     public ResponseEntity<ResponseObject> createHotel(@RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
@@ -75,6 +75,7 @@ public class HotelController {
         }
     }
 
+    @SecurityRequirement(name = "bearer-key")
     @PutMapping("updateHotel/{hotelId}")
     public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
@@ -98,11 +99,12 @@ public class HotelController {
         }
     }
 
-
+    @SecurityRequirement(name = "bearer-key")
     @PutMapping("/updateStatus/{hotelId}")
-    public ResponseEntity<ResponseObject> updateHotelStatus(@PathVariable Long hotelId, @RequestBody HotelStatus newStatus, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ResponseObject> updateHotelStatus(@PathVariable Long hotelId, @RequestBody HotelStatus newStatus, @RequestHeader("Authorization") String authHeader) {
         try {
-            hotelService.updateStatus(hotelId, newStatus, user);
+            String token = authHeader.substring(7);
+            hotelService.updateStatus(hotelId, newStatus, token);
             return ResponseEntity.ok().body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .message(MessageKeys.UPDATE_HOTEL_STATUS_SUCCESSFULLY)

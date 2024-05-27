@@ -43,6 +43,7 @@ public class JwtTokenUtils {
         Map<String, Object> claims = new HashMap<>();
         claims.put("phoneNumber", user.getPhoneNumber());
         claims.put("userId", user.getId());
+        claims.put("role", user.getRole().getRoleName());
 
         try {
             return Jwts.builder()
@@ -101,6 +102,15 @@ public class JwtTokenUtils {
                 .parseClaimsJws(token)
                 .getBody();
         return Long.parseLong(claims.get("userId").toString());
+    }
+
+    public String extractUserRole(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("role", String.class);
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {

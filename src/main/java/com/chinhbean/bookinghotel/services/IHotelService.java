@@ -22,5 +22,5 @@ public interface IHotelService {
 
     User getUserDetailsFromToken(String token) throws DataNotFoundException;
 
-    void updateStatus(Long hotelId, HotelStatus newStatus, User user) throws DataNotFoundException, PermissionDenyException;
+    void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException;
 }

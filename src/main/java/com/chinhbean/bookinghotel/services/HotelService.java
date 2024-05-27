@@ -36,6 +36,7 @@ public class HotelService implements IHotelService {
 
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
 
+    @Transactional
     @Override
     public List<HotelResponse> getAllHotels() throws DataNotFoundException {
         logger.info("Fetching all hotels from the database.");
@@ -50,6 +51,7 @@ public class HotelService implements IHotelService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException {
         logger.info("Fetching details for hotel with ID: {}", hotelId);
@@ -81,17 +83,14 @@ public class HotelService implements IHotelService {
 
 
     private Hotel convertToEntity(HotelDTO hotelDTO) {
-        // Create and set the hotel location from DTO
         HotelLocation location = new HotelLocation();
         location.setAddress(hotelDTO.getLocation().getAddress());
         location.setCity(hotelDTO.getLocation().getCity());
         location.setDistrict(hotelDTO.getLocation().getDistrict());
-
-        // Create and set the hotel conveniences from DTO
         Set<Convenience> conveniences = hotelDTO.getConveniences().stream()
                 .map(this::convertToConvenienceEntity)
                 .collect(Collectors.toSet());
-        return Hotel.builder()
+        Hotel hotel = Hotel.builder()
                 .hotelName(hotelDTO.getHotelName())
                 .rating(hotelDTO.getRating())
                 .description(hotelDTO.getDescription())
@@ -100,6 +99,8 @@ public class HotelService implements IHotelService {
                 .conveniences(conveniences)
                 .location(location)
                 .build();
+        location.setHotel(hotel);
+        return hotel;
     }
 
     private Convenience convertToConvenienceEntity(ConvenienceDTO dto) {
@@ -171,28 +172,29 @@ public class HotelService implements IHotelService {
     @Override
     public User getUserDetailsFromToken(String token) throws DataNotFoundException {
         if (jwtTokenUtils.isTokenExpired(token)) {
-            throw new DataNotFoundException("Token is expired");
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.TOKEN_IS_EXPIRED));
         }
         Long id = jwtTokenUtils.extractUserId(token);
         return userRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException("User not found"));
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_EXISTS)));
     }
 
+    @Transactional
     @Override
-    public void updateStatus(Long hotelId, HotelStatus newStatus, User user) throws DataNotFoundException, PermissionDenyException {
+    public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new DataNotFoundException("Hotel not found"));
-        String userRole = user.getRole().getRoleName();
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
+        String userRole = jwtTokenUtils.extractUserRole(token);
         if (Role.ADMIN.equals(userRole)) {
             hotel.setStatus(newStatus);
         } else if (Role.PARTNER.equals(userRole)) {
             if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE) {
                 hotel.setStatus(newStatus);
             } else {
-                throw new PermissionDenyException("Partner cannot change status to " + newStatus);
+                throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.PARTNER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
             }
         } else {
-            throw new PermissionDenyException("User does not have permission to change status");
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
         }
         hotelRepository.save(hotel);
     }
