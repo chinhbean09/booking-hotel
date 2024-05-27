@@ -1,6 +1,6 @@
 package com.chinhbean.bookinghotel.responses;
 
-import com.chinhbean.bookinghotel.entities.TypeRoom;
+import com.chinhbean.bookinghotel.entities.Type;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TypeRoomResponse {
+public class RoomTypeResponse {
     @JsonProperty("id")
     private Long id;
 
@@ -27,13 +27,13 @@ public class TypeRoomResponse {
     @JsonProperty("twin_bedroom")
     private Boolean twinBedroom;
 
-    public static TypeRoomResponse fromType(TypeRoom typeRoom) {
-        return TypeRoomResponse.builder()
-                .id(typeRoom.getId())
-                .doubleBedroom(typeRoom.getDoubleBedroom())
-                .luxury(typeRoom.getLuxury())
-                .singleBedroom(typeRoom.getSingleBedroom())
-                .twinBedroom(typeRoom.getTwinBedroom())
+    public static RoomTypeResponse fromType(Type type) {
+        return RoomTypeResponse.builder()
+                .id(type.getId())
+                .doubleBedroom(type.getDoubleBedroom())
+                .luxury(type.getLuxury())
+                .singleBedroom(type.getSingleBedroom())
+                .twinBedroom(type.getTwinBedroom())
                 .build();
     }
 }

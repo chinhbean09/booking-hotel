@@ -7,7 +7,7 @@ import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.repositories.ConvenienceRoomRepository;
 import com.chinhbean.bookinghotel.repositories.RoomRepository;
-import com.chinhbean.bookinghotel.repositories.TypeRoomRepository;
+import com.chinhbean.bookinghotel.repositories.TypeRepository;
 import com.chinhbean.bookinghotel.responses.RoomResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoomService implements IRoomService {
     private final RoomRepository roomRepository;
-    private final TypeRoomRepository typeRoomRepository;
+    private final TypeRepository typeRepository;
     private final ConvenienceRoomRepository convenienceRoomRepository;
 
     @Override
@@ -37,12 +37,12 @@ public class RoomService implements IRoomService {
         Room room = convertToEntity(roomDTO);
 
         // Filter out the new types from the room's types
-        Set<TypeRoom> newTypeRooms = room.getTypeRooms().stream()
+        Set<Type> newTypes = room.getTypes().stream()
                 .filter(type -> type.getId() == null)
                 .collect(Collectors.toSet());
 
         // Save the new types to the repository
-        typeRoomRepository.saveAll(newTypeRooms);
+        typeRepository.saveAll(newTypes);
 
         // Save the room to the repository and get the saved room
         Room savedRoom = roomRepository.save(room);
@@ -90,29 +90,29 @@ public class RoomService implements IRoomService {
 
         // If new types are provided in the RoomDTO, save them and associate them with the room
         if (roomDTO.getTypes() != null) {
-            Set<TypeRoom> updatedTypeRooms = new HashSet<>();
+            Set<Type> updatedTypes = new HashSet<>();
             for (TypeRoomDTO typeRoomDTO : roomDTO.getTypes()) {
                 // Convert TypeDTO to Type entity
-                TypeRoom typeRoom = convertToTypeEntity(typeRoomDTO);
+                Type type = convertToTypeEntity(typeRoomDTO);
 
                 // Save the new type to the database
-                typeRoom = typeRoomRepository.save(typeRoom);
+                type = typeRepository.save(type);
 
                 // Add the saved type to the updated types set
-                updatedTypeRooms.add(typeRoom);
+                updatedTypes.add(type);
             }
             // Update the room's types
-            room.setTypeRooms(updatedTypeRooms);
+            room.setTypes(updatedTypes);
         }
 
         if (roomDTO.getConveniences() != null) {
-            Set<ConvenienceRoom> updatedConvenienceRooms = new HashSet<>();
+            Set<RoomConvenience> updatedRoomConveniences = new HashSet<>();
             for (ConvenienceRoomDTO convenienceRoomDTO : roomDTO.getConveniences()) {
-                ConvenienceRoom convenienceRoom = convertToConvenienceRoomEntity(convenienceRoomDTO);
-                convenienceRoom = convenienceRoomRepository.save(convenienceRoom);
-                updatedConvenienceRooms.add(convenienceRoom);
+                RoomConvenience roomConvenience = convertToConvenienceRoomEntity(convenienceRoomDTO);
+                roomConvenience = convenienceRoomRepository.save(roomConvenience);
+                updatedRoomConveniences.add(roomConvenience);
             }
-            room.setConvenienceRooms(updatedConvenienceRooms);
+            room.setRoomConveniences(updatedRoomConveniences);
         }
 
 
@@ -142,10 +142,10 @@ public class RoomService implements IRoomService {
 
     private Room convertToEntity(RoomDTO roomDTO) {
         // Convert the list of TypeDTO objects to a set of Type objects
-        Set<TypeRoom> typeRooms = roomDTO.getTypes().stream()
+        Set<Type> types = roomDTO.getTypes().stream()
                 .map(this::convertToTypeEntity)
                 .collect(Collectors.toSet());
-        Set<ConvenienceRoom> convenienceRooms = roomDTO.getConveniences().stream()
+        Set<RoomConvenience> roomConveniences = roomDTO.getConveniences().stream()
                 .map(this::convertToConvenienceRoomEntity)
                 .collect(Collectors.toSet());
 
@@ -159,16 +159,16 @@ public class RoomService implements IRoomService {
                 .roomNumber(roomDTO.getRoomNumber())
                 .price(roomDTO.getPrice())
                 .availability(roomDTO.getAvailability())
-                .typeRooms(typeRooms)
-                .convenienceRooms(convenienceRooms)
+                .types(types)
+                .roomConveniences(roomConveniences)
                 .build();
     }
 
 
 
-    private TypeRoom convertToTypeEntity(TypeRoomDTO typeRoomDTO) {
+    private Type convertToTypeEntity(TypeRoomDTO typeRoomDTO) {
         // Find the Type entity in the repository based on the provided TypeDTO properties
-        return typeRoomRepository.findByLuxuryAndSingleBedroomAndTwinBedroomAndDoubleBedroom(
+        return typeRepository.findByLuxuryAndSingleBedroomAndTwinBedroomAndDoubleBedroom(
                         typeRoomDTO.getLuxury(),
                         typeRoomDTO.getSingleBedroom(),
                         typeRoomDTO.getTwinBedroom(),
@@ -177,7 +177,7 @@ public class RoomService implements IRoomService {
                 .orElseGet(() -> createNewType(typeRoomDTO));
     }
 
-    private ConvenienceRoom convertToConvenienceRoomEntity(ConvenienceRoomDTO dto) {
+    private RoomConvenience convertToConvenienceRoomEntity(ConvenienceRoomDTO dto) {
         return convenienceRoomRepository.findByWardrobeAndAirConditioningAndTvAndWifiAndToiletriesAndKitchen(
                         dto.getWardrobe(),
                         dto.getAirConditioning(),
@@ -188,24 +188,24 @@ public class RoomService implements IRoomService {
                 .orElseGet(() -> createNewConvenienceRoom(dto));
     }
 
-    private ConvenienceRoom createNewConvenienceRoom(ConvenienceRoomDTO dto) {
-        ConvenienceRoom convenienceRoom = new ConvenienceRoom();
-        convenienceRoom.setWardrobe(dto.getWardrobe());
-        convenienceRoom.setAirConditioning(dto.getAirConditioning());
-        convenienceRoom.setTv(dto.getTv());
-        convenienceRoom.setWifi(dto.getWifi());
-        convenienceRoom.setToiletries(dto.getToiletries());
-        convenienceRoom.setKitchen(dto.getKitchen());
-        return convenienceRoom;
+    private RoomConvenience createNewConvenienceRoom(ConvenienceRoomDTO dto) {
+        RoomConvenience roomConvenience = new RoomConvenience();
+        roomConvenience.setWardrobe(dto.getWardrobe());
+        roomConvenience.setAirConditioning(dto.getAirConditioning());
+        roomConvenience.setTv(dto.getTv());
+        roomConvenience.setWifi(dto.getWifi());
+        roomConvenience.setToiletries(dto.getToiletries());
+        roomConvenience.setKitchen(dto.getKitchen());
+        return roomConvenience;
     }
 
 
-    private TypeRoom createNewType(TypeRoomDTO typeRoomDTO) {
-        TypeRoom typeRoom = new TypeRoom();
-        typeRoom.setLuxury(typeRoomDTO.getLuxury());
-        typeRoom.setSingleBedroom(typeRoomDTO.getSingleBedroom());
-        typeRoom.setTwinBedroom(typeRoomDTO.getTwinBedroom());
-        typeRoom.setDoubleBedroom(typeRoomDTO.getDoubleBedroom());
-        return typeRoom;
+    private Type createNewType(TypeRoomDTO typeRoomDTO) {
+        Type type = new Type();
+        type.setLuxury(typeRoomDTO.getLuxury());
+        type.setSingleBedroom(typeRoomDTO.getSingleBedroom());
+        type.setTwinBedroom(typeRoomDTO.getTwinBedroom());
+        type.setDoubleBedroom(typeRoomDTO.getDoubleBedroom());
+        return type;
     }
 }
