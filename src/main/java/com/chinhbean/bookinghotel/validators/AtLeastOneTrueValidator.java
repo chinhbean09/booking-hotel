@@ -2,10 +2,14 @@ package com.chinhbean.bookinghotel.validators;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 
 public class AtLeastOneTrueValidator implements ConstraintValidator<AtLeastOneTrue, Object> {
+
+    private static final Logger logger = LoggerFactory.getLogger(AtLeastOneTrueValidator.class);
 
     @Override
     public boolean isValid(Object obj, ConstraintValidatorContext context) {
@@ -21,11 +25,10 @@ public class AtLeastOneTrueValidator implements ConstraintValidator<AtLeastOneTr
                         return true;
                     }
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    logger.error("Illegal access to field: {}", field.getName(), e);
                 }
             }
         }
-
         return false;
     }
 }
