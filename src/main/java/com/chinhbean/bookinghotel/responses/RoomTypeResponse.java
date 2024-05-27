@@ -29,13 +29,15 @@ public class RoomTypeResponse {
     private Boolean singleBedroom;
 
     @JsonProperty("twin_bedroom")
-    private Boolean twinBedroom;public static RoomTypeResponse fromType(TypeRoom typeRoom) {
+    private Boolean twinBedroom;
+
+    public static RoomTypeResponse fromType(Type type) {
         return RoomTypeResponse.builder()
-                .id(typeRoom.getId())
-                .doubleBedroom(typeRoom.getDoubleBedroom())
-                .luxury(typeRoom.getLuxury())
-                .singleBedroom(typeRoom.getSingleBedroom())
-                .twinBedroom(typeRoom.getTwinBedroom())
+                .id(type.getId())
+                .doubleBedroom(type.getDoubleBedroom())
+                .luxury(type.getLuxury())
+                .singleBedroom(type.getSingleBedroom())
+                .twinBedroom(type.getTwinBedroom())
                 .build();
     }
 }
