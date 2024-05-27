@@ -1,6 +1,6 @@
 package com.chinhbean.bookinghotel.responses;
 
-import com.chinhbean.bookinghotel.entities.ConvenienceRoom;
+import com.chinhbean.bookinghotel.entities.RoomConvenience;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,15 +34,15 @@ public class ConvenienceRoomResponse {
     @JsonProperty("kitchen")
     private Boolean kitchen;
 
-    public static ConvenienceRoomResponse fromConvenienceRoom(ConvenienceRoom convenienceRoom) {
+    public static ConvenienceRoomResponse fromConvenienceRoom(RoomConvenience roomConvenience) {
         return ConvenienceRoomResponse.builder()
-                .id(convenienceRoom.getId())
-                .wardrobe(convenienceRoom.getWardrobe())
-                .airConditioning(convenienceRoom.getAirConditioning())
-                .tv(convenienceRoom.getTv())
-                .wifi(convenienceRoom.getWifi())
-                .toiletries(convenienceRoom.getToiletries())
-                .kitchen(convenienceRoom.getKitchen())
+                .id(roomConvenience.getId())
+                .wardrobe(roomConvenience.getWardrobe())
+                .airConditioning(roomConvenience.getAirConditioning())
+                .tv(roomConvenience.getTv())
+                .wifi(roomConvenience.getWifi())
+                .toiletries(roomConvenience.getToiletries())
+                .kitchen(roomConvenience.getKitchen())
                 .build();
     }
 }

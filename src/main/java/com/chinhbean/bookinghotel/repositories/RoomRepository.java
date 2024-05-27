@@ -13,11 +13,11 @@ import java.util.Optional;
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
 
-    @Query("SELECT DISTINCT r FROM Room r LEFT JOIN FETCH r.typeRooms LEFT JOIN FETCH r.convenienceRooms WHERE r.hotel.id = :hotelId")
+    @Query("SELECT DISTINCT r FROM Room r LEFT JOIN FETCH r.types LEFT JOIN FETCH r.roomConveniences WHERE r.hotel.id = :hotelId")
     List<Room> findByHotelIdWithTypesAndConvenience(Long hotelId);
 
 
-    @EntityGraph(attributePaths = {"typeRooms", "convenienceRooms"})
+    @EntityGraph(attributePaths = {"types", "roomConveniences"})
     Optional<Room> findWithTypesAndConvenienceById(Long id);
 
     Boolean existsByRoomNumber(String roomNumber);

@@ -46,7 +46,7 @@ public class Room {
             joinColumns = @JoinColumn(name = "room_id"),
             inverseJoinColumns = @JoinColumn(name = "type_id")
     )
-    private Set<TypeRoom> typeRooms;
+    private Set<Type> types;
 
     @NotEmpty(message = "At least one convenience must be selected")
     @ManyToMany
@@ -55,6 +55,6 @@ public class Room {
             joinColumns = @JoinColumn(name = "room_id"),
             inverseJoinColumns = @JoinColumn(name = "convenience_id")
     )
-    private Set<ConvenienceRoom> convenienceRooms;
+    private Set<RoomConvenience> roomConveniences;
 
 }

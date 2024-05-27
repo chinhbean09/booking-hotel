@@ -12,7 +12,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TypeRoom {
+public class Type {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +30,6 @@ public class TypeRoom {
     @Column(name = "double_bedroom", nullable = false)
     private Boolean doubleBedroom;
 
-    @ManyToMany(mappedBy = "typeRooms")
+    @ManyToMany(mappedBy = "types")
     private Set<Room> rooms;
 }

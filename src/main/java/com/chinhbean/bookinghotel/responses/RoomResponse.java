@@ -1,6 +1,5 @@
 package com.chinhbean.bookinghotel.responses;
 
-import com.chinhbean.bookinghotel.entities.ConvenienceRoom;
 import com.chinhbean.bookinghotel.entities.Room;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -30,17 +29,17 @@ public class RoomResponse {
     private BigDecimal price;
 
     @JsonProperty("types")
-    private List<TypeRoomResponse> types;
+    private List<RoomTypeResponse> types;
 
     @JsonProperty("conveniences")
     private List<ConvenienceRoomResponse> conveniences;
 
     public static RoomResponse fromRoom(Room room) {
-        List<TypeRoomResponse> typeRoomRespons = room.getTypeRooms().stream()
-                .map(TypeRoomResponse::fromType)
+        List<RoomTypeResponse> typeRoomRespons = room.getTypes().stream()
+                .map(RoomTypeResponse::fromType)
                 .collect(Collectors.toList());
 
-        List<ConvenienceRoomResponse> convenienceRoomRespons = room.getConvenienceRooms().stream()
+        List<ConvenienceRoomResponse> convenienceRoomRespons = room.getRoomConveniences().stream()
                 .map(ConvenienceRoomResponse::fromConvenienceRoom)
                 .collect(Collectors.toList());
 
