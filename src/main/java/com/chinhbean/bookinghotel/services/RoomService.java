@@ -1,11 +1,13 @@
 package com.chinhbean.bookinghotel.services;
 
+import com.chinhbean.bookinghotel.dtos.ConvenienceRoomDTO;
 import com.chinhbean.bookinghotel.dtos.RoomDTO;
-import com.chinhbean.bookinghotel.dtos.TypeDTO;
+import com.chinhbean.bookinghotel.dtos.TypeRoomDTO;
 import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.repositories.ConvenienceRoomRepository;
 import com.chinhbean.bookinghotel.repositories.RoomRepository;
-import com.chinhbean.bookinghotel.repositories.TypeRepository;
+import com.chinhbean.bookinghotel.repositories.TypeRoomRepository;
 import com.chinhbean.bookinghotel.responses.RoomResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
@@ -20,25 +22,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoomService implements IRoomService {
     private final RoomRepository roomRepository;
-    private final TypeRepository typeRepository;
-    /**
-     * Creates a new room based on the provided RoomDTO.
-     *
-     * @param roomDTO The RoomDTO containing the room details.
-     * @return The RoomResponse representing the created room.
-     */
+    private final TypeRoomRepository typeRoomRepository;
+    private final ConvenienceRoomRepository convenienceRoomRepository;
+
     @Override
-    public RoomResponse createRoom(RoomDTO roomDTO) {
+    public RoomResponse createRoom(RoomDTO roomDTO) throws DataNotFoundException {
+
+        // Check if the room number already exists
+        if (roomRepository.existsByRoomNumber(roomDTO.getRoomNumber())) {
+            throw new DataNotFoundException(MessageKeys.ROOM_NUMBER_ALREADY_EXISTS);
+        }
+
         // Convert the roomDTO to an entity
         Room room = convertToEntity(roomDTO);
 
         // Filter out the new types from the room's types
-        Set<Type> newTypes = room.getTypes().stream()
+        Set<TypeRoom> newTypeRooms = room.getTypeRooms().stream()
                 .filter(type -> type.getId() == null)
                 .collect(Collectors.toSet());
 
         // Save the new types to the repository
-        typeRepository.saveAll(newTypes);
+        typeRoomRepository.saveAll(newTypeRooms);
 
         // Save the room to the repository and get the saved room
         Room savedRoom = roomRepository.save(room);
@@ -47,19 +51,11 @@ public class RoomService implements IRoomService {
         return RoomResponse.fromRoom(savedRoom);
     }
 
-    /**
-     * This method retrieves all rooms associated with a specific hotel.
-     * It throws a DataNotFoundException if no rooms are found for the provided hotelId.
-     *
-     * @param hotelId The ID of the hotel for which to retrieve the rooms.
-     * @return A list of RoomResponse objects representing the rooms.
-     * @throws DataNotFoundException If no rooms are found for the provided hotelId.
-     */
     @Override
     public List<RoomResponse> getAllRoomsByHotelId(Long hotelId) throws DataNotFoundException {
 
         // Retrieve all rooms associated with the provided hotelId, including their types.
-        List<Room> rooms = roomRepository.findByHotelIdWithTypes(hotelId);
+        List<Room> rooms = roomRepository.findByHotelIdWithTypesAndConvenience(hotelId);
 
         // If no rooms are found, throw a DataNotFoundException.
         if (rooms.isEmpty()) {
@@ -72,14 +68,6 @@ public class RoomService implements IRoomService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * This method updates a room in the database based on the provided RoomDTO.
-     *
-     * @param roomId The ID of the room to update.
-     * @param roomDTO The RoomDTO containing the updated room details.
-     * @return The RoomResponse representing the updated room.
-     * @throws DataNotFoundException If the room with the provided ID does not exist.
-     */
     @Override
     public RoomResponse updateRoom(Long roomId, RoomDTO roomDTO) throws DataNotFoundException {
         // Find the room with the provided ID, or throw an exception if it does not exist
@@ -102,20 +90,31 @@ public class RoomService implements IRoomService {
 
         // If new types are provided in the RoomDTO, save them and associate them with the room
         if (roomDTO.getTypes() != null) {
-            Set<Type> updatedTypes = new HashSet<>();
-            for (TypeDTO typeDTO : roomDTO.getTypes()) {
+            Set<TypeRoom> updatedTypeRooms = new HashSet<>();
+            for (TypeRoomDTO typeRoomDTO : roomDTO.getTypes()) {
                 // Convert TypeDTO to Type entity
-                Type type = convertToTypeEntity(typeDTO);
+                TypeRoom typeRoom = convertToTypeEntity(typeRoomDTO);
 
                 // Save the new type to the database
-                type = typeRepository.save(type);
+                typeRoom = typeRoomRepository.save(typeRoom);
 
                 // Add the saved type to the updated types set
-                updatedTypes.add(type);
+                updatedTypeRooms.add(typeRoom);
             }
             // Update the room's types
-            room.setTypes(updatedTypes);
+            room.setTypeRooms(updatedTypeRooms);
         }
+
+        if (roomDTO.getConveniences() != null) {
+            Set<ConvenienceRoom> updatedConvenienceRooms = new HashSet<>();
+            for (ConvenienceRoomDTO convenienceRoomDTO : roomDTO.getConveniences()) {
+                ConvenienceRoom convenienceRoom = convertToConvenienceRoomEntity(convenienceRoomDTO);
+                convenienceRoom = convenienceRoomRepository.save(convenienceRoom);
+                updatedConvenienceRooms.add(convenienceRoom);
+            }
+            room.setConvenienceRooms(updatedConvenienceRooms);
+        }
+
 
         // Save the updated room to the database and get the saved room
         Room savedRoom = roomRepository.save(room);
@@ -126,37 +125,28 @@ public class RoomService implements IRoomService {
 
 
 
-    /**
-     * Deletes a room from the database, including its associated types.
-     *
-     * @param roomId The ID of the room to delete.
-     * @throws DataNotFoundException If the room with the provided ID does not exist.
-     */
     @Override
     @Transactional
     public void deleteRoom(Long roomId) throws DataNotFoundException {
         // Find the room with the provided ID, or throw an exception if it does not exist
-        Room room = roomRepository.findWithTypesById(roomId)
+        Room room = roomRepository.findWithTypesAndConvenienceById(roomId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_DOES_NOT_EXISTS));
 
         // Delete each associated type of the room
-        room.getTypes().forEach(typeRepository::delete);
+        //room.getTypeRooms().forEach(typeRepository::delete);
 
         // Delete the room
         roomRepository.delete(room);
     }
 
 
-    /**
-     * Converts a RoomDTO object to a Room entity.
-     *
-     * @param roomDTO The RoomDTO object to convert.
-     * @return The converted Room entity.
-     */
     private Room convertToEntity(RoomDTO roomDTO) {
         // Convert the list of TypeDTO objects to a set of Type objects
-        Set<Type> types = roomDTO.getTypes().stream()
+        Set<TypeRoom> typeRooms = roomDTO.getTypes().stream()
                 .map(this::convertToTypeEntity)
+                .collect(Collectors.toSet());
+        Set<ConvenienceRoom> convenienceRooms = roomDTO.getConveniences().stream()
+                .map(this::convertToConvenienceRoomEntity)
                 .collect(Collectors.toSet());
 
         // Create a new Hotel object with the provided hotelId
@@ -169,41 +159,53 @@ public class RoomService implements IRoomService {
                 .roomNumber(roomDTO.getRoomNumber())
                 .price(roomDTO.getPrice())
                 .availability(roomDTO.getAvailability())
-                .types(types)
+                .typeRooms(typeRooms)
+                .convenienceRooms(convenienceRooms)
                 .build();
     }
 
 
-    /**
-     * Converts a TypeDTO object to a Type entity.
-     * If the Type entity does not exist in the repository, creates a new Type entity.
-     *
-     * @param typeDTO The TypeDTO object to convert.
-     * @return The converted Type entity.
-     */
-    private Type convertToTypeEntity(TypeDTO typeDTO) {
+
+    private TypeRoom convertToTypeEntity(TypeRoomDTO typeRoomDTO) {
         // Find the Type entity in the repository based on the provided TypeDTO properties
-        return typeRepository.findByLuxuryAndSingleBedroomAndTwinBedroomAndDoubleBedroom(
-                        typeDTO.getLuxury(),
-                        typeDTO.getSingleBedroom(),
-                        typeDTO.getTwinBedroom(),
-                        typeDTO.getDoubleBedroom())
+        return typeRoomRepository.findByLuxuryAndSingleBedroomAndTwinBedroomAndDoubleBedroom(
+                        typeRoomDTO.getLuxury(),
+                        typeRoomDTO.getSingleBedroom(),
+                        typeRoomDTO.getTwinBedroom(),
+                        typeRoomDTO.getDoubleBedroom())
                 // If the Type entity does not exist, create a new Type entity using the provided TypeDTO properties
-                .orElseGet(() -> createNewType(typeDTO));
+                .orElseGet(() -> createNewType(typeRoomDTO));
     }
 
-    /**
-     * Creates a new Type entity based on the provided TypeDTO.
-     *
-     * @param typeDTO The TypeDTO object used to create the new Type entity.
-     * @return The newly created Type entity.
-     */
-    private Type createNewType(TypeDTO typeDTO) {
-        Type type = new Type();
-        type.setLuxury(typeDTO.getLuxury());
-        type.setSingleBedroom(typeDTO.getSingleBedroom());
-        type.setTwinBedroom(typeDTO.getTwinBedroom());
-        type.setDoubleBedroom(typeDTO.getDoubleBedroom());
-        return type;
+    private ConvenienceRoom convertToConvenienceRoomEntity(ConvenienceRoomDTO dto) {
+        return convenienceRoomRepository.findByWardrobeAndAirConditioningAndTvAndWifiAndToiletriesAndKitchen(
+                        dto.getWardrobe(),
+                        dto.getAirConditioning(),
+                        dto.getTv(),
+                        dto.getWifi(),
+                        dto.getToiletries(),
+                        dto.getKitchen())
+                .orElseGet(() -> createNewConvenienceRoom(dto));
+    }
+
+    private ConvenienceRoom createNewConvenienceRoom(ConvenienceRoomDTO dto) {
+        ConvenienceRoom convenienceRoom = new ConvenienceRoom();
+        convenienceRoom.setWardrobe(dto.getWardrobe());
+        convenienceRoom.setAirConditioning(dto.getAirConditioning());
+        convenienceRoom.setTv(dto.getTv());
+        convenienceRoom.setWifi(dto.getWifi());
+        convenienceRoom.setToiletries(dto.getToiletries());
+        convenienceRoom.setKitchen(dto.getKitchen());
+        return convenienceRoom;
+    }
+
+
+    private TypeRoom createNewType(TypeRoomDTO typeRoomDTO) {
+        TypeRoom typeRoom = new TypeRoom();
+        typeRoom.setLuxury(typeRoomDTO.getLuxury());
+        typeRoom.setSingleBedroom(typeRoomDTO.getSingleBedroom());
+        typeRoom.setTwinBedroom(typeRoomDTO.getTwinBedroom());
+        typeRoom.setDoubleBedroom(typeRoomDTO.getDoubleBedroom());
+        return typeRoom;
     }
 }

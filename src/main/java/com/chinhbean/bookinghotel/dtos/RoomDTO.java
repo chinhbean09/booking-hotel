@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Set;
 
 @Data
@@ -30,5 +29,8 @@ public class RoomDTO {
     private String availability;
 
     @JsonProperty("types")
-    private Set<TypeDTO> types;
+    private Set<TypeRoomDTO> types;
+
+    @JsonProperty("conveniences")
+    private Set<ConvenienceRoomDTO> conveniences;
 }

@@ -8,14 +8,14 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
-public class TypeDTO {
+public class TypeRoomDTO {
 
     @JsonProperty("luxury")
-    private Boolean luxury;
+    private Boolean luxury = false;
     @JsonProperty("single_bedroom")
-    private Boolean singleBedroom;
+    private Boolean singleBedroom = false;
     @JsonProperty("twin_bedroom")
-    private Boolean twinBedroom;
+    private Boolean twinBedroom = false;
     @JsonProperty("double_bedroom")
-    private Boolean doubleBedroom;
+    private Boolean doubleBedroom = false;
 }

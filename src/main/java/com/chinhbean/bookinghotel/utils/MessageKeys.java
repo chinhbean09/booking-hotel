@@ -48,4 +48,6 @@ public class MessageKeys {
     public static final String UPDATE_ROOM_SUCCESSFULLY = "room.update_room.update_successfully";
 
     public static final String DELETE_ROOM_SUCCESSFULLY = "room.delete_room.delete_successfully";
+
+    public static  final String ROOM_NUMBER_ALREADY_EXISTS = "room.create_room.room_number_already_exists";
 }
