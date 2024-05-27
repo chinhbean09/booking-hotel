@@ -1,10 +1,6 @@
 package com.chinhbean.bookinghotel.responses;
 
-<<<<<<< HEAD
-import com.chinhbean.bookinghotel.entities.TypeRoom;
-=======
 import com.chinhbean.bookinghotel.entities.Type;
->>>>>>> origin/feature/crud_room
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
