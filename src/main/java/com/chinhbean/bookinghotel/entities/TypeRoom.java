@@ -6,13 +6,13 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "type")
+@Table(name = "type_room")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Type {
+public class TypeRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +30,6 @@ public class Type {
     @Column(name = "double_bedroom", nullable = false)
     private Boolean doubleBedroom;
 
-    @ManyToMany(mappedBy = "types")
+    @ManyToMany(mappedBy = "typeRooms")
     private Set<Room> rooms;
 }

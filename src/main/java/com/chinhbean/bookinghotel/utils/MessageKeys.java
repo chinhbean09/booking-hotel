@@ -40,4 +40,18 @@ public class MessageKeys {
     public static final String RETRIEVED_ALL_HOTELS_SUCCESSFULLY = "hotel.list_hotel.retrieved_all_hotels_successfully";
     public static final String RETRIEVED_HOTEL_DETAILS_SUCCESSFULLY = "hotel.hotel_detail.retrieved_hotel_details_successfully";
     public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS = "hotel.update_status.user_does_not_have_permission_to_change_status";
+    public static final String ROOM_DOES_NOT_EXISTS = "room.list_room.room_not_exist";
+
+    public static final String TOKEN_GENERATION_FAILEDSTRING = "user.login.jwt.token_can_not_create";
+    public static final String INSERT_ROOM_SUCCESSFULLY = "room.create_room.create_successfully";
+
+    public static final String NO_ROOMS_FOUND = "room.list_room.no_rooms_found";
+
+    public static final String RETRIEVED_ROOMS_SUCCESSFULLY = "room.list_room.retrieved_rooms_successfully";
+
+    public static final String UPDATE_ROOM_SUCCESSFULLY = "room.update_room.update_successfully";
+
+    public static final String DELETE_ROOM_SUCCESSFULLY = "room.delete_room.delete_successfully";
+
+    public static  final String ROOM_NUMBER_ALREADY_EXISTS = "room.create_room.room_number_already_exists";
 }

@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "room_type")
+@Table(name = "room_conveniences")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RoomType {
+public class RoomConvenience {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +21,6 @@ public class RoomType {
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "type_id", nullable = false)
-    private TypeRoom typeRoom;
+    @JoinColumn(name = "convenience_id", nullable = false)
+    private ConvenienceRoom convenienceRoom;
 }
