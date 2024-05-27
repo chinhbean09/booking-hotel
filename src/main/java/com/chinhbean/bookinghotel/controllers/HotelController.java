@@ -8,6 +8,7 @@ import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,7 @@ public class HotelController {
         }
     }
 
+    @SecurityRequirement(name = "bearer-key")
     @PostMapping("/create")
     public ResponseEntity<ResponseObject> createHotel(@RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
@@ -73,6 +75,7 @@ public class HotelController {
         }
     }
 
+    @SecurityRequirement(name = "bearer-key")
     @PutMapping("updateHotel/{hotelId}")
     public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
@@ -96,7 +99,7 @@ public class HotelController {
         }
     }
 
-
+    @SecurityRequirement(name = "bearer-key")
     @PutMapping("/updateStatus/{hotelId}")
     public ResponseEntity<ResponseObject> updateHotelStatus(@PathVariable Long hotelId, @RequestBody HotelStatus newStatus, @RequestHeader("Authorization") String authHeader) {
         try {
