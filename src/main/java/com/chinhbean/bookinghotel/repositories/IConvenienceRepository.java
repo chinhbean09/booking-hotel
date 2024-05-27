@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ConvenienceRepository extends JpaRepository<Convenience, Long> {
+public interface IConvenienceRepository extends JpaRepository<Convenience, Long> {
     Optional<Convenience> findByFreeBreakfastAndPickUpDropOffAndRestaurantAndBarAndPoolAndFreeInternetAndReception24hAndLaundry(
             Boolean freeBreakfast,
             Boolean pickUpDropOff,

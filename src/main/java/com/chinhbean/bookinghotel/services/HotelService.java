@@ -9,8 +9,8 @@ import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
-import com.chinhbean.bookinghotel.repositories.ConvenienceRepository;
-import com.chinhbean.bookinghotel.repositories.HotelRepository;
+import com.chinhbean.bookinghotel.repositories.IConvenienceRepository;
+import com.chinhbean.bookinghotel.repositories.IHotelRepository;
 import com.chinhbean.bookinghotel.repositories.UserRepository;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
@@ -28,10 +28,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HotelService implements IHotelService {
 
-    private final HotelRepository hotelRepository;
+    private final IHotelRepository IHotelRepository;
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
-    private final ConvenienceRepository convenienceRepository;
+    private final IConvenienceRepository IConvenienceRepository;
     private final UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
@@ -40,7 +40,7 @@ public class HotelService implements IHotelService {
     @Override
     public List<HotelResponse> getAllHotels() throws DataNotFoundException {
         logger.info("Fetching all hotels from the database.");
-        List<Hotel> hotels = hotelRepository.findAll();
+        List<Hotel> hotels = IHotelRepository.findAll();
         if (hotels.isEmpty()) {
             logger.warn("No hotels found in the database.");
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS));
@@ -55,7 +55,7 @@ public class HotelService implements IHotelService {
     @Override
     public HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException {
         logger.info("Fetching details for hotel with ID: {}", hotelId);
-        Hotel hotel = hotelRepository.findById(hotelId)
+        Hotel hotel = IHotelRepository.findById(hotelId)
                 .orElseThrow(() -> {
                     logger.error("Hotel with ID: {} does not exist.", hotelId);
                     return new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS));
@@ -75,8 +75,8 @@ public class HotelService implements IHotelService {
         Set<Convenience> newConveniences = hotel.getConveniences().stream()
                 .filter(convenience -> convenience.getId() == null)
                 .collect(Collectors.toSet());
-        convenienceRepository.saveAll(newConveniences);
-        Hotel savedHotel = hotelRepository.save(hotel);
+        IConvenienceRepository.saveAll(newConveniences);
+        Hotel savedHotel = IHotelRepository.save(hotel);
         logger.info("Hotel created successfully with ID: {}", savedHotel.getId());
         return HotelResponse.fromHotel(savedHotel);
     }
@@ -104,7 +104,7 @@ public class HotelService implements IHotelService {
     }
 
     private Convenience convertToConvenienceEntity(ConvenienceDTO dto) {
-        return convenienceRepository.findByFreeBreakfastAndPickUpDropOffAndRestaurantAndBarAndPoolAndFreeInternetAndReception24hAndLaundry(
+        return IConvenienceRepository.findByFreeBreakfastAndPickUpDropOffAndRestaurantAndBarAndPoolAndFreeInternetAndReception24hAndLaundry(
                         dto.getFreeBreakfast(),
                         dto.getPickUpDropOff(),
                         dto.getRestaurant(),
@@ -134,7 +134,7 @@ public class HotelService implements IHotelService {
     public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException {
         User user = getUserDetailsFromToken(token);
 
-        Hotel hotel = hotelRepository.findById(hotelId)
+        Hotel hotel = IHotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
 
         hotel.setPartner(user);
@@ -165,7 +165,7 @@ public class HotelService implements IHotelService {
             hotel.setConveniences(conveniences);
         }
 
-        Hotel updatedHotel = hotelRepository.save(hotel);
+        Hotel updatedHotel = IHotelRepository.save(hotel);
         return HotelResponse.fromHotel(updatedHotel);
     }
 
@@ -182,7 +182,7 @@ public class HotelService implements IHotelService {
     @Transactional
     @Override
     public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
-        Hotel hotel = hotelRepository.findById(hotelId)
+        Hotel hotel = IHotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
         String userRole = jwtTokenUtils.extractUserRole(token);
         if (Role.ADMIN.equals(userRole)) {
@@ -196,6 +196,6 @@ public class HotelService implements IHotelService {
         } else {
             throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
         }
-        hotelRepository.save(hotel);
+        IHotelRepository.save(hotel);
     }
 }
