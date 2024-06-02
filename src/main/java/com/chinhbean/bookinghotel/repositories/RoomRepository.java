@@ -16,9 +16,12 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("SELECT DISTINCT r FROM Room r LEFT JOIN FETCH r.types LEFT JOIN FETCH r.roomConveniences WHERE r.hotel.id = :hotelId")
     List<Room> findByHotelIdWithTypesAndConvenience(Long hotelId);
 
+    @Query("SELECT DISTINCT r FROM Room r LEFT JOIN FETCH r.types LEFT JOIN FETCH r.roomConveniences LEFT JOIN FETCH r.roomImages WHERE r.hotel.id = :hotelId")
+    List<Room> findByHotelIdWithTypesAndConvenienceAndRoomImages(Long hotelId);
+
 
     @EntityGraph(attributePaths = {"types", "roomConveniences"})
     Optional<Room> findWithTypesAndConvenienceById(Long id);
 
-    Boolean existsByRoomNumber(String roomNumber);
+    Boolean existsByRoomNumberAndHotelId(String roomNumber, Long hotelId);
 }

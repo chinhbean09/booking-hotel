@@ -5,21 +5,29 @@ import com.chinhbean.bookinghotel.dtos.RoomDTO;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
+import com.chinhbean.bookinghotel.responses.RoomImageResponse;
 import com.chinhbean.bookinghotel.responses.RoomResponse;
+import com.chinhbean.bookinghotel.services.IRoomImageService;
 import com.chinhbean.bookinghotel.services.IRoomService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/v1/rooms")
 @RequiredArgsConstructor
 public class RoomController {
     private final IRoomService roomService;
+    private final IRoomImageService roomImageService;
 
 
     /**
@@ -50,6 +58,24 @@ public class RoomController {
                     .message(e.getMessage())
                     .build());
         }
+    }
+    @PostMapping("/upload-images/{roomId}")
+    @Transactional
+    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("roomId") Long roomId) throws IOException {
+        try{
+            List<RoomResponse> roomImageResponses = roomImageService.uploadImages(images, roomId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
+                    .status(HttpStatus.CREATED)
+                    .data(roomImageResponses)
+                    .message(MessageKeys.UPLOAD_IMAGES_SUCCESSFULLY)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build());
+        }
+
     }
 
     /**
@@ -133,6 +159,33 @@ public class RoomController {
             // If the room does not exist, return a ResponseEntity with a status of NOT_FOUND and the exception message.
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @PutMapping("/update-images/{roomId}")
+    public ResponseEntity<ResponseObject> updateRoomImages(@PathVariable Long roomId, @RequestParam Map<String, MultipartFile> images) {
+        try {
+            // Convert image indices to integer keys
+            Map<Integer, MultipartFile> imageMap = images.entrySet().stream()
+                    .collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue));
+
+            // Call the updateRoomImages method from the roomImageService to update the room images.
+            List<RoomResponse> updatedRoom = roomImageService.updateRoomImages(imageMap, roomId);
+
+            // Return a ResponseEntity with a status of OK, the updated room data, and a success message.
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(updatedRoom)
+                    .message(MessageKeys.UPDATED_IMAGES_SUCCESSFULLY)
+                    .build());
+        } catch (DataNotFoundException | IOException e) {
+            // If no room is found for the provided roomId or an error occurs during the update process,
+            // return a ResponseEntity with a status of NOT_FOUND or INTERNAL_SERVER_ERROR and the error message.
+            HttpStatus status = e instanceof DataNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+            return ResponseEntity.status(status).body(ResponseObject.builder()
+                    .status(status)
                     .message(e.getMessage())
                     .build());
         }

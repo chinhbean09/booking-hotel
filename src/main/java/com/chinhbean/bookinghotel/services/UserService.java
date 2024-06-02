@@ -165,7 +165,7 @@ public class UserService implements IUserService {
                 // Get the original filename of the avatar
                 String originalFileName = avatar.getOriginalFilename();
                 // Construct the object key with the folder path and original filename
-                String objectKey = "user_avatar/" + originalFileName;
+                String objectKey = "user_avatar/" + id + "/" + originalFileName;
                 // Get the size of the file
                 long contentLength = avatar.getSize();
                 // Create object metadata and set the content length and content type

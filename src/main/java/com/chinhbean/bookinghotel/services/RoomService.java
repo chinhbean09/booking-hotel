@@ -6,6 +6,7 @@ import com.chinhbean.bookinghotel.dtos.TypeRoomDTO;
 import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.repositories.ConvenienceRoomRepository;
+import com.chinhbean.bookinghotel.repositories.RoomImageRepository;
 import com.chinhbean.bookinghotel.repositories.RoomRepository;
 import com.chinhbean.bookinghotel.repositories.TypeRepository;
 import com.chinhbean.bookinghotel.responses.RoomResponse;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,14 +24,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoomService implements IRoomService {
     private final RoomRepository roomRepository;
+    private final RoomImageRepository roomImageRepository;
     private final TypeRepository typeRepository;
     private final ConvenienceRoomRepository convenienceRoomRepository;
 
     @Override
+    @Transactional
     public RoomResponse createRoom(RoomDTO roomDTO) throws DataNotFoundException {
 
         // Check if the room number already exists
-        if (roomRepository.existsByRoomNumber(roomDTO.getRoomNumber())) {
+        if (roomRepository.existsByRoomNumberAndHotelId(roomDTO.getRoomNumber(), roomDTO.getHotelId())) {
             throw new DataNotFoundException(MessageKeys.ROOM_NUMBER_ALREADY_EXISTS);
         }
 
@@ -43,6 +47,10 @@ public class RoomService implements IRoomService {
 
         // Save the new types to the repository
         typeRepository.saveAll(newTypes);
+        Set<RoomConvenience> newConveniences = room.getRoomConveniences().stream()
+                .filter(convenience -> convenience.getId() == null)
+                .collect(Collectors.toSet());
+        convenienceRoomRepository.saveAll(newConveniences);
 
         // Save the room to the repository and get the saved room
         Room savedRoom = roomRepository.save(room);
@@ -55,7 +63,7 @@ public class RoomService implements IRoomService {
     public List<RoomResponse> getAllRoomsByHotelId(Long hotelId) throws DataNotFoundException {
 
         // Retrieve all rooms associated with the provided hotelId, including their types.
-        List<Room> rooms = roomRepository.findByHotelIdWithTypesAndConvenience(hotelId);
+        List<Room> rooms = roomRepository.findByHotelIdWithTypesAndConvenienceAndRoomImages(hotelId);
 
         // If no rooms are found, throw a DataNotFoundException.
         if (rooms.isEmpty()) {
@@ -69,6 +77,7 @@ public class RoomService implements IRoomService {
     }
 
     @Override
+    @Transactional
     public RoomResponse updateRoom(Long roomId, RoomDTO roomDTO) throws DataNotFoundException {
         // Find the room with the provided ID, or throw an exception if it does not exist
         Room room = roomRepository.findById(roomId)
@@ -132,8 +141,8 @@ public class RoomService implements IRoomService {
         Room room = roomRepository.findWithTypesAndConvenienceById(roomId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_DOES_NOT_EXISTS));
 
-        // Delete each associated type of the room
-        //room.getTypeRooms().forEach(typeRepository::delete);
+        // Delete associated room images
+        room.getRoomImages().forEach(roomImageRepository::delete);
 
         // Delete the room
         roomRepository.delete(room);
@@ -148,6 +157,8 @@ public class RoomService implements IRoomService {
         Set<RoomConvenience> roomConveniences = roomDTO.getConveniences().stream()
                 .map(this::convertToConvenienceRoomEntity)
                 .collect(Collectors.toSet());
+        // Initialize roomImages as an empty set to avoid null value
+        Set<RoomImage> roomImages = Collections.emptySet();
 
         // Create a new Hotel object with the provided hotelId
         Hotel hotel = new Hotel();
@@ -159,6 +170,7 @@ public class RoomService implements IRoomService {
                 .roomNumber(roomDTO.getRoomNumber())
                 .price(roomDTO.getPrice())
                 .availability(roomDTO.getAvailability())
+                .roomImages(roomImages)
                 .types(types)
                 .roomConveniences(roomConveniences)
                 .build();
@@ -196,6 +208,9 @@ public class RoomService implements IRoomService {
         roomConvenience.setWifi(dto.getWifi());
         roomConvenience.setToiletries(dto.getToiletries());
         roomConvenience.setKitchen(dto.getKitchen());
+        // Set the association with Room
+        Set<Room> rooms = new HashSet<>();
+        roomConvenience.setRooms(rooms);
         return roomConvenience;
     }
 

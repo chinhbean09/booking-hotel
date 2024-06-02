@@ -54,4 +54,6 @@ public class MessageKeys {
     public static final String DELETE_ROOM_SUCCESSFULLY = "room.delete_room.delete_successfully";
 
     public static  final String ROOM_NUMBER_ALREADY_EXISTS = "room.create_room.room_number_already_exists";
+    public static final String UPLOAD_IMAGES_SUCCESSFULLY = "upload_images.upload_images_successfully";
+    public static final String UPDATED_IMAGES_SUCCESSFULLY = "upload_images.updated_images_successfully";
 }

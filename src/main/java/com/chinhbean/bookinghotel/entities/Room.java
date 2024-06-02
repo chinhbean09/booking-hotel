@@ -38,6 +38,9 @@ public class Room {
     @NotBlank(message = "Availability status is required")
     @Column(nullable = false)
     private String availability;
+    @OneToMany
+    @JoinColumn(name = "room_id")
+    private Set<RoomImage> roomImages;
 
     @NotEmpty(message = "At least one room type must be selected")
     @ManyToMany
