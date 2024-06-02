@@ -1,8 +1,5 @@
 # Booking Hotel System
 
-1. My demo database #13052024:
-   ![image](https://github.com/chinhbean09/booking-hotel/assets/112397448/182bcb67-f08e-4a6e-a719-ab930ab941ce)
-
 Project Rules:
 
 Commit Title:
@@ -26,5 +23,9 @@ Address and resolve feedback received during the code review.
 Accept Changes from Other Branches:
 Avoid committing directly to the main/master branch.
 Use feature branches to develop new features and make changes.
+
+
+2. My demo database #13052024:
+   ![image](https://github.com/chinhbean09/booking-hotel/assets/112397448/182bcb67-f08e-4a6e-a719-ab930ab941ce)
 
 
