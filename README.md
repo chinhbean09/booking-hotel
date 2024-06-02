@@ -1,4 +1,4 @@
-# Booking Hotel System
+![image](https://github.com/chinhbean09/booking-hotel/assets/112397448/8205c8bf-c90d-48b6-a48e-850a3b11ba77)# Booking Hotel System
 
 Project Rules:
 
@@ -26,6 +26,6 @@ Use feature branches to develop new features and make changes.
 
 
 2. My demo database #13052024:
-   ![image](https://github.com/chinhbean09/booking-hotel/assets/112397448/182bcb67-f08e-4a6e-a719-ab930ab941ce)
+![image](https://github.com/chinhbean09/booking-hotel/assets/112397448/bac66ad8-563f-4853-a8eb-6fc9eb90e683)
 
 
