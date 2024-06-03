@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.Set;
 
 @Entity
@@ -29,6 +30,6 @@ public class Type {
     @Column(name = "double_bedroom", nullable = false)
     private Boolean doubleBedroom;
 
-    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<RoomType> roomTypes;
+    @ManyToMany(mappedBy = "types")
+    private Set<Room> rooms;
 }

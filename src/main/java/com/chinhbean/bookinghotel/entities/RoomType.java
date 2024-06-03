@@ -17,26 +17,10 @@ public class RoomType {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "type_id", nullable = false)
-    private Type type;
-
-    @Column(name = "room_price", nullable = false)
-    private Double roomPrice;
-
-    @Column(name = "number_of_room", nullable = false)
-    private Integer numberOfRoom;
-
-    @Column(name = "description", nullable = false)
-    private String description;
-
-    @Column(name = "image_urls", nullable = false)
-    private String imageUrls;
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "hotel_id", nullable = false)
-    private Hotel hotel;
-
-    @Column(name = "status")
-    private int status;
-
+    @JoinColumn(name = "type_id", nullable = false)
+    private Type type;
 }
