@@ -56,4 +56,9 @@ public class MessageKeys {
     public static  final String ROOM_NUMBER_ALREADY_EXISTS = "room.create_room.room_number_already_exists";
     public static final String UPLOAD_IMAGES_SUCCESSFULLY = "upload_images.upload_images_successfully";
     public static final String UPDATED_IMAGES_SUCCESSFULLY = "upload_images.updated_images_successfully";
+    public static final String INSERT_ROOM_TYPE_SUCCESSFULLY = "room_type.create_room_type.create_successfully";
+    public static final String ROOM_TYPE_NOT_FOUND = "room_type.list_room_type.room_type_not_found";
+    public static final String RETRIEVED_ROOM_TYPES_SUCCESSFULLY = "room_type.list_room_type.retrieved_room_types_successfully";
+    public static final String UPDATE_ROOM_TYPE_SUCCESSFULLY = "room_type.update_room_type.update_successfully";
+    public static final String DELETE_ROOM_TYPE_SUCCESSFULLY = "room_type.delete_room_type.delete_successfully";
 }

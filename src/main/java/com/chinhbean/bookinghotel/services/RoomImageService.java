@@ -4,14 +4,14 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
-import com.chinhbean.bookinghotel.entities.Room;
 import com.chinhbean.bookinghotel.entities.RoomImage;
+import com.chinhbean.bookinghotel.entities.RoomType;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.repositories.RoomImageRepository;
-import com.chinhbean.bookinghotel.repositories.RoomRepository;
+import com.chinhbean.bookinghotel.repositories.RoomTypeRepository;
 import com.chinhbean.bookinghotel.responses.RoomImageResponse;
-import com.chinhbean.bookinghotel.responses.RoomResponse;
+import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,38 +30,38 @@ import java.util.stream.Collectors;
 public class RoomImageService implements IRoomImageService {
     private final RoomImageRepository roomImageRepository;
     private final AmazonS3 amazonS3;
-    private final RoomRepository roomRepository;
+    private final RoomTypeRepository roomTypeRepository;
     private final LocalizationUtils localizationUtils;
 
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
     @Override
-    public List<RoomResponse> uploadImages(List<MultipartFile> images, Long roomId) throws IOException {
+    public List<RoomTypeResponse> uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException {
         List<String> imageUrls = new ArrayList<>();
         List<RoomImageResponse> roomImageResponses = new ArrayList<>();
-        if (roomRepository.findById(roomId).isEmpty()) {
+        if (roomTypeRepository.findById(roomTypeId).isEmpty()) {
             throw new IllegalArgumentException(MessageKeys.ROOM_DOES_NOT_EXISTS);
         }
 
         for (MultipartFile image : images) {
             validateImageFile(image);
             String imageName = image.getOriginalFilename();
-            String key = "room_images/" + roomId + "/" + imageName;
+            String key = "room_images/" + roomTypeId + "/" + imageName;
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(image.getContentType());
             metadata.setContentLength(image.getSize());
             amazonS3.putObject(bucketName, key, image.getInputStream(), metadata);
             String imageUrl = amazonS3.getUrl(bucketName, key).toString();
             // Check if the image URL already exists
-            if (roomImageRepository.findByImageUrlsAndRoomId(imageUrl, roomId).isPresent()) {
-                throw new DuplicateKeyException("Image URL already exists for this room "+ roomId);
+            if (roomImageRepository.findByImageUrlsAndRoomTypeId(imageUrl, roomTypeId).isPresent()) {
+                throw new DuplicateKeyException("Image URL already exists for this room "+ roomTypeId);
             }
             imageUrls.add(imageUrl);
 
             // Create RoomImage entity and save it to the database
             RoomImage roomImage = RoomImage.builder()
                     .imageUrls(imageUrl)
-                    .room(Room.builder().id(roomId).build()) // Assuming you have a constructor or builder method to set the id of the Room entity
+                    .roomType(RoomType.builder().id(roomTypeId).build()) // Assuming you have a constructor or builder method to set the id of the Room entity
                     .build();
             roomImage = roomImageRepository.save(roomImage);
 
@@ -69,21 +69,23 @@ public class RoomImageService implements IRoomImageService {
             RoomImageResponse roomImageResponse = RoomImageResponse.builder()
                     .id(roomImage.getId()) // Set the id
                     .imageUrl(roomImage.getImageUrls())
-                    .roomId(roomId) // Set the room_id
+                    .roomTypeId(roomTypeId) // Set the room_id
                     .build();
             roomImageResponses.add(roomImageResponse);
         }
 
         // Create the response object in the desired format
-        Room room = roomRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException(MessageKeys.ROOM_DOES_NOT_EXISTS));
-        return Collections.singletonList(RoomResponse.fromRoom(room));
+        RoomType roomType = roomTypeRepository.findById(roomTypeId).orElseThrow(() -> new IllegalArgumentException(MessageKeys.ROOM_TYPE_NOT_FOUND));
+        RoomTypeResponse roomTypeResponse = RoomTypeResponse.fromType(roomType);
+        roomTypeResponse.setImageUrls(roomImageResponses); // Set the image URLs
+        return Collections.singletonList(roomTypeResponse);
     }
 
     @Override
     @Transactional
-    public List<RoomResponse> updateRoomImages(Map<Integer, MultipartFile> imageMap, Long roomId) throws DataNotFoundException, IOException {
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_DOES_NOT_EXISTS));
+    public List<RoomTypeResponse> updateRoomImages(Map<Integer, MultipartFile> imageMap, Long roomTypeId) throws DataNotFoundException, IOException {
+        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+                .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
 
         List<RoomImageResponse> roomImageResponses = new ArrayList<>();
 
@@ -101,7 +103,7 @@ public class RoomImageService implements IRoomImageService {
                 RoomImage existingImage = optionalRoomImage.get();
 
                 // Upload new image to S3
-                String imageUrl = uploadImageToS3(imageFile, roomId);
+                String imageUrl = uploadImageToS3(imageFile, roomTypeId);
 
                 // Delete previous image from S3
                 deleteImageFromS3(existingImage.getImageUrls());
@@ -114,17 +116,15 @@ public class RoomImageService implements IRoomImageService {
                 RoomImageResponse roomImageResponse = RoomImageResponse.builder()
                         .id(existingImage.getId())
                         .imageUrl(existingImage.getImageUrls())
-                        .roomId(roomId)
+                        .roomTypeId(roomTypeId)
                         .build();
                 roomImageResponses.add(roomImageResponse);
             }
         }
 
-        // Convert updated room entity to response
-        RoomResponse updatedRoom = RoomResponse.fromRoom(room);
-
-        // Return the updated room response
-        return Collections.singletonList(updatedRoom);
+        RoomTypeResponse roomTypeResponse = RoomTypeResponse.fromType(roomType);
+        roomTypeResponse.setImageUrls(roomImageResponses); // Set the image URLs
+        return Collections.singletonList(roomTypeResponse);
     }
 
 

@@ -1,6 +1,5 @@
 package com.chinhbean.bookinghotel.responses;
 
-import com.chinhbean.bookinghotel.entities.Room;
 import com.chinhbean.bookinghotel.entities.RoomImage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -18,8 +17,8 @@ public class RoomImageResponse {
     private Long id;
     @JsonProperty("image_url")
     private String imageUrl;
-    @JsonProperty("room_id")
-    private Long roomId;
+    @JsonProperty("room_type_id")
+    private Long roomTypeId;
 
 
     public static RoomImageResponse fromRoomImage(RoomImage roomImage) {
@@ -27,7 +26,7 @@ public class RoomImageResponse {
         return RoomImageResponse.builder()
                 .id(roomImage.getId())
                 .imageUrl(roomImage.getImageUrls())
-                .roomId(roomImage.getRoom().getId())
+                .roomTypeId(roomImage.getRoomType().getId())
                 .build();
     }
 }

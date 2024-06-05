@@ -1,7 +1,10 @@
 package com.chinhbean.bookinghotel.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "room_type")
@@ -29,14 +32,24 @@ public class RoomType {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "image_urls", nullable = false)
-    private String imageUrls;
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "room_type_id")
+    private Set<RoomImage> roomImages;
+
+//    @NotEmpty(message = "At least one convenience must be selected")
+//    @ManyToMany
+//    @JoinTable(
+//            name = "room_conveniences",
+//            joinColumns = @JoinColumn(name = "room_type_id"),
+//            inverseJoinColumns = @JoinColumn(name = "convenience_id")
+//    )
+//    private Set<RoomConvenience> roomConveniences;
 
     @ManyToOne
     @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
     @Column(name = "status")
-    private int status;
+    private Integer status;
 
 }

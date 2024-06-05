@@ -42,8 +42,8 @@ public class HotelResponse {
     @JsonProperty("conveniences")
     private List<ConvenienceResponse> conveniences;
 
-    @JsonProperty("rooms")
-    private List<RoomResponse> rooms;
+//    @JsonProperty("rooms")
+//    private List<RoomResponse> rooms;
 
     public static HotelResponse fromHotel(Hotel hotel) {
         HotelLocationResponse locationResponse = HotelLocationResponse.fromHotelLocation(hotel.getLocation());
@@ -53,9 +53,9 @@ public class HotelResponse {
                 .map(ConvenienceResponse::fromConvenience)
                 .toList();
 
-        List<RoomResponse> roomResponses = (hotel.getRooms() != null) ? hotel.getRooms().stream()
-                .map(RoomResponse::fromRoom)
-                .toList() : List.of();
+//        List<RoomResponse> roomResponses = (hotel.getRooms() != null) ? hotel.getRooms().stream()
+//                .map(RoomResponse::fromRoom)
+//                .toList() : List.of();
 
         return HotelResponse.builder()
                 .id(hotel.getId())
@@ -67,7 +67,7 @@ public class HotelResponse {
                 .status(hotel.getStatus())
                 .location(locationResponse)
                 .conveniences(convenienceResponses)
-                .rooms(roomResponses)
+//                .rooms(roomResponses)
                 .build();
     }
 }
