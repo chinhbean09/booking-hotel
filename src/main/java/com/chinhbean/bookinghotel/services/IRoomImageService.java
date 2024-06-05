@@ -1,7 +1,7 @@
 package com.chinhbean.bookinghotel.services;
 
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.responses.RoomResponse;
+import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.util.Map;
 
 public interface IRoomImageService {
 
-    List<RoomResponse> uploadImages(List<MultipartFile> images, Long roomId) throws IOException;
+    List<RoomTypeResponse> uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException;
 
-    List<RoomResponse> updateRoomImages(Map<Integer, MultipartFile> imageMap, Long roomId) throws DataNotFoundException, IOException;
+    List<RoomTypeResponse> updateRoomImages(Map<Integer, MultipartFile> imageMap, Long roomTypeId) throws DataNotFoundException, IOException;
 }

@@ -19,7 +19,7 @@ public class RoomImage {
     private String imageUrls;
 
     @ManyToOne
-    @JoinColumn(name = "room_id")
-    private Room room;
+    @JoinColumn(name = "room_type_id")
+    private RoomType roomType;
 
 }

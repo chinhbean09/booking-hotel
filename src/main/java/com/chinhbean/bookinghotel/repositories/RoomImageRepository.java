@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface RoomImageRepository extends JpaRepository<RoomImage, Long> {
-    Optional<RoomImage> findByImageUrlsAndRoomId(String imageUrl, Long roomId);
+    Optional<RoomImage> findByImageUrlsAndRoomTypeId(String imageUrl, Long roomTypeId);
 }

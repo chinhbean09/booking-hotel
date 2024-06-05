@@ -48,9 +48,9 @@ public class Booking {
     @Column(name = "payment_method", nullable = false)
     private String paymentMethod;
 
-    @ManyToOne
-    @JoinColumn(name = "room_id", nullable = false)
-    private Room room;
+//    @ManyToOne
+//    @JoinColumn(name = "room_id", nullable = false)
+//    private Room room;
 
     @Column(name = "expiration_date")
     private LocalDateTime expirationDate;

@@ -9,5 +9,15 @@ import java.util.Optional;
 @Repository
 public interface TypeRepository extends JpaRepository<Type, Long> {
 
-    Optional<Type> findByLuxuryAndSingleBedroomAndTwinBedroomAndDoubleBedroom(Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom);
+    Optional<Type> findByLuxuryAndSingleBedroomAndTwinBedroomAndDoubleBedroomAndWardrobeAndAirConditioningAndTvAndWifiAndToiletriesAndKitchen
+            (Boolean luxury,
+             Boolean singleBedroom,
+             Boolean twinBedroom,
+             Boolean doubleBedroom,
+             Boolean wardrobe,
+             Boolean airConditioning,
+             Boolean tv,
+             Boolean wifi,
+             Boolean toiletries,
+             Boolean kitchen);
 }
