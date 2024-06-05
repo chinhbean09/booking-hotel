@@ -36,14 +36,14 @@ public class RoomType {
     @JoinColumn(name = "room_type_id")
     private Set<RoomImage> roomImages;
 
-//    @NotEmpty(message = "At least one convenience must be selected")
-//    @ManyToMany
-//    @JoinTable(
-//            name = "room_conveniences",
-//            joinColumns = @JoinColumn(name = "room_type_id"),
-//            inverseJoinColumns = @JoinColumn(name = "convenience_id")
-//    )
-//    private Set<RoomConvenience> roomConveniences;
+    @NotEmpty(message = "At least one convenience must be selected")
+    @ManyToMany
+    @JoinTable(
+            name = "room_conveniences",
+            joinColumns = @JoinColumn(name = "room_type_id"),
+            inverseJoinColumns = @JoinColumn(name = "convenience_id")
+    )
+    private Set<RoomConvenience> roomConveniences;
 
     @ManyToOne
     @JoinColumn(name = "hotel_id", nullable = false)

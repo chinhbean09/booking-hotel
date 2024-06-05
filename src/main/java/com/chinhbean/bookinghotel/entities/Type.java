@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "type_room")
+@Table(name = "type")
 @Getter
 @Setter
 @AllArgsConstructor
