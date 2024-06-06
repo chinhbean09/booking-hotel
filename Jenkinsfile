@@ -12,7 +12,7 @@ pipeline {
         buildScript = "mvn clean install -DskipTests=true"
         copyScript = "cp target/${processName} ${folderDeploy}"
         // killScript = "kill -9 \$(ps -ef| grep ${processName}| grep -v grep| awk '{print \$2}')"
-        runScript = 'jenkins bash -c "cd ${folderDeploy} && java -jar ${processName}"'
+        runScript = 'jenkins bash -c "cd ${folderDeploy} && java -jar ${processName} &"'
     }
 
     stages {
