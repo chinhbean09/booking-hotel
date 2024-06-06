@@ -27,6 +27,15 @@ pipeline {
                 sh(script: """ ${buildScript} """, label: "maven is building")
             }
         }
+        stage('deploy') {
+            steps {
+                sh(script: """ ${copyScript} """, label: "copy the .jar file into deploy folder")
+                sh(script: """ ${permsScript} """, label: "set permission folder")
+                sh(script: """ ${killScript} """, label: "terminate the running process")
+                sh(script: """ ${runScript} """, label: "run the project")
+            }
+        }
+
     }
 }
 
