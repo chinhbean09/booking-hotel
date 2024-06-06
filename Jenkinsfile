@@ -12,7 +12,7 @@ pipeline {
         buildScript = "mvn clean install -DskipTests=true"
         copyScript = "cp target/${processName} ${folderDeploy}"
         // killScript = "kill -9 \$(ps -ef| grep ${processName}| grep -v grep| awk '{print \$2}')"
-        runScript = 'jenkins -c "cd ${folderDeploy}; java -jar ${processName} > nohup.out 2>&1 &"'
+        runScript = 'jenkins bash -c "cd ${folderDeploy} && java -jar ${processName} > nohup.out 2>&1 &"'
     }
 
     stages {
@@ -23,7 +23,9 @@ pipeline {
         }
         stage('build') {
             steps {
-                sh(script: """ ${buildScript} """, label: "maven is building")
+                sh(script: """ echo "Running build script..." """)
+                sh(script: """ ${buildScript} """, label: "Building")
+                sh(script: """ echo "Build script completed." """)
             }
         }
         stage('deploy') {
