@@ -30,7 +30,7 @@ pipeline {
             steps {
                 sh(script: """ whoami;pwd; """, label: "second time so give me your info")
                 sh(script: """ ${copyScript} """, label: "copy the .jar file into deploy folder")
-                sh(script: """ ${killScript} """, label: "terminate the running process")
+                // sh(script: """ ${killScript} """, label: "terminate the running process")
                 sh(script: """ ${runScript} """, label: "run the project")
             }
         }
