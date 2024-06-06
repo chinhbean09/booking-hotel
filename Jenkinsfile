@@ -11,9 +11,9 @@ pipeline {
         folderDeploy = "/datas/${appUser}"
         buildScript = "mvn clean install -DskipTests=true"
         copyScript = "cp target/${processName} ${folderDeploy}"
-        permsScript = "chown -R jenkins. ${folderDeploy}"
+        permsScript = "chown -R ${appUser}. ${folderDeploy}"
         // killScript = "kill -9 \$(ps -ef| grep ${processName}| grep -v grep| awk '{print \$2}')"
-        runScript = 'su jenkins -c "cd ${folderDeploy}; java -jar ${processName} > nohup.out 2>&1 &"'
+        runScript = '${appUser} -c "cd ${folderDeploy}; java -jar ${processName} > nohup.out 2>&1 &"'
     }
 
     stages {
