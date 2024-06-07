@@ -1,11 +1,16 @@
 package com.chinhbean.bookinghotel.responses;
 
+import com.chinhbean.bookinghotel.entities.RoomType;
 import com.chinhbean.bookinghotel.entities.Type;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
@@ -15,25 +20,46 @@ public class RoomTypeResponse {
     @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("double_bedroom")
-    private Boolean doubleBedroom;
+    @JsonProperty("hotel_id")
+    private Long hotelId;
 
-    @JsonProperty("luxury")
-    private Boolean luxury;
+    @JsonProperty("description")
+    private String description;
 
-    @JsonProperty("single_bedroom")
-    private Boolean singleBedroom;
+    @JsonProperty("number_of_rooms")
+    private Integer numberOfRooms;
 
-    @JsonProperty("twin_bedroom")
-    private Boolean twinBedroom;
+    @JsonProperty("room_price")
+    private Double roomPrice;
 
-    public static RoomTypeResponse fromType(Type type) {
+    @JsonProperty("status")
+    private Integer status;
+
+    @JsonProperty("image_urls")
+    private List<RoomImageResponse> imageUrls;
+
+    @JsonProperty("types")
+    private List<TypeResponse> types;
+
+    public static RoomTypeResponse fromType(RoomType roomType) {
+
+        List<TypeResponse> types = Arrays.stream(new Type[]{roomType.getType()})
+                .map(TypeResponse::fromType)
+                .toList();
+
+        List<RoomImageResponse> imageUrls = roomType.getRoomImages().stream()
+                .map(RoomImageResponse::fromRoomImage)
+                .toList();
+
         return RoomTypeResponse.builder()
-                .id(type.getId())
-                .doubleBedroom(type.getDoubleBedroom())
-                .luxury(type.getLuxury())
-                .singleBedroom(type.getSingleBedroom())
-                .twinBedroom(type.getTwinBedroom())
+                .id(roomType.getId())
+                .hotelId(roomType.getHotel().getId())
+                .description(roomType.getDescription())
+                .numberOfRooms(roomType.getNumberOfRoom())
+                .roomPrice(roomType.getRoomPrice())
+                .status(roomType.getStatus())
+                .imageUrls(imageUrls)
+                .types(types)
                 .build();
     }
 }

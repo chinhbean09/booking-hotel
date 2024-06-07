@@ -22,8 +22,8 @@ public class BookingDetails {
     private Booking booking;
 
     @ManyToOne
-    @JoinColumn(name = "room_id", nullable = false)
-    private Room roomId;
+    @JoinColumn(name = "room_type_id", nullable = false)
+    private RoomType roomType;
 
     @Column(nullable = false)
     private BigDecimal price;

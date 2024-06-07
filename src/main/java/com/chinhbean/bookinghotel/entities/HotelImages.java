@@ -4,22 +4,21 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "room_images")
+@Table(name = "hotel_images")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RoomImage {
-
+public class HotelImages {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "image_urls", nullable = false)
-    private String imageUrls;
+
+    @Column(name = "url", nullable = false)
+    private String url;
 
     @ManyToOne
-    @JoinColumn(name = "room_type_id")
-    private RoomType roomType;
-
+    @JoinColumn(name = "hotel_id", nullable = false)
+    private Hotel hotel;
 }

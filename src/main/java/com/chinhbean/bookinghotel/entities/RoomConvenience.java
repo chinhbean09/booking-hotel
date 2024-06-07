@@ -6,7 +6,7 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "convenience_room")
+@Table(name = "room_convenience")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -31,6 +31,6 @@ public class RoomConvenience {
     private Boolean kitchen;
 
     @ManyToMany(mappedBy = "roomConveniences")
-    private Set<Room> rooms;
+    private Set<RoomType> roomTypes;
 
 }

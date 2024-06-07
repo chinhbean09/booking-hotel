@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "type_room")
+@Table(name = "type")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -29,6 +29,19 @@ public class Type {
     @Column(name = "double_bedroom", nullable = false)
     private Boolean doubleBedroom;
 
-    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Column(name = "wardrobe", nullable = false)
+    private Boolean wardrobe;
+    @Column(name = "air_conditioning", nullable = false)
+    private Boolean airConditioning;
+    @Column(name = "tv", nullable = false)
+    private Boolean tv;
+    @Column(name = "wifi", nullable = false)
+    private Boolean wifi;
+    @Column(name = "toiletries", nullable = false)
+    private Boolean toiletries;
+    @Column(name = "kitchen", nullable = false)
+    private Boolean kitchen;
+
+    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL)
     private Set<RoomType> roomTypes;
 }
