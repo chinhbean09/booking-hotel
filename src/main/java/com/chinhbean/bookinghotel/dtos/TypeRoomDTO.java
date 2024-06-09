@@ -13,23 +13,11 @@ public class TypeRoomDTO {
     @JsonProperty("id")
     private Long id;
     @JsonProperty("luxury")
-    private Boolean luxury;
+    private Boolean luxury = false;
     @JsonProperty("single_bedroom")
-    private Boolean singleBedroom;
+    private Boolean singleBedroom = false;
     @JsonProperty("twin_bedroom")
-    private Boolean twinBedroom;
+    private Boolean twinBedroom = false;
     @JsonProperty("double_bedroom")
-    private Boolean doubleBedroom;
-    @JsonProperty("wardrobe")
-    private Boolean wardrobe;
-    @JsonProperty("air_conditioning")
-    private Boolean airConditioning;
-    @JsonProperty("tv")
-    private Boolean tv;
-    @JsonProperty("wifi")
-    private Boolean wifi;
-    @JsonProperty("toiletries")
-    private Boolean toiletries;
-    @JsonProperty("kitchen")
-    private Boolean kitchen;
+    private Boolean doubleBedroom = false;
 }

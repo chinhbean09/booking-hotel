@@ -42,6 +42,9 @@ public class HotelResponse {
     @JsonProperty("conveniences")
     private List<ConvenienceResponse> conveniences;
 
+    @JsonProperty("image_urls")
+    private List<HotelImageResponse> imageUrls;
+
 //    @JsonProperty("rooms")
 //    private List<RoomResponse> rooms;
 
@@ -56,6 +59,9 @@ public class HotelResponse {
 //        List<RoomResponse> roomResponses = (hotel.getRooms() != null) ? hotel.getRooms().stream()
 //                .map(RoomResponse::fromRoom)
 //                .toList() : List.of();
+        List<HotelImageResponse> hotelImageResponses = hotel.getHotelImages().stream()
+                .map(HotelImageResponse::fromHotelImage)
+                .toList();
 
         return HotelResponse.builder()
                 .id(hotel.getId())
@@ -67,7 +73,7 @@ public class HotelResponse {
                 .status(hotel.getStatus())
                 .location(locationResponse)
                 .conveniences(convenienceResponses)
-//                .rooms(roomResponses)
+                .imageUrls(hotelImageResponses)
                 .build();
     }
 }

@@ -3,10 +3,12 @@ package com.chinhbean.bookinghotel.controllers;
 
 import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
+import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
+import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.responses.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.responses.UserResponse;
@@ -123,5 +125,22 @@ public class UserController {
                 .build());
     }
 
-
+    @PutMapping("/update-password/{id}")
+    public ResponseEntity<ResponseObject> changePassword(
+            @PathVariable long id,
+            @Valid @RequestBody ChangePasswordDTO changePasswordDTO
+    ) throws DataNotFoundException {
+        try {
+            User user = userService.changePassword(id, changePasswordDTO);
+            return ResponseEntity.ok(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .message(MessageKeys.CHANGE_PASSWORD_SUCCESSFULLY)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
 }
