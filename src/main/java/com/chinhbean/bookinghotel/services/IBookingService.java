@@ -21,7 +21,7 @@ public interface IBookingService {
     BookingResponse getBookingDetail(Long bookingId) throws DataNotFoundException;
 
     @Transactional
-    Booking updateBooking(Long bookingId, BookingDTO bookingDTO) throws DataNotFoundException;
+    Booking updateBooking(Long bookingId, BookingDTO bookingDTO, String token) throws DataNotFoundException;
 
     @Transactional
     void updateStatus(Long bookingId, BookingStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException, PermissionDenyException;

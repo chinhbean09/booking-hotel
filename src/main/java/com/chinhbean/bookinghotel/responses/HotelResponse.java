@@ -51,8 +51,8 @@ public class HotelResponse {
     @JsonProperty("feedbacks")
     private List<FeedbackResponse> feedbacks;
 
-    @JsonProperty("hotelImages")
-    private List<HotelImageResponse> hotelImages;
+    @JsonProperty("image_urls")
+    private List<HotelImageResponse> imageUrls;
 
     public static HotelResponse fromHotel(Hotel hotel) {
         HotelLocationResponse locationResponse = (hotel.getLocation() != null) ? HotelLocationResponse.fromHotelLocation(hotel.getLocation()) : null;
@@ -94,7 +94,7 @@ public class HotelResponse {
                 .conveniences(convenienceResponses)
                 .roomTypes(roomTypeResponses)
                 .feedbacks(feedbackResponses)
-                .hotelImages(hotelImageResponses)
+                .imageUrls(hotelImageResponses)
                 .build();
     }
 }

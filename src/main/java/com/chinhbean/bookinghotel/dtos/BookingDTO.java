@@ -15,6 +15,7 @@ public class BookingDTO {
     private Date checkInDate;
     private Date checkOutDate;
     private Long couponId;
+    private Long userId;
     private String note;
     private String paymentMethod;
     private LocalDateTime expirationDate;

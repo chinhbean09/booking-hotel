@@ -20,5 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Transactional
     void updateAvatar(long id, MultipartFile avatar);
 
+    Optional<User> findByEmail(String email);
 
 }

@@ -55,9 +55,10 @@ public class Hotel {
     private List<RoomType> roomTypes;
 
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Feedback> feedbacks = new LinkedHashSet<>();
+    private Set<Feedback> feedbacks;
 
-    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<HotelImages> hotelImages = new LinkedHashSet<>();
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_id")
+    private Set<HotelImages> hotelImages;
 
 }

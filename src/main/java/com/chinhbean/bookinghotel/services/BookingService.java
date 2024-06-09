@@ -95,10 +95,13 @@ public class BookingService implements IBookingService {
 
     @Transactional
     @Override
-    public Booking updateBooking(Long bookingId, BookingDTO bookingDTO) throws DataNotFoundException {
+    public Booking updateBooking(Long bookingId, BookingDTO bookingDTO, String token) throws DataNotFoundException {
+        Long userId = jwtTokenUtils.extractUserId(token);
+        User user = userRepository.findById(userId).orElse(null);
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.NO_BOOKINGS_FOUND));
 
+        booking.setUser(user);
         if (bookingDTO.getTotalPrice() != null) {
             booking.setTotalPrice(bookingDTO.getTotalPrice());
         }

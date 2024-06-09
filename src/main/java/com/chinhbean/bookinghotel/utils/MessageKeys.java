@@ -13,6 +13,16 @@ public class MessageKeys {
     public static final String LOGIN_FAILED = "user.login.login_failed";
     public static final String PASSWORD_NOT_MATCH = "user.register.password_not_match";
     public static final String USER_IS_LOCKED = "user.login.user_is_locked";
+    public static final String USER_NOT_FOUND = "user.get_user.user_not_found";
+    public static final String OLD_PASSWORD_WRONG = "user.change_password.old_password_wrong";
+    public static final String CONFIRM_PASSWORD_NOT_MATCH = "user.confirm_password_not_match";
+    public static final String CHANGE_PASSWORD_SUCCESSFULLY = "user.change_password.change_password_successfully";
+    public static final String CHANGE_PASSWORD_FAILED = "user.change_password.change_password_failed";
+    public static final String OTP_SENT_SUCCESSFULLY = "forgot_password.otp_sent_successfully";
+    public static final String OTP_IS_EXPIRED = "forgot_password.otp_is_expired";
+    public static final String OTP_NOT_FOUND = "forgot_password.otp_not_found";
+    public static final String OTP_VERIFIED_SUCCESSFULLY = "forgot_password.otp_verified_successfully";
+    public static final String OTP_INCORRECT = "forgot_password.opt_incorrect";
 
     public static final String DELETE_HOTEL_SUCCESSFULLY = "hotel.delete_hotel.delete_successfully";
     public static final String INSERT_HOTEL_FAILED = "hotel.create_hotel.create_failed";

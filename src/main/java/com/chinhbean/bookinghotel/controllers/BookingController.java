@@ -68,9 +68,10 @@ public class BookingController {
     }
 
     @PutMapping("/updateBooking/{bookingId}")
-    public ResponseEntity<ResponseObject> updateBooking(@PathVariable Long bookingId, @RequestBody BookingDTO bookingDTO) {
+    public ResponseEntity<ResponseObject> updateBooking(@PathVariable Long bookingId, @RequestBody BookingDTO bookingDTO, @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
         try {
-            Booking updatedBooking = bookingService.updateBooking(bookingId, bookingDTO);
+            Booking updatedBooking = bookingService.updateBooking(bookingId, bookingDTO, token);
             return ResponseEntity.ok().body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .data(updatedBooking)

@@ -16,12 +16,16 @@ public class HotelImageResponse {
     private Long id;
 
     @JsonProperty("url")
-    private String url;
+    private String imageUrl;
+
+    @JsonProperty
+    private Long hotelId;
+
 
     public static HotelImageResponse fromHotelImage(HotelImages hotelImages) {
         return HotelImageResponse.builder()
                 .id(hotelImages.getId())
-                .url(hotelImages.getUrl())
+                .imageUrl(hotelImages.getImageUrl())
                 .build();
     }
 }

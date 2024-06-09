@@ -15,4 +15,6 @@ public interface IRoomTypeService {
     RoomTypeResponse updateRoomType(Long roomTypeId, RoomTypeDTO roomTypeDTO) throws DataNotFoundException;
 
     void deleteRoomType(Long id) throws DataNotFoundException;
+
+    RoomTypeResponse getRoomTypeById(Long id) throws DataNotFoundException;
 }
