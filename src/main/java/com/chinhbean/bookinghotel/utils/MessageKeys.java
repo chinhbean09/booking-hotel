@@ -38,6 +38,8 @@ public class MessageKeys {
     public static final String WRONG_PHONE_PASSWORD = "user.login.wrong_phone_password";
     public static final String ROLE_DOES_NOT_EXISTS = "user.login.role_not_exist";
     public static final String USER_DOES_NOT_EXISTS = "user.get_user.user_not_exist";
+    public static final String ENABLE_USER_SUCCESSFULLY = "user.enable_user.enable_successfully";
+    public static final String BLOCK_USER_SUCCESSFULLY = "user.enable_user.disable_successfully";
 
     public static final String TOKEN_IS_EXPIRED = "user.jwt.token_is_expired";
     public static final String TOKEN_GENERATION_FAILED = "user.login.jwt.token_can_not_create";

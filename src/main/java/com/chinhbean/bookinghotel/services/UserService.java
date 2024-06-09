@@ -83,7 +83,7 @@ public class UserService implements IUserService {
                 .address(userDTO.getAddress())
                 .dateOfBirth(userDTO.getDateOfBirth())
                 .gender(userDTO.getGender())
-                .active(true)
+                .active(false)
                 .city(userDTO.getCity())
                 .facebookAccountId(userDTO.getFacebookAccountId())
                 .googleAccountId(userDTO.getGoogleAccountId())
@@ -96,9 +96,10 @@ public class UserService implements IUserService {
             String encodedPassword = passwordEncoder.encode(password);
             newUser.setPassword(encodedPassword);
         }
+        User user = userRepository.save(newUser);
         //send mail
         sendMailForRegisterSuccess(userDTO.getFullName(), userDTO.getEmail(), userDTO.getPassword());
-        return userRepository.save(newUser);
+        return user;
     }
 
 
@@ -192,6 +193,10 @@ public class UserService implements IUserService {
     @Override
     public void sendMailForRegisterSuccess(String name, String email, String password) {
         try {
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                return;
+            }
             DataMailDTO dataMail = new DataMailDTO();
             dataMail.setTo(email);
             dataMail.setSubject(MailTemplate.SEND_MAIL_SUBJECT.USER_REGISTER);
@@ -199,6 +204,7 @@ public class UserService implements IUserService {
             props.put("name", name);
             props.put("email", email);
             props.put("password", password);
+            props.put("link", "http://localhost:8080/api/v1/users/block-or-enable/" + user.getId() + "/1");
             dataMail.setProps(props);
 
             mailService.sendHtmlMail(dataMail, MailTemplate.SEND_MAIL_TEMPLATE.USER_REGISTER);
@@ -229,5 +235,14 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
+        existingUser.setActive(active);
+        userRepository.save(existingUser);
     }
 }
