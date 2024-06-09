@@ -1,5 +1,5 @@
 ![image](https://github.com/chinhbean09/booking-hotel/assets/112397448/8205c8bf-c90d-48b6-a48e-850a3b11ba77)# Booking
-Hotel System
+Hotel System:
 
 Project Rules:
 
