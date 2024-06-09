@@ -7,7 +7,6 @@ import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.entities.RoomImage;
 import com.chinhbean.bookinghotel.entities.RoomType;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.repositories.RoomImageRepository;
 import com.chinhbean.bookinghotel.repositories.RoomTypeRepository;
 import com.chinhbean.bookinghotel.responses.RoomImageResponse;
@@ -23,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -35,6 +33,7 @@ public class RoomImageService implements IRoomImageService {
 
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
+
     @Override
     public RoomTypeResponse uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException {
         List<String> imageUrls = new ArrayList<>();
@@ -54,7 +53,7 @@ public class RoomImageService implements IRoomImageService {
             String imageUrl = amazonS3.getUrl(bucketName, key).toString();
             // Check if the image URL already exists
             if (roomImageRepository.findByImageUrlsAndRoomTypeId(imageUrl, roomTypeId).isPresent()) {
-                throw new DuplicateKeyException("Image URL already exists for this room "+ roomTypeId);
+                throw new DuplicateKeyException("Image URL already exists for this room " + roomTypeId);
             }
             imageUrls.add(imageUrl);
 

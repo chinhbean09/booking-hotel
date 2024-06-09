@@ -4,6 +4,7 @@ import com.chinhbean.bookinghotel.enums.HotelStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +40,7 @@ public class Hotel {
     @Enumerated(EnumType.STRING)
     private HotelStatus status;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     @JoinTable(
             name = "hotel_conveniences",
             joinColumns = @JoinColumn(name = "hotel_id"),
@@ -50,10 +51,14 @@ public class Hotel {
     @OneToOne(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private HotelLocation location;
 
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<RoomType> roomTypes;
+
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Feedback> feedbacks;
+
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "hotel_id")
     private Set<HotelImages> hotelImages;
 
-//    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<Room> rooms;
 }

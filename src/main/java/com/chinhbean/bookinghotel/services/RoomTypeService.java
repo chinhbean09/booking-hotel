@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RoomTypeService implements IRoomTypeService{
+public class RoomTypeService implements IRoomTypeService {
 
     private final TypeRepository typeRepository;
     private final RoomTypeRepository roomTypeRepository;
@@ -74,13 +74,13 @@ public class RoomTypeService implements IRoomTypeService{
         RoomType roomType = roomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
 
-        if (roomTypeDTO.getDescription() != null){
+        if (roomTypeDTO.getDescription() != null) {
             roomType.setDescription(roomTypeDTO.getDescription());
         }
         if (roomTypeDTO.getNumberOfRooms() != null) {
             roomType.setNumberOfRoom(roomTypeDTO.getNumberOfRooms());
         }
-        if (roomTypeDTO.getRoomPrice() != null){
+        if (roomTypeDTO.getRoomPrice() != null) {
             roomType.setRoomPrice(roomTypeDTO.getRoomPrice());
         }
         if (roomTypeDTO.getStatus() != null) {

@@ -20,12 +20,8 @@ public class UserDTO {
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 
-    @JsonProperty("full_name")
-    private String fullName;
-
     @NotBlank(message = "email is required")
     private String email;
-
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
@@ -33,18 +29,9 @@ public class UserDTO {
     @JsonProperty("retype_password")
     private String retypePassword;
 
-    private String address;
-
-    @JsonProperty("date_of_birth")
-    private Date dateOfBirth;
-
     @NotNull(message = "Role ID is required")
     @JsonProperty("role_id")
     private Long roleId;
-
-    private String gender;
-
-    private String city;
 
     @JsonProperty("facebook_account_id")
     private int facebookAccountId;
@@ -52,6 +39,4 @@ public class UserDTO {
     @JsonProperty("google_account_id")
     private int googleAccountId;
 
-    @JsonProperty("avatar")
-    private String avatar;
 }

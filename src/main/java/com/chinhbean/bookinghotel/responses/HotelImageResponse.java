@@ -12,19 +12,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class HotelImageResponse {
-
     @JsonProperty("id")
     private Long id;
-    @JsonProperty("image_url")
+
+    @JsonProperty("url")
     private String imageUrl;
-    @JsonProperty("hotel_id")
+
+    @JsonProperty
     private Long hotelId;
 
-    public static HotelImageResponse fromHotelImage(HotelImages hotelImage) {
+
+    public static HotelImageResponse fromHotelImage(HotelImages hotelImages) {
         return HotelImageResponse.builder()
-                .id(hotelImage.getId())
-                .imageUrl(hotelImage.getImageUrl())
-                .hotelId(hotelImage.getHotel().getId())
+                .id(hotelImages.getId())
+                .imageUrl(hotelImages.getImageUrl())
                 .build();
     }
 }

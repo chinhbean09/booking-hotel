@@ -1,11 +1,14 @@
 package com.chinhbean.bookinghotel.entities;
 
+import com.chinhbean.bookinghotel.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "bookings")
@@ -34,7 +37,8 @@ public class Booking {
     private Date checkOutDate;
 
     @Column(nullable = false)
-    private Integer status;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status;
 
     @Column(name = "coupon_id")
     private Long couponId;
@@ -48,14 +52,15 @@ public class Booking {
     @Column(name = "payment_method", nullable = false)
     private String paymentMethod;
 
-//    @ManyToOne
-//    @JoinColumn(name = "room_id", nullable = false)
-//    private Room room;
-
     @Column(name = "expiration_date")
     private LocalDateTime expirationDate;
 
     @Column(name = "extend_expiration_date")
     private LocalDateTime extendExpirationDate;
 
+    @OneToMany(mappedBy = "booking")
+    private Set<BookingDetails> bookingDetails = new LinkedHashSet<>();
 }
+
+
+
