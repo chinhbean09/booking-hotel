@@ -13,7 +13,7 @@ pipeline {
         copyScript = "cp target/${processName} ${folderDeploy}"
         // killScript = "kill -9 \$(ps -ef| grep ${processName}| grep -v grep| awk '{print \$2}')"
         //runScript = 'jenkins bash -c "cd ${folderDeploy} && java -jar ${processName} &"'
-        runScript = 'jenkins bash -c "cd ${folderDeploy} && SPRING_CONFIG_LOCATION=/path/to/properties-prod.properties java -jar ${processName} > nohup.out 2>&1 &"'
+        runScript = 'jenkins bash -c "cd ${folderDeploy} && java -jar -Dspring.profiles.active=pro ${processName} > nohup.out 2>&1 &"'
 
     }
 
