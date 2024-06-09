@@ -2,7 +2,7 @@ pipeline {
     agent {
         label 'lab-server'
     }
-     environment {
+    environment {
         appUser = "bookinghotel"
         appName = "booking-hotel"
         appVersion = "0.0.1-SNAPSHOT"
@@ -36,8 +36,7 @@ pipeline {
                 sh(script: """ whoami;pwd; """, label: "second time so give me your info")
                 sh(script: """ ${copyScript} """, label: "copy the .jar file into deploy folder")
                 // sh(script: """ ${killScript} """, label: "terminate the running process")
-                sh(script: """ ${copyScript} """, label: "copy the .jar file into deploy folder")
-                sudo chmod 777 /datas/bookinghotel/booking-hotel-0.0.1-SNAPSHOT.jar
+                sh(script: """ ${updateChown} """, label: "copy the .jar file into deploy folder")
                 sh(script: """ ${runScript} """, label: "run the project")
             }
         }
