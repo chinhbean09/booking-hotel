@@ -2,7 +2,6 @@ package com.chinhbean.bookinghotel.responses;
 
 import com.chinhbean.bookinghotel.entities.Type;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

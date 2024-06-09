@@ -18,10 +18,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,17 +40,16 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public List<HotelResponse> getAllHotels() throws DataNotFoundException {
+    public Page<HotelResponse> getAllHotels() throws DataNotFoundException {
         logger.info("Fetching all hotels from the database.");
-        List<Hotel> hotels = IHotelRepository.findAll();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Hotel> hotels = IHotelRepository.findAll(pageable);
         if (hotels.isEmpty()) {
             logger.warn("No hotels found in the database.");
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS));
         }
         logger.info("Successfully retrieved all hotels.");
-        return hotels.stream()
-                .map(HotelResponse::fromHotel)
-                .collect(Collectors.toList());
+        return hotels.map(HotelResponse::fromHotel);
     }
 
     @Transactional
@@ -91,7 +91,6 @@ public class HotelService implements IHotelService {
         Set<Convenience> conveniences = hotelDTO.getConveniences().stream()
                 .map(this::convertToConvenienceEntity)
                 .collect(Collectors.toSet());
-        Set<HotelImages> hotelImages = Collections.emptySet();
         Hotel hotel = Hotel.builder()
                 .hotelName(hotelDTO.getHotelName())
                 .rating(hotelDTO.getRating())
@@ -100,7 +99,6 @@ public class HotelService implements IHotelService {
                 .status(HotelStatus.PENDING)
                 .conveniences(conveniences)
                 .location(location)
-                .hotelImages(hotelImages)
                 .build();
         location.setHotel(hotel);
         return hotel;
@@ -194,7 +192,7 @@ public class HotelService implements IHotelService {
             if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE) {
                 hotel.setStatus(newStatus);
             } else {
-                throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.PARTNER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
+                throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
             }
         } else {
             throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));

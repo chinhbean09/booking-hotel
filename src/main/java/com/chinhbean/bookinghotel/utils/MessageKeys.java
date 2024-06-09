@@ -45,7 +45,7 @@ public class MessageKeys {
     public static final String TOKEN_GENERATION_FAILED = "user.login.jwt.token_can_not_create";
 
     public static final String UPDATE_HOTEL_STATUS_SUCCESSFULLY = "hotel.update_status.update_hotel_status_successfully";
-    public static final String PARTNER_CANNOT_CHANGE_STATUS_TO = "hotel.update_status.partner_cannot_change_status_to";
+    public static final String USER_CANNOT_CHANGE_STATUS_TO = "update_status.user_cannot_change_status_to";
     public static final String INSERT_HOTEL_SUCCESSFULLY = "hotel.create_hotel.create_successfully";
     public static final String UPDATE_HOTEL_SUCCESSFULLY = "hotel.update_hotel.update_successfully";
     public static final String HOTEL_DOES_NOT_EXISTS = "hotel.list_hotel.hotel_not_exist";
@@ -65,7 +65,7 @@ public class MessageKeys {
 
     public static final String DELETE_ROOM_SUCCESSFULLY = "room.delete_room.delete_successfully";
 
-    public static  final String ROOM_NUMBER_ALREADY_EXISTS = "room.create_room.room_number_already_exists";
+    public static final String ROOM_NUMBER_ALREADY_EXISTS = "room.create_room.room_number_already_exists";
     public static final String UPLOAD_IMAGES_SUCCESSFULLY = "upload_images.upload_images_successfully";
     public static final String UPDATED_IMAGES_SUCCESSFULLY = "upload_images.updated_images_successfully";
     public static final String INSERT_ROOM_TYPE_SUCCESSFULLY = "room_type.create_room_type.create_successfully";
@@ -73,4 +73,11 @@ public class MessageKeys {
     public static final String RETRIEVED_ROOM_TYPES_SUCCESSFULLY = "room_type.list_room_type.retrieved_room_types_successfully";
     public static final String UPDATE_ROOM_TYPE_SUCCESSFULLY = "room_type.update_room_type.update_successfully";
     public static final String DELETE_ROOM_TYPE_SUCCESSFULLY = "room_type.delete_room_type.delete_successfully";
+    public static final String RETRIEVED_ALL_BOOKINGS_SUCCESSFULLY = "booking.list_booking.retrieved_all_bookings_successfully";
+    public static final String NO_BOOKINGS_FOUND = "booking.no_bookings_found";
+    public static final String NO_HOTELS_FOUND = "hotel.list_hotel.no_hotels_found";
+    public static final String UPDATE_BOOKING_STATUS_SUCCESSFULLY = "booking.update_status.update_booking_status_successfully";
+    public static final String UPDATE_BOOKING_SUCCESSFULLY = "booking.update_booking.update_successfully";
+    public static final String RETRIEVED_BOOKING_DETAIL_SUCCESSFULLY = "booking.booking_detail.retrieved_booking_detail_successfully";
+    public static final String CREATE_BOOKING_SUCCESSFULLY = "booking.create_booking.create_successfully";
 }
