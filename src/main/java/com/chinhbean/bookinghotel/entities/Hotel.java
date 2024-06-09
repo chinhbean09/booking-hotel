@@ -39,7 +39,7 @@ public class Hotel {
     @Enumerated(EnumType.STRING)
     private HotelStatus status;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "hotel_conveniences",
             joinColumns = @JoinColumn(name = "hotel_id"),
@@ -49,6 +49,10 @@ public class Hotel {
 
     @OneToOne(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private HotelLocation location;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_id")
+    private Set<HotelImages> hotelImages;
 
 //    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 //    private List<Room> rooms;

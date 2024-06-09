@@ -94,11 +94,28 @@ public class RoomTypeController {
                     .build());
         }
     }
+
+    @GetMapping("/get-by-id/{roomTypeId}")
+    public ResponseEntity<ResponseObject> getRoomTypeById(@PathVariable Long roomTypeId) {
+        try {
+            RoomTypeResponse roomType = roomTypeService.getRoomTypeById(roomTypeId);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(roomType)
+                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
     @PostMapping("/upload-images/{roomTypeId}")
     @Transactional
     public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("roomTypeId") Long roomTypeId) throws IOException {
         try{
-            List<RoomTypeResponse> roomImageResponses = roomImageService.uploadImages(images, roomTypeId);
+            RoomTypeResponse roomImageResponses = roomImageService.uploadImages(images, roomTypeId);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
                     .status(HttpStatus.CREATED)
                     .data(roomImageResponses)
@@ -121,7 +138,7 @@ public class RoomTypeController {
                     .collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue));
 
             // Call the updateRoomImages method from the roomImageService to update the room images.
-            List<RoomTypeResponse> updatedRoom = roomImageService.updateRoomImages(imageMap, roomTypeId);
+            RoomTypeResponse updatedRoom = roomImageService.updateRoomImages(imageMap, roomTypeId);
 
             // Return a ResponseEntity with a status of OK, the updated room data, and a success message.
             return ResponseEntity.ok().body(ResponseObject.builder()

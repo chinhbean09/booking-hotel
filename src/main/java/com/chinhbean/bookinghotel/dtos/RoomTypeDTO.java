@@ -29,4 +29,7 @@ public class RoomTypeDTO {
 
     @JsonProperty("types")
     private TypeRoomDTO types;
+
+    @JsonProperty("conveniences")
+    private Set<ConvenienceRoomDTO> conveniences;
 }

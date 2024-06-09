@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
+import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
 import com.chinhbean.bookinghotel.dtos.DataMailDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.entities.Role;
@@ -204,5 +205,29 @@ public class UserService implements IUserService {
         } catch (MessagingException exp) {
             exp.printStackTrace();
         }
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public User changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException {
+        User exsistingUser = userRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
+        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), exsistingUser.getPassword())) {
+            throw new DataNotFoundException(MessageKeys.OLD_PASSWORD_WRONG);
+        }
+        if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
+            throw new DataNotFoundException(MessageKeys.CONFIRM_PASSWORD_NOT_MATCH);
+        }
+        exsistingUser.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        userRepository.save(exsistingUser);
+        return exsistingUser;
+    }
+
+    @Override
+    public void updatePassword(String email, String password) throws DataNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
     }
 }

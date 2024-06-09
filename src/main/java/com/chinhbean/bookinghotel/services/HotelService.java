@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -90,6 +91,7 @@ public class HotelService implements IHotelService {
         Set<Convenience> conveniences = hotelDTO.getConveniences().stream()
                 .map(this::convertToConvenienceEntity)
                 .collect(Collectors.toSet());
+        Set<HotelImages> hotelImages = Collections.emptySet();
         Hotel hotel = Hotel.builder()
                 .hotelName(hotelDTO.getHotelName())
                 .rating(hotelDTO.getRating())
@@ -98,6 +100,7 @@ public class HotelService implements IHotelService {
                 .status(HotelStatus.PENDING)
                 .conveniences(conveniences)
                 .location(location)
+                .hotelImages(hotelImages)
                 .build();
         location.setHotel(hotel);
         return hotel;
