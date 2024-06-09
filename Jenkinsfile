@@ -13,8 +13,9 @@ pipeline {
         copyScript = "cp target/${processName} ${folderDeploy}"
         // killScript = "kill -9 \$(ps -ef| grep ${processName}| grep -v grep| awk '{print \$2}')"
         //runScript = 'jenkins bash -c "cd ${folderDeploy} && java -jar ${processName} &"'
+        updateChown = "chmod 777 ${folderDeploy}/${processName}"
         runScript = 'bash -c "cd /datas/bookinghotel && java -jar -Dspring.profiles.active=pro booking-hotel-0.0.1-SNAPSHOT.jar > nohup.out 2>&1 &"'
-
+        
     }
 
     stages {
@@ -35,6 +36,8 @@ pipeline {
                 sh(script: """ whoami;pwd; """, label: "second time so give me your info")
                 sh(script: """ ${copyScript} """, label: "copy the .jar file into deploy folder")
                 // sh(script: """ ${killScript} """, label: "terminate the running process")
+                sh(script: """ ${copyScript} """, label: "copy the .jar file into deploy folder")
+                sudo chmod 777 /datas/bookinghotel/booking-hotel-0.0.1-SNAPSHOT.jar
                 sh(script: """ ${runScript} """, label: "run the project")
             }
         }
