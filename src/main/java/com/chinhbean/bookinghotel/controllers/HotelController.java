@@ -6,15 +6,21 @@ import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
+import com.chinhbean.bookinghotel.services.IHotelImageService;
 import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -23,6 +29,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class HotelController {
     private final IHotelService hotelService;
+    private final IHotelImageService hotelImageService;
 
     @GetMapping("/getListHotels")
     public ResponseEntity<ResponseObject> getAllHotels() throws DataNotFoundException {
@@ -122,6 +129,49 @@ public class HotelController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @PostMapping("/upload-images/{hotelId}")
+    @Transactional
+    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) throws IOException {
+        try{
+            HotelResponse hotelImageResponse = hotelImageService.uploadImages(images, hotelId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
+                    .status(HttpStatus.CREATED)
+                    .data(hotelImageResponse)
+                    .message(MessageKeys.UPLOAD_IMAGES_SUCCESSFULLY)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @PutMapping("/update-images/{hotelId}")
+    public ResponseEntity<ResponseObject> updateRoomImages(@PathVariable Long hotelId, @RequestParam Map<String, MultipartFile> images) {
+        try {
+            // Convert image indices to integer keys
+            Map<Integer, MultipartFile> imageMap = images.entrySet().stream()
+                    .collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue));
+
+            // Call the updateHotelImages method from the hotelImageService to update the hotel images.
+            HotelResponse updateHotelImages = hotelImageService.updateHotelImages(imageMap, hotelId);
+
+            // Return a ResponseEntity with a status of OK, the updated room data, and a success message.
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(updateHotelImages)
+                    .message(MessageKeys.UPDATED_IMAGES_SUCCESSFULLY)
+                    .build());
+        } catch (DataNotFoundException | IOException e) {
+            HttpStatus status = e instanceof DataNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+            return ResponseEntity.status(status).body(ResponseObject.builder()
+                    .status(status)
                     .message(e.getMessage())
                     .build());
         }

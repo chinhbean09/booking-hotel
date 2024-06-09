@@ -15,8 +15,8 @@ public class HotelImages {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "url", nullable = false)
-    private String url;
+    @Column(name = "image_url", nullable = false)
+    private String imageUrl;
 
     @ManyToOne
     @JoinColumn(name = "hotel_id", nullable = false)

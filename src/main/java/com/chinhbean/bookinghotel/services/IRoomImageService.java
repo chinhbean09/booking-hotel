@@ -10,7 +10,7 @@ import java.util.Map;
 
 public interface IRoomImageService {
 
-    List<RoomTypeResponse> uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException;
+    RoomTypeResponse uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException;
 
-    List<RoomTypeResponse> updateRoomImages(Map<Integer, MultipartFile> imageMap, Long roomTypeId) throws DataNotFoundException, IOException;
+    RoomTypeResponse updateRoomImages(Map<Integer, MultipartFile> imageMap, Long roomTypeId) throws DataNotFoundException, IOException;
 }

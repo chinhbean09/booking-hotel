@@ -41,6 +41,8 @@ public class RoomTypeResponse {
     @JsonProperty("types")
     private List<TypeResponse> types;
 
+    private List<ConvenienceRoomResponse> conveniences;
+
     public static RoomTypeResponse fromType(RoomType roomType) {
 
         List<TypeResponse> types = Arrays.stream(new Type[]{roomType.getType()})
@@ -51,6 +53,10 @@ public class RoomTypeResponse {
                 .map(RoomImageResponse::fromRoomImage)
                 .toList();
 
+        List<ConvenienceRoomResponse> conveniences = roomType.getRoomConveniences().stream()
+                .map(ConvenienceRoomResponse::fromConvenienceRoom)
+                .toList();
+
         return RoomTypeResponse.builder()
                 .id(roomType.getId())
                 .hotelId(roomType.getHotel().getId())
@@ -59,6 +65,7 @@ public class RoomTypeResponse {
                 .roomPrice(roomType.getRoomPrice())
                 .status(roomType.getStatus())
                 .imageUrls(imageUrls)
+                .conveniences(conveniences)
                 .types(types)
                 .build();
     }
