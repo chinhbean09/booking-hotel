@@ -22,4 +22,6 @@ public interface IUserService {
 
     void updatePassword(String email, String password) throws DataNotFoundException;
 
+    void blockOrEnable(Long userId, Boolean active) throws Exception;
+
 }
