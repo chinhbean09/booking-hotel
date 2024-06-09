@@ -16,7 +16,7 @@ public interface IUserService {
 
     User updateUserAvatar(long id, MultipartFile avatar);
 
-    void sendMailForRegisterSuccess(String name, String email, String password);
+    public void sendMailForRegisterSuccess(String email, String password, long userId);
 
     User changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException;
 

@@ -1,17 +1,16 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'/>
 </head>
 <body style="font-family: 'Roboto', sans-serif; font-size: 16px;">
-<p th:text="'Xin chào, ' + ${name}"></p>
+<p>Chào mừng quý khách</p>
 <p>Chúc bạn có những trải nghiệm tuyệt vời khi sử dụng dịch vụ của chúng tôi</p>
 <p>Chúng tôi gửi thông tin truy cập hệ thống của bạn:</p>
-<p th:text="'- Email: ' + ${email}"></p>
-<p th:text="'- Password: ' + ${password}"></p>
-<p>Active account:</p>
-<a th:href="${link}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #56caff; border: none; border-radius: 15px; text-decoration: none;">Activate</a>
+<p>Email: <span th:text="${email}"></span></p>
+<p>Password: <span th:text="${password}"></span></p>
+<p>Activate account:</p>
+<a th:href="@{'http://localhost:8080/api/v1/users/block-or-enable/' + ${userId} + '/1'}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #56caff; border: none; border-radius: 15px; text-decoration: none;">Activate</a>
 <p>Đây là email tự động, vui lòng không trả lời.</p>
 </body>
 </html>
