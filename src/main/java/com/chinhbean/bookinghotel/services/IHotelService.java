@@ -6,13 +6,12 @@ import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public interface IHotelService {
-    List<HotelResponse> getAllHotels() throws DataNotFoundException;
+    Page<HotelResponse> getAllHotels() throws DataNotFoundException;
 
     HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException;
 

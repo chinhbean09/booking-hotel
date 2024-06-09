@@ -4,6 +4,7 @@ import com.chinhbean.bookinghotel.enums.HotelStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -50,6 +51,13 @@ public class Hotel {
     @OneToOne(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private HotelLocation location;
 
-//    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<Room> rooms;
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<RoomType> roomTypes;
+
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Feedback> feedbacks = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<HotelImages> hotelImages = new LinkedHashSet<>();
+
 }

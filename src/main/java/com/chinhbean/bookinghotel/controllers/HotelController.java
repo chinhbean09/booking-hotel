@@ -10,11 +10,10 @@ import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 @RestController
@@ -26,7 +25,7 @@ public class HotelController {
 
     @GetMapping("/getListHotels")
     public ResponseEntity<ResponseObject> getAllHotels() throws DataNotFoundException {
-        List<HotelResponse> hotels = hotelService.getAllHotels();
+        Page<HotelResponse> hotels = hotelService.getAllHotels();
         return ResponseEntity.ok().body(ResponseObject.builder()
                 .status(HttpStatus.OK)
                 .data(hotels)
@@ -46,7 +45,7 @@ public class HotelController {
         } catch (DataNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
-                    .message(e.getMessage())
+                    .message(MessageKeys.NO_HOTELS_FOUND)
                     .build());
         }
     }
@@ -55,6 +54,9 @@ public class HotelController {
     @PostMapping("/create")
     public ResponseEntity<ResponseObject> createHotel(@RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new IllegalArgumentException("Invalid token");
+            }
             String token = authHeader.substring(7);
             HotelResponse createdHotel = hotelService.createHotel(hotelDTO, token);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
@@ -79,6 +81,9 @@ public class HotelController {
     @PutMapping("updateHotel/{hotelId}")
     public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new IllegalArgumentException("Invalid token");
+            }
             String token = authHeader.substring(7);
             HotelResponse updatedHotel = hotelService.updateHotel(hotelId, hotelDTO, token);
             return ResponseEntity.ok().body(ResponseObject.builder()
@@ -89,7 +94,7 @@ public class HotelController {
         } catch (DataNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
-                    .message(e.getMessage())
+                    .message(MessageKeys.NO_HOTELS_FOUND)
                     .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
@@ -103,6 +108,9 @@ public class HotelController {
     @PutMapping("/updateStatus/{hotelId}")
     public ResponseEntity<ResponseObject> updateHotelStatus(@PathVariable Long hotelId, @RequestBody HotelStatus newStatus, @RequestHeader("Authorization") String authHeader) {
         try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new IllegalArgumentException("Invalid token");
+            }
             String token = authHeader.substring(7);
             hotelService.updateStatus(hotelId, newStatus, token);
             return ResponseEntity.ok().body(ResponseObject.builder()
@@ -112,7 +120,7 @@ public class HotelController {
         } catch (DataNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
-                    .message(e.getMessage())
+                    .message(MessageKeys.NO_HOTELS_FOUND)
                     .build());
         } catch (PermissionDenyException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseObject.builder()

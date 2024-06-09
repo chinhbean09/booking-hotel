@@ -8,7 +8,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
@@ -42,20 +45,42 @@ public class HotelResponse {
     @JsonProperty("conveniences")
     private List<ConvenienceResponse> conveniences;
 
-//    @JsonProperty("rooms")
-//    private List<RoomResponse> rooms;
+    @JsonProperty("roomTypes")
+    private List<RoomTypeResponse> roomTypes;
+
+    @JsonProperty("feedbacks")
+    private List<FeedbackResponse> feedbacks;
+
+    @JsonProperty("hotelImages")
+    private List<HotelImageResponse> hotelImages;
 
     public static HotelResponse fromHotel(Hotel hotel) {
-        HotelLocationResponse locationResponse = HotelLocationResponse.fromHotelLocation(hotel.getLocation());
-        UserResponse partnerResponse = UserResponse.fromUser(hotel.getPartner());
+        HotelLocationResponse locationResponse = (hotel.getLocation() != null) ? HotelLocationResponse.fromHotelLocation(hotel.getLocation()) : null;
+        UserResponse partnerResponse = (hotel.getPartner() != null) ? UserResponse.fromUser(hotel.getPartner()) : null;
 
-        List<ConvenienceResponse> convenienceResponses = hotel.getConveniences().stream()
+        List<ConvenienceResponse> convenienceResponses = Optional.ofNullable(hotel.getConveniences())
+                .orElseGet(Collections::emptySet)
+                .stream()
                 .map(ConvenienceResponse::fromConvenience)
-                .toList();
+                .collect(Collectors.toList());
 
-//        List<RoomResponse> roomResponses = (hotel.getRooms() != null) ? hotel.getRooms().stream()
-//                .map(RoomResponse::fromRoom)
-//                .toList() : List.of();
+        List<RoomTypeResponse> roomTypeResponses = Optional.ofNullable(hotel.getRoomTypes())
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(RoomTypeResponse::fromType)
+                .collect(Collectors.toList());
+
+        List<FeedbackResponse> feedbackResponses = Optional.ofNullable(hotel.getFeedbacks())
+                .orElseGet(Collections::emptySet)
+                .stream()
+                .map(FeedbackResponse::fromFeedback)
+                .collect(Collectors.toList());
+
+        List<HotelImageResponse> hotelImageResponses = Optional.ofNullable(hotel.getHotelImages())
+                .orElseGet(Collections::emptySet)
+                .stream()
+                .map(HotelImageResponse::fromHotelImage)
+                .collect(Collectors.toList());
 
         return HotelResponse.builder()
                 .id(hotel.getId())
@@ -67,7 +92,9 @@ public class HotelResponse {
                 .status(hotel.getStatus())
                 .location(locationResponse)
                 .conveniences(convenienceResponses)
-//                .rooms(roomResponses)
+                .roomTypes(roomTypeResponses)
+                .feedbacks(feedbackResponses)
+                .hotelImages(hotelImageResponses)
                 .build();
     }
 }

@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.Set;
 
 @Entity
