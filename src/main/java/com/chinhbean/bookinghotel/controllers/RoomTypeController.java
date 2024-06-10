@@ -111,10 +111,11 @@ public class RoomTypeController {
                     .build());
         }
     }
+
     @PostMapping("/upload-images/{roomTypeId}")
     @Transactional
     public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("roomTypeId") Long roomTypeId) throws IOException {
-        try{
+        try {
             RoomTypeResponse roomImageResponses = roomImageService.uploadImages(images, roomTypeId);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
                     .status(HttpStatus.CREATED)

@@ -8,7 +8,6 @@ import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
-import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.responses.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.responses.UserResponse;
@@ -83,7 +82,7 @@ public class UserController {
             HttpServletRequest request
     ) throws Exception {
         String token = userService.login(
-                userLoginDTO.getPhoneNumber(),
+                userLoginDTO.getEmailOrPhone(),
                 userLoginDTO.getPassword(),
                 userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId()
         );
@@ -128,10 +127,9 @@ public class UserController {
     @PutMapping("/update-password/{id}")
     public ResponseEntity<ResponseObject> changePassword(
             @PathVariable long id,
-            @Valid @RequestBody ChangePasswordDTO changePasswordDTO
-    ) throws DataNotFoundException {
+            @Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
         try {
-            User user = userService.changePassword(id, changePasswordDTO);
+            userService.changePassword(id, changePasswordDTO);
             return ResponseEntity.ok(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .message(MessageKeys.CHANGE_PASSWORD_SUCCESSFULLY)

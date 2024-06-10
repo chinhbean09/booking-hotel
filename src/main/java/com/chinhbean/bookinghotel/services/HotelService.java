@@ -1,5 +1,7 @@
 package com.chinhbean.bookinghotel.services;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
@@ -8,6 +10,7 @@ import com.chinhbean.bookinghotel.dtos.HotelLocationDTO;
 import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IConvenienceRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
@@ -18,11 +21,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,23 +38,34 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HotelService implements IHotelService {
 
-    private final IHotelRepository IHotelRepository;
+    private final IHotelRepository hotelRepository;
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
     private final IConvenienceRepository IConvenienceRepository;
     private final UserRepository userRepository;
+    private final AmazonS3 amazonS3;
 
+    private static final String UPLOAD_DIR = "business-license-uploads/";
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
+    @Value("${amazonProperties.bucketName}")
+    private String bucketName;
 
     @Transactional
     @Override
-    public Page<HotelResponse> getAllHotels() throws DataNotFoundException {
+    public Page<HotelResponse> getAllHotels(String token, int page, int size) {
         logger.info("Fetching all hotels from the database.");
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Hotel> hotels = IHotelRepository.findAll(pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Hotel> hotels;
+        String userRole = jwtTokenUtils.extractUserRole(token);
+        if (Role.PARTNER.equals(userRole)) {
+            Long userId = jwtTokenUtils.extractUserId(token);
+            hotels = hotelRepository.findAllByPartnerId(userId, pageable);
+        } else {
+            hotels = hotelRepository.findAll(pageable);
+        }
         if (hotels.isEmpty()) {
             logger.warn("No hotels found in the database.");
-            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS));
+            return Page.empty();
         }
         logger.info("Successfully retrieved all hotels.");
         return hotels.map(HotelResponse::fromHotel);
@@ -56,7 +75,7 @@ public class HotelService implements IHotelService {
     @Override
     public HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException {
         logger.info("Fetching details for hotel with ID: {}", hotelId);
-        Hotel hotel = IHotelRepository.findById(hotelId)
+        Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> {
                     logger.error("Hotel with ID: {} does not exist.", hotelId);
                     return new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS));
@@ -77,7 +96,7 @@ public class HotelService implements IHotelService {
                 .filter(convenience -> convenience.getId() == null)
                 .collect(Collectors.toSet());
         IConvenienceRepository.saveAll(newConveniences);
-        Hotel savedHotel = IHotelRepository.save(hotel);
+        Hotel savedHotel = hotelRepository.save(hotel);
         logger.info("Hotel created successfully with ID: {}", savedHotel.getId());
         return HotelResponse.fromHotel(savedHotel);
     }
@@ -86,8 +105,7 @@ public class HotelService implements IHotelService {
     private Hotel convertToEntity(HotelDTO hotelDTO) {
         HotelLocation location = new HotelLocation();
         location.setAddress(hotelDTO.getLocation().getAddress());
-        location.setCity(hotelDTO.getLocation().getCity());
-        location.setDistrict(hotelDTO.getLocation().getDistrict());
+        location.setProvince(hotelDTO.getLocation().getProvince());
         Set<Convenience> conveniences = hotelDTO.getConveniences().stream()
                 .map(this::convertToConvenienceEntity)
                 .collect(Collectors.toSet());
@@ -135,7 +153,7 @@ public class HotelService implements IHotelService {
     public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException {
         User user = getUserDetailsFromToken(token);
 
-        Hotel hotel = IHotelRepository.findById(hotelId)
+        Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
 
         hotel.setPartner(user);
@@ -155,8 +173,7 @@ public class HotelService implements IHotelService {
             HotelLocationDTO locationDTO = updateDTO.getLocation();
             HotelLocation location = hotel.getLocation();
             location.setAddress(locationDTO.getAddress());
-            location.setCity(locationDTO.getCity());
-            location.setDistrict(locationDTO.getDistrict());
+            location.setProvince(locationDTO.getProvince());
         }
 
         if (updateDTO.getConveniences() != null) {
@@ -166,7 +183,7 @@ public class HotelService implements IHotelService {
             hotel.setConveniences(conveniences);
         }
 
-        Hotel updatedHotel = IHotelRepository.save(hotel);
+        Hotel updatedHotel = hotelRepository.save(hotel);
         return HotelResponse.fromHotel(updatedHotel);
     }
 
@@ -183,7 +200,7 @@ public class HotelService implements IHotelService {
     @Transactional
     @Override
     public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
-        Hotel hotel = IHotelRepository.findById(hotelId)
+        Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
         String userRole = jwtTokenUtils.extractUserRole(token);
         if (Role.ADMIN.equals(userRole)) {
@@ -197,6 +214,46 @@ public class HotelService implements IHotelService {
         } else {
             throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
         }
-        IHotelRepository.save(hotel);
+        hotelRepository.save(hotel);
+    }
+
+    @Override
+    public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException {
+        Hotel hotel = getHotelById(hotelId);
+        validateFile(file);
+        String objectKey = buildObjectKey(hotel.getId(), file.getOriginalFilename());
+        ObjectMetadata metadata = createObjectMetadata(file);
+        uploadFileToS3(bucketName, objectKey, file, metadata);
+        String licenseUrl = amazonS3.getUrl(bucketName, objectKey).toString();
+        hotel.setBusinessLicense(licenseUrl);
+        return hotelRepository.save(hotel);
+    }
+
+    private Hotel getHotelById(Long hotelId) throws DataNotFoundException {
+        return hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.NO_HOTELS_FOUND, hotelId)));
+    }
+
+    private void validateFile(MultipartFile file) {
+        MediaType mediaType = MediaType.parseMediaType(Objects.requireNonNull(file.getContentType()));
+        if (!mediaType.isCompatibleWith(MediaType.IMAGE_JPEG) &&
+                !mediaType.isCompatibleWith(MediaType.IMAGE_PNG)) {
+            throw new InvalidParamException(localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE));
+        }
+    }
+
+    private String buildObjectKey(Long hotelId, String originalFileName) {
+        return UPLOAD_DIR + hotelId + "/" + originalFileName;
+    }
+
+    private void uploadFileToS3(String bucketName, String objectKey, MultipartFile file, ObjectMetadata metadata) throws IOException {
+        amazonS3.putObject(bucketName, objectKey, file.getInputStream(), metadata);
+    }
+
+    private ObjectMetadata createObjectMetadata(MultipartFile file) {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(file.getContentType());
+        metadata.setContentLength(file.getSize());
+        return metadata;
     }
 }

@@ -78,4 +78,6 @@ public class MessageKeys {
     public static final String UPDATE_BOOKING_SUCCESSFULLY = "booking.update_booking.update_successfully";
     public static final String RETRIEVED_BOOKING_DETAIL_SUCCESSFULLY = "booking.booking_detail.retrieved_booking_detail_successfully";
     public static final String CREATE_BOOKING_SUCCESSFULLY = "booking.create_booking.create_successfully";
+    public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_VIEW_BOOKINGS = "booking.list_booking.user_does_not_have_permission_to_view_bookings";
+    public static final String UPDATE_LICENSE_SUCCESSFULLY = "license.update_license.update_successfully";
 }
