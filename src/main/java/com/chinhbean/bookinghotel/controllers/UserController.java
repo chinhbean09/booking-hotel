@@ -141,4 +141,20 @@ public class UserController {
                     .build());
         }
     }
+
+    @GetMapping("/block-or-enable/{userId}/{active}")
+    public ResponseEntity<String> blockOrEnable(
+            @Valid @PathVariable long userId,
+            @Valid @PathVariable int active
+    ) throws DataNotFoundException {
+        try {
+            userService.blockOrEnable(userId, active > 0);
+            String message = active > 0 ? MessageKeys.ENABLE_USER_SUCCESSFULLY : MessageKeys.BLOCK_USER_SUCCESSFULLY;
+            return ResponseEntity.ok().body(message);
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.badRequest().body(MessageKeys.USER_NOT_FOUND);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

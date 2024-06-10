@@ -65,7 +65,7 @@ public class UserService implements IUserService {
         }
 
         // Sử dụng roleId mặc định là 2 nếu không được truyền vào
-        Long roleId = userDTO.getRoleId() != null ? userDTO.getRoleId() : 2L;
+        Long roleId = userDTO.getRoleId() != null ? userDTO.getRoleId() : 3L;
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new DataNotFoundException(
                         localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
@@ -76,15 +76,10 @@ public class UserService implements IUserService {
         }
 
         User newUser = User.builder()
-                .fullName(userDTO.getFullName())
                 .email(userDTO.getEmail())
                 .phoneNumber(userDTO.getPhoneNumber())
                 .password(userDTO.getPassword())
-                .address(userDTO.getAddress())
-                .dateOfBirth(userDTO.getDateOfBirth())
-                .gender(userDTO.getGender())
-                .active(true)
-                .city(userDTO.getCity())
+                .active(false)
                 .facebookAccountId(userDTO.getFacebookAccountId())
                 .googleAccountId(userDTO.getGoogleAccountId())
                 .build();
@@ -96,9 +91,10 @@ public class UserService implements IUserService {
             String encodedPassword = passwordEncoder.encode(password);
             newUser.setPassword(encodedPassword);
         }
+        User user = userRepository.save(newUser);
         //send mail
-        sendMailForRegisterSuccess(userDTO.getFullName(), userDTO.getEmail(), userDTO.getPassword());
-        return userRepository.save(newUser);
+        sendMailForRegisterSuccess(userDTO.getEmail(), userDTO.getPassword(), user.getId());
+        return user;
     }
 
 
@@ -199,15 +195,17 @@ public class UserService implements IUserService {
 
 
     @Override
-    public void sendMailForRegisterSuccess(String name, String email, String password) {
+    public void sendMailForRegisterSuccess(String email, String password, long userId) {
         try {
             DataMailDTO dataMail = new DataMailDTO();
             dataMail.setTo(email);
             dataMail.setSubject(MailTemplate.SEND_MAIL_SUBJECT.USER_REGISTER);
+
             Map<String, Object> props = new HashMap<>();
-            props.put("name", name);
             props.put("email", email);
             props.put("password", password);
+            props.put("userId", userId); // Add userId to props
+
             dataMail.setProps(props);
 
             mailService.sendHtmlMail(dataMail, MailTemplate.SEND_MAIL_TEMPLATE.USER_REGISTER);
@@ -238,5 +236,14 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
+        existingUser.setActive(active);
+        userRepository.save(existingUser);
     }
 }
