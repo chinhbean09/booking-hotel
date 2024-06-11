@@ -21,7 +21,7 @@ public interface IHotelService {
 
     HotelResponse createHotel(HotelDTO hotelDTO, String token) throws DataNotFoundException;
 
-    HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException;
+    HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException, PermissionDenyException;
 
     User getUserDetailsFromToken(String token) throws DataNotFoundException;
 

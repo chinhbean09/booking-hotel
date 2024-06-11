@@ -150,11 +150,15 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException {
+    public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException, PermissionDenyException {
         User user = getUserDetailsFromToken(token);
 
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
+
+        if (hotel.getStatus() == HotelStatus.PENDING) {
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_IS_PENDING));
+        }
 
         hotel.setPartner(user);
         if (updateDTO.getHotelName() != null) {
@@ -198,24 +202,24 @@ public class HotelService implements IHotelService {
     }
 
     @Transactional
-    @Override
-    public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
-        Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
-        String userRole = jwtTokenUtils.extractUserRole(token);
-        if (Role.ADMIN.equals(userRole)) {
+@Override
+public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
+    Hotel hotel = hotelRepository.findById(hotelId)
+            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
+    String userRole = jwtTokenUtils.extractUserRole(token);
+    if (Role.ADMIN.equals(userRole)) {
+        hotel.setStatus(newStatus);
+    } else if (Role.PARTNER.equals(userRole)) {
+        if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE || newStatus == HotelStatus.CLOSED) {
             hotel.setStatus(newStatus);
-        } else if (Role.PARTNER.equals(userRole)) {
-            if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE) {
-                hotel.setStatus(newStatus);
-            } else {
-                throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
-            }
         } else {
-            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
         }
-        hotelRepository.save(hotel);
+    } else {
+        throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
     }
+    hotelRepository.save(hotel);
+}
 
     @Override
     public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException {
