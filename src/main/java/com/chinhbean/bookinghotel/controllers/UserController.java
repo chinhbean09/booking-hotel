@@ -9,6 +9,7 @@ import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.repositories.UserRepository;
 import com.chinhbean.bookinghotel.responses.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.responses.UserResponse;
@@ -39,6 +40,7 @@ public class UserController {
     private final ITokenService tokenService;
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
+    private final UserRepository userRepository;
 
     @GetMapping("/generate-secret-key")
     public ResponseEntity<?> generateSecretKey() {
@@ -60,6 +62,13 @@ public class UserController {
                     .status(HttpStatus.BAD_REQUEST)
                     .data(null)
                     .message(errorMessages.toString())
+                    .build());
+        }
+        if(userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
+            return ResponseEntity.badRequest().body(ResponseObject.builder()
+                    .status(HttpStatus.BAD_REQUEST)
+                    .data(null)
+                    .message(localizationUtils.getLocalizedMessage(MessageKeys.PHONE_NUMBER_ALREADY_EXISTS))
                     .build());
         }
         if (!userDTO.getPassword().equals(userDTO.getRetypePassword())) {
