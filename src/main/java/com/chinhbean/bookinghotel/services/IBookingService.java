@@ -6,23 +6,17 @@ import com.chinhbean.bookinghotel.enums.BookingStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.BookingResponse;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 
 public interface IBookingService {
 
-    @Transactional
-    Page<BookingResponse> getListBooking() throws DataNotFoundException;
+    Page<BookingResponse> getListBooking(String token, int page, int size) throws DataNotFoundException, PermissionDenyException;
 
-    @Transactional
     Booking createBooking(BookingDTO bookingDTO, String token);
 
-    @Transactional
     BookingResponse getBookingDetail(Long bookingId) throws DataNotFoundException;
 
-    @Transactional
     Booking updateBooking(Long bookingId, BookingDTO bookingDTO, String token) throws DataNotFoundException;
 
-    @Transactional
     void updateStatus(Long bookingId, BookingStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException, PermissionDenyException;
 }

@@ -37,7 +37,7 @@ public class RoomType {
     private Set<RoomImage> roomImages;
 
     @NotEmpty(message = "At least one convenience must be selected")
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "room_conveniences",
             joinColumns = @JoinColumn(name = "room_type_id"),

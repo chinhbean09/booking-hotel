@@ -18,18 +18,14 @@ public class HotelLocationResponse {
     @JsonProperty("address")
     private String address;
 
-    @JsonProperty("city")
-    private String city;
-
-    @JsonProperty("district")
-    private String district;
+    @JsonProperty("province")
+    private String province;
 
     public static HotelLocationResponse fromHotelLocation(HotelLocation hotelLocation) {
         return HotelLocationResponse.builder()
                 .id(hotelLocation.getId())
                 .address(hotelLocation.getAddress())
-                .city(hotelLocation.getCity())
-                .district(hotelLocation.getDistrict())
+                .province(hotelLocation.getProvince())
                 .build();
     }
 }

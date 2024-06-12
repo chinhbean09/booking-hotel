@@ -92,7 +92,7 @@ public class UserController {
             HttpServletRequest request
     ) throws Exception {
         String token = userService.login(
-                userLoginDTO.getPhoneNumber(),
+                userLoginDTO.getEmailOrPhone(),
                 userLoginDTO.getPassword(),
                 userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId()
         );
@@ -137,10 +137,9 @@ public class UserController {
     @PutMapping("/update-password/{id}")
     public ResponseEntity<ResponseObject> changePassword(
             @PathVariable long id,
-            @Valid @RequestBody ChangePasswordDTO changePasswordDTO
-    ) throws DataNotFoundException {
+            @Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
         try {
-            User user = userService.changePassword(id, changePasswordDTO);
+            userService.changePassword(id, changePasswordDTO);
             return ResponseEntity.ok(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .message(MessageKeys.CHANGE_PASSWORD_SUCCESSFULLY)
@@ -156,8 +155,7 @@ public class UserController {
     @GetMapping("/block-or-enable/{userId}/{active}")
     public ResponseEntity<String> blockOrEnable(
             @Valid @PathVariable long userId,
-            @Valid @PathVariable int active
-    ) throws DataNotFoundException {
+            @Valid @PathVariable int active) {
         try {
             userService.blockOrEnable(userId, active > 0);
             String message = active > 0 ? MessageKeys.ENABLE_USER_SUCCESSFULLY : MessageKeys.BLOCK_USER_SUCCESSFULLY;

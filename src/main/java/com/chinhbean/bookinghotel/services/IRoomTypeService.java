@@ -17,4 +17,9 @@ public interface IRoomTypeService {
     void deleteRoomType(Long id) throws DataNotFoundException;
 
     RoomTypeResponse getRoomTypeById(Long id) throws DataNotFoundException;
+
+    List<RoomTypeResponse> filterRoomType(Long hotelId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom,
+                                          Boolean doubleBedroom, Boolean wardrobe, Boolean airConditioning,
+                                          Boolean tv, Boolean wifi, Boolean toiletries, Boolean kitchen,
+                                          Double minPrice, Double maxPrice);
 }

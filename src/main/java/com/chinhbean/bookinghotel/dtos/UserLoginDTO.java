@@ -1,5 +1,6 @@
 package com.chinhbean.bookinghotel.dtos;
 
+import com.chinhbean.bookinghotel.validators.EmailOrPhone;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -13,9 +14,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserLoginDTO {
-    @JsonProperty("phone_number")
-    @NotBlank(message = "Phone number is required")
-    private String phoneNumber;
+    @JsonProperty("email_or_phone")
+    @NotBlank(message = "Email or phone number is required")
+    @EmailOrPhone(message = "If an email is provided, it must be valid")
+    private String emailOrPhone;
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
