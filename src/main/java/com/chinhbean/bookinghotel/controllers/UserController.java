@@ -8,6 +8,7 @@ import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
+import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.responses.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.responses.UserResponse;
@@ -145,8 +146,7 @@ public class UserController {
     @GetMapping("/block-or-enable/{userId}/{active}")
     public ResponseEntity<String> blockOrEnable(
             @Valid @PathVariable long userId,
-            @Valid @PathVariable int active
-    ) throws DataNotFoundException {
+            @Valid @PathVariable int active) {
         try {
             userService.blockOrEnable(userId, active > 0);
             String message = active > 0 ? MessageKeys.ENABLE_USER_SUCCESSFULLY : MessageKeys.BLOCK_USER_SUCCESSFULLY;

@@ -202,24 +202,24 @@ public class HotelService implements IHotelService {
     }
 
     @Transactional
-@Override
-public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
-    Hotel hotel = hotelRepository.findById(hotelId)
-            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
-    String userRole = jwtTokenUtils.extractUserRole(token);
-    if (Role.ADMIN.equals(userRole)) {
-        hotel.setStatus(newStatus);
-    } else if (Role.PARTNER.equals(userRole)) {
-        if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE || newStatus == HotelStatus.CLOSED) {
+    @Override
+    public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
+        String userRole = jwtTokenUtils.extractUserRole(token);
+        if (Role.ADMIN.equals(userRole)) {
             hotel.setStatus(newStatus);
+        } else if (Role.PARTNER.equals(userRole)) {
+            if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE || newStatus == HotelStatus.CLOSED) {
+                hotel.setStatus(newStatus);
+            } else {
+                throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
+            }
         } else {
-            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
         }
-    } else {
-        throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS));
+        hotelRepository.save(hotel);
     }
-    hotelRepository.save(hotel);
-}
 
     @Override
     public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException {
