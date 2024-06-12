@@ -33,6 +33,7 @@ public class HotelImageService implements IHotelImageService {
 
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
+
     @Override
     public HotelResponse uploadImages(List<MultipartFile> images, Long hotelId) throws IOException {
         List<String> imageUrls = new ArrayList<>();
@@ -52,7 +53,7 @@ public class HotelImageService implements IHotelImageService {
             String imageUrl = amazonS3.getUrl(bucketName, key).toString();
             // Check if the image URL already exists
             if (hotelImageRepository.findByImageUrlAndHotelId(imageUrl, hotelId).isPresent()) {
-                throw new DuplicateKeyException("Image URL already exists for this hotel "+ hotelId);
+                throw new DuplicateKeyException("Image URL already exists for this hotel " + hotelId);
             }
             imageUrls.add(imageUrl);
 
@@ -81,7 +82,7 @@ public class HotelImageService implements IHotelImageService {
 
     @Override
     public HotelResponse updateHotelImages(Map<Integer, MultipartFile> imageMap, Long hotelId) throws DataNotFoundException, IOException {
-                Hotel hotel = hotelRepository.findById(hotelId)
+        Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
 
         List<HotelImageResponse> hotelImageResponses = new ArrayList<>();

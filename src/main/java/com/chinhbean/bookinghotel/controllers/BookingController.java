@@ -23,18 +23,33 @@ public class BookingController {
     private final IBookingService bookingService;
 
     @GetMapping("/getListBookings")
-    public ResponseEntity<ResponseObject> getListBookings() {
+    public ResponseEntity<ResponseObject> getListBookings(@RequestHeader("Authorization") String authHeader,
+                                                          @RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<BookingResponse> bookings = bookingService.getListBooking();
-            return ResponseEntity.ok().body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(bookings)
-                    .message(MessageKeys.RETRIEVED_ALL_BOOKINGS_SUCCESSFULLY)
-                    .build());
+            String token = authHeader.substring(7);
+            Page<BookingResponse> bookings = bookingService.getListBooking(token, page, size);
+            if (bookings.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                        .status(HttpStatus.NOT_FOUND)
+                        .message(MessageKeys.NO_BOOKINGS_FOUND)
+                        .build());
+            } else {
+                return ResponseEntity.ok().body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(bookings)
+                        .message(MessageKeys.RETRIEVED_ALL_BOOKINGS_SUCCESSFULLY)
+                        .build());
+            }
         } catch (DataNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
                     .message(MessageKeys.NO_BOOKINGS_FOUND)
+                    .build());
+        } catch (PermissionDenyException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseObject.builder()
+                    .status(HttpStatus.FORBIDDEN)
+                    .message(e.getMessage())
                     .build());
         }
     }

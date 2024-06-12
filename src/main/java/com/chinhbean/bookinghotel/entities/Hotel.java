@@ -4,7 +4,6 @@ import com.chinhbean.bookinghotel.enums.HotelStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +31,9 @@ public class Hotel {
     @ManyToOne
     @JoinColumn(name = "partner_id", nullable = false)
     private User partner;
+
+    @Column(name = "business_license")
+    private String businessLicense;
 
     @Column(nullable = false)
     private String brand;
