@@ -124,6 +124,19 @@ public class RoomTypeService implements IRoomTypeService {
         return RoomTypeResponse.fromType(roomType);
     }
 
+    @Override
+    public List<RoomTypeResponse> filterRoomType(Long hotelId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom,
+            Boolean doubleBedroom, Boolean wardrobe, Boolean airConditioning, Boolean tv, Boolean wifi, Boolean toiletries,
+            Boolean kitchen, Double minPrice, Double maxPrice) {
+
+        List<RoomType> roomTypes = roomTypeRepository.findByTypeAndConveniencesAndPriceAndHotel(hotelId, luxury, singleBedroom, twinBedroom, doubleBedroom,
+                wardrobe, airConditioning, tv, wifi, toiletries, kitchen, minPrice, maxPrice);
+
+        return roomTypes.stream()
+                .map(RoomTypeResponse::fromType)
+                .collect(Collectors.toList());
+    }
+
     private RoomType convertToEntity(RoomTypeDTO roomTypeDTO) {
         Type types = convertToTypeEntity(roomTypeDTO.getTypes());
 
@@ -156,7 +169,7 @@ public class RoomTypeService implements IRoomTypeService {
         ).orElseGet(() -> createNewType(typeRoomDTO));
     }
 
-    private RoomConvenience convertToRoomConvenienceEntity(ConvenienceRoomDTO convenienceRoomDTO){
+    private RoomConvenience convertToRoomConvenienceEntity(ConvenienceRoomDTO convenienceRoomDTO) {
         return convenienceRoomRepository.findByWardrobeAndAirConditioningAndTvAndWifiAndToiletriesAndKitchen(
                 convenienceRoomDTO.getWardrobe(),
                 convenienceRoomDTO.getAirConditioning(),
@@ -176,7 +189,7 @@ public class RoomTypeService implements IRoomTypeService {
         return type;
     }
 
-    private RoomConvenience createNewRoomConvenience(ConvenienceRoomDTO convenienceRoomDTO){
+    private RoomConvenience createNewRoomConvenience(ConvenienceRoomDTO convenienceRoomDTO) {
         RoomConvenience roomConvenience = new RoomConvenience();
         roomConvenience.setWardrobe(convenienceRoomDTO.getWardrobe());
         roomConvenience.setAirConditioning(convenienceRoomDTO.getAirConditioning());

@@ -111,10 +111,11 @@ public class RoomTypeController {
                     .build());
         }
     }
+
     @PostMapping("/upload-images/{roomTypeId}")
     @Transactional
     public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("roomTypeId") Long roomTypeId) throws IOException {
-        try{
+        try {
             RoomTypeResponse roomImageResponses = roomImageService.uploadImages(images, roomTypeId);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
                     .status(HttpStatus.CREATED)
@@ -152,6 +153,38 @@ public class RoomTypeController {
             HttpStatus status = e instanceof DataNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
             return ResponseEntity.status(status).body(ResponseObject.builder()
                     .status(status)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @GetMapping("/filter/{hotelId}")
+    public ResponseEntity<ResponseObject> filterRoomType(
+            @PathVariable Long hotelId,
+            @RequestParam(name = "luxury", required = false) Boolean luxury,
+            @RequestParam(name = "single_bedroom", required = false) Boolean singleBedroom,
+            @RequestParam(name = "twin_bedroom", required = false) Boolean twinBedroom,
+            @RequestParam(name = "double_bedroom", required = false) Boolean doubleBedroom,
+            @RequestParam(name = "wardrobe", required = false) Boolean wardrobe,
+            @RequestParam(name = "air_conditioning", required = false) Boolean airConditioning,
+            @RequestParam(name = "tv", required = false) Boolean tv,
+            @RequestParam(name = "wifi", required = false) Boolean wifi,
+            @RequestParam(name = "toiletries", required = false) Boolean toiletries,
+            @RequestParam(name = "kitchen", required = false) Boolean kitchen,
+            @RequestParam(name = "min_price", required = false) Double minPrice,
+            @RequestParam(name = "max_price", required = false) Double maxPrice
+    ) {
+        try {
+            List<RoomTypeResponse> roomTypeResponses = roomTypeService.filterRoomType(hotelId, luxury, singleBedroom, twinBedroom,
+                    doubleBedroom, wardrobe, airConditioning, tv, wifi, toiletries, kitchen, minPrice, maxPrice);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(roomTypeResponses)
+                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .message(e.getMessage())
                     .build());
         }

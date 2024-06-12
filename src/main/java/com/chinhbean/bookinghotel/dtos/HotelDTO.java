@@ -28,10 +28,6 @@ public class HotelDTO {
     @Size(min = 10, message = "Description must be at least 10 characters long")
     private String description;
 
-    @NotNull(message = "Partner ID is required")
-    @JsonProperty("partner_id")
-    private Long partnerId;
-
     @NotBlank(message = "Brand is required")
     @Size(min = 2, max = 50, message = "Brand must be between 2 and 50 characters")
     private String brand;

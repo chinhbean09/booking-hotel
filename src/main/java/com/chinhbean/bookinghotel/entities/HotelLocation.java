@@ -22,11 +22,8 @@ public class HotelLocation {
     private Hotel hotel;
 
     @Column(nullable = false)
-    private String district;
-
-    @Column(nullable = false)
-    private String city;
-
-    @Column(nullable = false)
     private String address;
+
+    @Column(nullable = false)
+    private String province;
 }
