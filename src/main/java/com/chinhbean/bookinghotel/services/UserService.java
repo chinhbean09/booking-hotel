@@ -239,7 +239,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
