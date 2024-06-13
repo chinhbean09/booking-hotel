@@ -34,6 +34,9 @@ public class HotelImageService implements IHotelImageService {
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
 
+    @Value("${app.hotel.image.directory}")
+    private String hotelImageDirectory;
+
     @Override
     public HotelResponse uploadImages(List<MultipartFile> images, Long hotelId) throws IOException {
         List<String> imageUrls = new ArrayList<>();
@@ -45,7 +48,7 @@ public class HotelImageService implements IHotelImageService {
         for (MultipartFile image : images) {
             validateImageFile(image);
             String imageName = image.getOriginalFilename();
-            String key = "hotel_images/" + hotelId + "/" + imageName;
+            String key = hotelImageDirectory + hotelId + "/" + imageName;
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(image.getContentType());
             metadata.setContentLength(image.getSize());
@@ -126,13 +129,17 @@ public class HotelImageService implements IHotelImageService {
     }
 
     private String uploadImageToS3(MultipartFile imageFile, Long hotelId) throws IOException {
-        String imageName = imageFile.getOriginalFilename();
-        String key = "hotel_images/" + hotelId + "/" + imageName;
+        String key = generateImageKey(imageFile, hotelId);
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(imageFile.getContentType());
         metadata.setContentLength(imageFile.getSize());
         amazonS3.putObject(bucketName, key, imageFile.getInputStream(), metadata);
         return amazonS3.getUrl(bucketName, key).toString();
+    }
+
+    private String generateImageKey(MultipartFile imageFile, Long hotelId) {
+        String imageName = imageFile.getOriginalFilename();
+        return hotelImageDirectory + hotelId + "/" + imageName;
     }
 
     private void validateImageFile(MultipartFile imageFile) {

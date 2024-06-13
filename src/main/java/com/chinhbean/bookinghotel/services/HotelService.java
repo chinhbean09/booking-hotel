@@ -42,14 +42,16 @@ public class HotelService implements IHotelService {
     private final IHotelRepository hotelRepository;
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
-    private final IConvenienceRepository IConvenienceRepository;
+    private final IConvenienceRepository convenienceRepository;
     private final UserRepository userRepository;
     private final AmazonS3 amazonS3;
 
-    private static final String UPLOAD_DIR = "business-license-uploads/";
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
+
+    @Value("${app.business.license.directory}")
+    private String businessLicenseDirectory;
 
     @Transactional
     @Override
@@ -96,7 +98,7 @@ public class HotelService implements IHotelService {
         Set<Convenience> newConveniences = hotel.getConveniences().stream()
                 .filter(convenience -> convenience.getId() == null)
                 .collect(Collectors.toSet());
-        IConvenienceRepository.saveAll(newConveniences);
+        convenienceRepository.saveAll(newConveniences);
         Hotel savedHotel = hotelRepository.save(hotel);
         logger.info("Hotel created successfully with ID: {}", savedHotel.getId());
         return HotelResponse.fromHotel(savedHotel);
@@ -124,7 +126,7 @@ public class HotelService implements IHotelService {
     }
 
     private Convenience convertToConvenienceEntity(ConvenienceDTO dto) {
-        return IConvenienceRepository.findByFreeBreakfastAndPickUpDropOffAndRestaurantAndBarAndPoolAndFreeInternetAndReception24hAndLaundry(
+        return convenienceRepository.findByFreeBreakfastAndPickUpDropOffAndRestaurantAndBarAndPoolAndFreeInternetAndReception24hAndLaundry(
                         dto.getFreeBreakfast(),
                         dto.getPickUpDropOff(),
                         dto.getRestaurant(),
@@ -248,7 +250,7 @@ public class HotelService implements IHotelService {
     }
 
     private String buildObjectKey(Long hotelId, String originalFileName) {
-        return UPLOAD_DIR + hotelId + "/" + originalFileName;
+        return businessLicenseDirectory + hotelId + "/" + originalFileName;
     }
 
     private void uploadFileToS3(String bucketName, String objectKey, MultipartFile file, ObjectMetadata metadata) throws IOException {
@@ -269,5 +271,11 @@ public class HotelService implements IHotelService {
         }
         Pageable pageable = PageRequest.of(page, size);
         return hotelRepository.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, pageable);
+    }
+
+    @Override
+    public Page<Hotel> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Long typeId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return hotelRepository.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, pageable);
     }
 }

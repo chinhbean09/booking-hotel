@@ -30,8 +30,11 @@ public class HotelResponse {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("business_license")
+    private String businessLicense;
+
     @JsonProperty("rating")
-    private Double rating;
+    private Integer rating;
 
     @JsonProperty("brand")
     private String brand;
@@ -95,6 +98,7 @@ public class HotelResponse {
                 .roomTypes(roomTypeResponses)
                 .feedbacks(feedbackResponses)
                 .imageUrls(hotelImageResponses)
+                .businessLicense(hotel.getBusinessLicense())
                 .build();
     }
 }

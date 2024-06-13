@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.util.Collections;
+import java.util.Set;
 
 
 @RestController
@@ -38,8 +40,9 @@ public class HotelController {
         String token = authHeader.substring(7);
         Page<HotelResponse> hotels = hotelService.getAllHotels(token, page, size);
         if (hotels.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
-                    .status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(Collections.emptyList())
                     .message(MessageKeys.NO_HOTELS_FOUND)
                     .build());
         } else {
@@ -175,8 +178,9 @@ public class HotelController {
 
         Page<Hotel> result = hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size);
         if (result.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
-                    .status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(Collections.emptyList())
                     .message(MessageKeys.NO_HOTELS_FOUND)
                     .build());
         } else {
@@ -184,6 +188,50 @@ public class HotelController {
                     .status(HttpStatus.OK)
                     .data(result)
                     .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
+                    .build());
+        }
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ResponseObject> filterHotels(
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) Set<Long> convenienceIds,
+            @RequestParam(required = false) Long typeId,
+            @RequestParam(required = false) Boolean luxury,
+            @RequestParam(required = false) Boolean singleBedroom,
+            @RequestParam(required = false) Boolean twinBedroom,
+            @RequestParam(required = false) Boolean doubleBedroom,
+            @RequestParam(required = false) Boolean freeBreakfast,
+            @RequestParam(required = false) Boolean pickUpDropOff,
+            @RequestParam(required = false) Boolean restaurant,
+            @RequestParam(required = false) Boolean bar,
+            @RequestParam(required = false) Boolean pool,
+            @RequestParam(required = false) Boolean freeInternet,
+            @RequestParam(required = false) Boolean reception24h,
+            @RequestParam(required = false) Boolean laundry,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Page<Hotel> hotels = hotelService.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, page, size);
+            if (hotels.isEmpty()) {
+                return ResponseEntity.ok().body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(Collections.emptyList())
+                        .message(MessageKeys.NO_HOTELS_FOUND)
+                        .build());
+            } else {
+                return ResponseEntity.ok().body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(hotels)
+                        .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
+                        .build());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .data(Collections.emptyList())
+                    .message(e.getMessage())
                     .build());
         }
     }

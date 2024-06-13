@@ -23,7 +23,7 @@ public class Hotel {
     private String hotelName;
 
     @Column(nullable = false)
-    private Double rating;
+    private Integer rating;
 
     @Column(nullable = false)
     private String description;
@@ -42,7 +42,7 @@ public class Hotel {
     @Enumerated(EnumType.STRING)
     private HotelStatus status;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(
             name = "hotel_conveniences",
             joinColumns = @JoinColumn(name = "hotel_id"),

@@ -55,6 +55,8 @@ public class UserService implements IUserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
+    @Value("${app.avatar.directory}")
+    private String UserAvatarDirectory;
 
     @Override
     @Transactional
@@ -171,7 +173,7 @@ public class UserService implements IUserService {
                 // Get the original filename of the avatar
                 String originalFileName = avatar.getOriginalFilename();
                 // Construct the object key with the folder path and original filename
-                String objectKey = "user_avatar/" + id + "/" + originalFileName;
+                String objectKey = UserAvatarDirectory + id + "/" + originalFileName;
                 // Get the size of the file
                 long contentLength = avatar.getSize();
                 // Create object metadata and set the content length and content type

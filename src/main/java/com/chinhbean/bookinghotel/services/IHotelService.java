@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.util.Set;
 
 @Service
 public interface IHotelService {
@@ -31,4 +32,6 @@ public interface IHotelService {
     Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException;
 
     Page<Hotel> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size);
+
+    Page<Hotel> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Long typeId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size);
 }

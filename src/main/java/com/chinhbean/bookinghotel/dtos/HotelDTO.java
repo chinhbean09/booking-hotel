@@ -22,7 +22,7 @@ public class HotelDTO {
     @NotNull(message = "Rating is required")
     @Min(value = 1, message = "Rating must be at least 1")
     @Max(value = 5, message = "Rating cannot be greater than 5")
-    private Double rating;
+    private Integer rating;
 
     @NotBlank(message = "Description is required")
     @Size(min = 10, message = "Description must be at least 10 characters long")
