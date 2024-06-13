@@ -17,6 +17,8 @@ pipeline {
         runScript = 'bash -c "java -jar -Dspring.profiles.active=pro /datas/bookinghotel/booking-hotel-0.0.1-SNAPSHOT.jar > /datas/bookinghotel/nohup.out &"'
     }
 
+
+    
     stages {
         stage('info') {
           steps {
