@@ -1,3 +1,4 @@
+http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel
 # Booking Hotel System:
 
 Project Rules:
