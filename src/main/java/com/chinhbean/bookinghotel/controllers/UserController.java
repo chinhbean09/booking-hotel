@@ -4,13 +4,16 @@ package com.chinhbean.bookinghotel.controllers;
 import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
+import com.chinhbean.bookinghotel.dtos.RefreshTokenDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.repositories.UserRepository;
 import com.chinhbean.bookinghotel.responses.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
+import com.chinhbean.bookinghotel.responses.UserListResponse;
 import com.chinhbean.bookinghotel.responses.UserResponse;
 import com.chinhbean.bookinghotel.services.ITokenService;
 import com.chinhbean.bookinghotel.services.IUserService;
@@ -18,16 +21,24 @@ import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -39,6 +50,7 @@ public class UserController {
     private final ITokenService tokenService;
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
+    private final UserRepository userRepository;
 
     @GetMapping("/generate-secret-key")
     public ResponseEntity<?> generateSecretKey() {
@@ -60,6 +72,13 @@ public class UserController {
                     .status(HttpStatus.BAD_REQUEST)
                     .data(null)
                     .message(errorMessages.toString())
+                    .build());
+        }
+        if(userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
+            return ResponseEntity.badRequest().body(ResponseObject.builder()
+                    .status(HttpStatus.BAD_REQUEST)
+                    .data(null)
+                    .message(localizationUtils.getLocalizedMessage(MessageKeys.PHONE_NUMBER_ALREADY_EXISTS))
                     .build());
         }
         if (!userDTO.getPassword().equals(userDTO.getRetypePassword())) {
@@ -84,8 +103,7 @@ public class UserController {
     ) throws Exception {
         String token = userService.login(
                 userLoginDTO.getEmailOrPhone(),
-                userLoginDTO.getPassword(),
-                userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId()
+                userLoginDTO.getPassword()
         );
         String userAgent = request.getHeader("User-Agent");
 
@@ -108,7 +126,22 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .build());
     }
-
+    @PostMapping("/logout")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        try {
+            String authorizationHeader = request.getHeader("Authorization");
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                String token = authorizationHeader.substring(7);
+                tokenService.deleteToken(token);
+                return ResponseEntity.ok().body("Logout successful.");
+            } else {
+                return ResponseEntity.badRequest().body("No token provided.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("An error occurred during logout: " + e.getMessage());
+        }
+    }
     private boolean isMobileDevice(String userAgent) {
         return userAgent.toLowerCase().contains("mobile");
     }
@@ -126,6 +159,8 @@ public class UserController {
     }
 
     @PutMapping("/update-password/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PARTNER', 'ROLE_CUSTOMER')")
+
     public ResponseEntity<ResponseObject> changePassword(
             @PathVariable long id,
             @Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
@@ -144,6 +179,8 @@ public class UserController {
     }
 
     @GetMapping("/block-or-enable/{userId}/{active}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+
     public ResponseEntity<String> blockOrEnable(
             @Valid @PathVariable long userId,
             @Valid @PathVariable int active) {
@@ -157,4 +194,118 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @GetMapping("/get-all-user")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
+    public ResponseEntity<UserListResponse> getAllUsers(
+            @RequestParam(defaultValue = "") String keyword,
+            @NonNull @RequestParam("page") int page ,
+            @RequestParam("limit") int limit) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("fullName").ascending());
+            Page<UserResponse> userPage = userService.getAllUsers(keyword, pageRequest);
+
+            int totalPages = userPage.getTotalPages();
+            List<UserResponse> users = userPage.getContent();
+
+            UserListResponse userListResponse = UserListResponse.builder()
+                    .users(users)
+                    .totalPages(totalPages)
+                    .message("Success")
+                    .build();
+
+            return ResponseEntity.ok(userListResponse);
+        } catch (IllegalArgumentException e) {
+            UserListResponse errorResponse = UserListResponse.builder()
+                    .users(Collections.emptyList())
+                    .totalPages(0)
+                    .message("Invalid parameters")
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(errorResponse);
+        } catch (Exception e) {
+            UserListResponse errorResponse = UserListResponse.builder()
+                    .users(Collections.emptyList())
+                    .totalPages(0)
+                    .message("Failed to retrieve users")
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping("/get-user/{id}")
+    public ResponseEntity<UserResponse> getUser(@Valid @PathVariable Long id) {
+        try {
+            User user = userService.getUser(id);
+            return ResponseEntity.ok(UserResponse.fromUser(user));
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+    @Transactional
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) throws DataNotFoundException {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.ok("Delete User Successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
+        }
+    }
+
+    @Transactional
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateUser(@RequestBody UserDTO userDTO) throws DataNotFoundException {
+        try {
+            userService.updateUser(userDTO);
+            return ResponseEntity.ok("Update Successfully");
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to update user: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<LoginResponse> refreshToken(
+            @Valid @RequestBody RefreshTokenDTO refreshTokenDTO
+    ) {
+        try {
+            User userDetail = userService.getUserDetailsFromRefreshToken(refreshTokenDTO.getRefreshToken());
+            Token jwtToken = tokenService.refreshToken(refreshTokenDTO.getRefreshToken(), userDetail);
+            return ResponseEntity.ok(LoginResponse.builder()
+                    .message("Refresh token successfully")
+                    .token(jwtToken.getToken())
+                    .tokenType(jwtToken.getTokenType())
+                    .refreshToken(jwtToken.getRefreshToken())
+                    .username(userDetail.getUsername())
+                    .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
+                    .id(userDetail.getId())
+                    .build());
+        } catch (Exception e) {
+            String errorMessage = "Error occurred during token refresh: " + e.getMessage();
+            LoginResponse errorResponse = LoginResponse.builder()
+                    .message(errorMessage)
+                    .build();
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+    }
+
+    @GetMapping("/get-all-users/{roleId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> getUsers(@PathVariable Long roleId) {
+        try {
+            List<UserResponse> users = userService.getAllUsers(roleId);
+            return ResponseEntity.ok(users);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid roleId: " + roleId);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving users: " + e.getMessage());
+        }
+    }
+
 }

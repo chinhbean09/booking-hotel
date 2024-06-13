@@ -48,9 +48,6 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @Column(name = "gender")
     private String gender;
 
-    @Column(name = "city")
-    private String city;
-
     @ManyToOne
     @JoinColumn(name = "role_id", columnDefinition = "bigint")
     private Role role;

@@ -17,6 +17,8 @@ pipeline {
         runScript = 'bash -c "java -jar -Dspring.profiles.active=pro /datas/bookinghotel/booking-hotel-0.0.1-SNAPSHOT.jar > /datas/bookinghotel/nohup.out &"'
     }
 
+
+    
     stages {
         stage('info') {
           steps {
@@ -26,7 +28,7 @@ pipeline {
         stage('build') {
             steps {
                 sh(script: """ echo "Stop old process..." """)
-                // sh(script: """ ${killScript} """, label: "terminate the running process")
+                sh(script: """ ${killScript} """, label: "terminate the running process")
                 sh(script: """ echo "Running build script..." """)
                 sh(script: """ ${buildScript} """, label: "Building")
                 sh(script: """ echo "Build script completed." """)
