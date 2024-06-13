@@ -19,7 +19,7 @@ public interface IHotelService {
 
     HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException;
 
-    HotelResponse createHotel(HotelDTO hotelDTO, String token) throws DataNotFoundException;
+    public HotelResponse createHotel(HotelDTO hotelDTO) throws DataNotFoundException, PermissionDenyException;
 
     HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException, PermissionDenyException;
 

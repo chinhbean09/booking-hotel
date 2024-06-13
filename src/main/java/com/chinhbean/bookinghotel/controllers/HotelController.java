@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,15 +67,12 @@ public class HotelController {
         }
     }
 
-    @SecurityRequirement(name = "bearer-key")
     @PostMapping("/create")
-    public ResponseEntity<ResponseObject> createHotel(@RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<ResponseObject> createHotel(@RequestBody HotelDTO hotelDTO) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new IllegalArgumentException("Invalid token");
-            }
-            String token = authHeader.substring(7);
-            HotelResponse createdHotel = hotelService.createHotel(hotelDTO, token);
+
+            HotelResponse createdHotel = hotelService.createHotel(hotelDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
                     .status(HttpStatus.CREATED)
                     .data(createdHotel)

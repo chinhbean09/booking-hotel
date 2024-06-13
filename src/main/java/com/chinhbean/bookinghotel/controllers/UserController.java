@@ -159,6 +159,8 @@ public class UserController {
     }
 
     @PutMapping("/update-password/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PARTNER', 'ROLE_CUSTOMER')")
+
     public ResponseEntity<ResponseObject> changePassword(
             @PathVariable long id,
             @Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
@@ -177,6 +179,8 @@ public class UserController {
     }
 
     @GetMapping("/block-or-enable/{userId}/{active}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+
     public ResponseEntity<String> blockOrEnable(
             @Valid @PathVariable long userId,
             @Valid @PathVariable int active) {
@@ -240,6 +244,7 @@ public class UserController {
     }
     @Transactional
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) throws DataNotFoundException {
         try {
             userService.deleteUser(id);
@@ -288,7 +293,8 @@ public class UserController {
 
     }
 
-    @GetMapping("/getallusers/{roleId}")
+    @GetMapping("/get-all-users/{roleId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> getUsers(@PathVariable Long roleId) {
         try {
             List<UserResponse> users = userService.getAllUsers(roleId);

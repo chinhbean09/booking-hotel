@@ -11,6 +11,7 @@ import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +30,8 @@ public class RoomTypeController {
     private final IRoomImageService roomImageService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+
     public ResponseEntity<ResponseObject> createRoomType(@RequestBody RoomTypeDTO roomTypeDTO) {
         try {
             RoomTypeResponse createdRoomType = roomTypeService.createRoomType(roomTypeDTO);
@@ -45,7 +48,9 @@ public class RoomTypeController {
         }
     }
 
-    @GetMapping("/get-all-by-hotel/{hotelId}")
+    @GetMapping("/get-all-room/{hotelId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+
     public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@PathVariable Long hotelId) {
         try {
             List<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId);
@@ -63,6 +68,8 @@ public class RoomTypeController {
     }
 
     @PutMapping("/update/{roomTypeId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
+
     public ResponseEntity<ResponseObject> updateRoomType(@PathVariable Long roomTypeId, @RequestBody RoomTypeDTO roomTypeDTO) {
         try {
             RoomTypeResponse updatedRoomType = roomTypeService.updateRoomType(roomTypeId, roomTypeDTO);
@@ -80,6 +87,7 @@ public class RoomTypeController {
     }
 
     @DeleteMapping("/delete/{roomTypeId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<ResponseObject> deleteRoomType(@PathVariable Long roomTypeId) {
         try {
             roomTypeService.deleteRoomType(roomTypeId);
@@ -95,7 +103,7 @@ public class RoomTypeController {
         }
     }
 
-    @GetMapping("/get-by-id/{roomTypeId}")
+    @GetMapping("/get-room/{roomTypeId}")
     public ResponseEntity<ResponseObject> getRoomTypeById(@PathVariable Long roomTypeId) {
         try {
             RoomTypeResponse roomType = roomTypeService.getRoomTypeById(roomTypeId);
