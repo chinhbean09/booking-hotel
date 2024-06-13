@@ -79,7 +79,7 @@ public class UserService implements IUserService {
                 .email(userDTO.getEmail())
                 .phoneNumber(userDTO.getPhoneNumber())
                 .password(userDTO.getPassword())
-                .active(false)
+                .active(true)
                 .facebookAccountId(userDTO.getFacebookAccountId())
                 .googleAccountId(userDTO.getGoogleAccountId())
                 .build();

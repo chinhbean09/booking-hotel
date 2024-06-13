@@ -9,8 +9,6 @@
 <p>Chúng tôi gửi thông tin truy cập hệ thống của bạn:</p>
 <p>Email: <span th:text="${email}"></span></p>
 <p>Password: <span th:text="${password}"></span></p>
-<p>Activate account:</p>
-<a th:href="@{'http://localhost:8080/api/v1/users/block-or-enable/' + ${userId} + '/1'}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #56caff; border: none; border-radius: 15px; text-decoration: none;">Activate</a>
 <p>Đây là email tự động, vui lòng không trả lời.</p>
 </body>
 </html>
