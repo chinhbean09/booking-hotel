@@ -31,16 +31,13 @@
         }
     </style>
 </head>
-<body>
-<div class="container">
-    <h2>Welcome, <span th:text="${email}"></span></h2>
-    <p>We hope you have a great experience using our service.</p>
-    <p>Click the button below to activate your account:</p>
-    <a href="http://localhost:8080/api/v1/users/block-or-enable/{userId}/1"
-       class="button">
-        Activate Your Account
-    </a>
-    <p style="margin-top: 30px; font-size: 14px; color: #999;">This is an automated email, please do not reply.</p>
-</div>
+<body style="font-family: 'Roboto', sans-serif; font-size: 16px;">
+<p>Chào mừng quý khách</p>
+<p>Chúc bạn có những trải nghiệm tuyệt vời khi sử dụng dịch vụ của chúng tôi</p>
+<p>Chúng tôi gửi thông tin truy cập hệ thống của bạn:</p>
+<p>Email: <span th:text="${email}"></span></p>
+<p>Password: <span th:text="${password}"></span></p>
+<p>Đây là email tự động, vui lòng không trả lời.</p>
+
 </body>
 </html>

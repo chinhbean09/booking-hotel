@@ -144,8 +144,7 @@ public class HotelImageService implements IHotelImageService {
 
     private void deleteImageFromS3(String imageUrl) {
         try {
-            String[] parts = imageUrl.split("/");
-            String key = parts[parts.length - 1];
+            String key = imageUrl.substring(imageUrl.indexOf(bucketName) + bucketName.length() + 1);
             amazonS3.deleteObject(bucketName, key);
         } catch (AmazonS3Exception e) {
             // Log or handle the exception
