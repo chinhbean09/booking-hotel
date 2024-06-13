@@ -62,7 +62,6 @@ public class UserResponse {
                 .facebookAccountId(user.getFacebookAccountId())
                 .googleAccountId(user.getGoogleAccountId())
                 .role(user.getRole())
-                .city(user.getCity())
                 .avatar(user.getAvatar())
                 .build();
     }

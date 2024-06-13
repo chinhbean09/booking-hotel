@@ -34,6 +34,9 @@ public class RoomImageService implements IRoomImageService {
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
 
+    @Value("${app.room.image.directory}")
+    private String roomImageDirectory;
+
     @Override
     public RoomTypeResponse uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException {
         List<String> imageUrls = new ArrayList<>();
@@ -45,7 +48,7 @@ public class RoomImageService implements IRoomImageService {
         for (MultipartFile image : images) {
             validateImageFile(image);
             String imageName = image.getOriginalFilename();
-            String key = "room_images/" + roomTypeId + "/" + imageName;
+            String key = roomImageDirectory + roomTypeId + "/" + imageName;
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(image.getContentType());
             metadata.setContentLength(image.getSize());
@@ -129,7 +132,7 @@ public class RoomImageService implements IRoomImageService {
 
     private String uploadImageToS3(MultipartFile imageFile, Long roomId) throws IOException {
         String imageName = imageFile.getOriginalFilename();
-        String key = "room_images/" + roomId + "/" + imageName;
+        String key = roomImageDirectory + roomId + "/" + imageName;
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(imageFile.getContentType());
         metadata.setContentLength(imageFile.getSize());
@@ -146,8 +149,7 @@ public class RoomImageService implements IRoomImageService {
 
     private void deleteImageFromS3(String imageUrl) {
         try {
-            String[] parts = imageUrl.split("/");
-            String key = parts[parts.length - 1];
+            String key = imageUrl.substring(imageUrl.indexOf(bucketName) + bucketName.length() + 1);
             amazonS3.deleteObject(bucketName, key);
         } catch (AmazonS3Exception e) {
             // Log or handle the exception

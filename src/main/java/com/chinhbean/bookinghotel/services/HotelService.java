@@ -26,6 +26,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -89,12 +91,12 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse createHotel(HotelDTO hotelDTO, String token) throws DataNotFoundException {
-        User user = getUserDetailsFromToken(token);
-
+    public HotelResponse createHotel(HotelDTO hotelDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         logger.info("Creating a new hotel with name: {}", hotelDTO.getHotelName());
         Hotel hotel = convertToEntity(hotelDTO);
-        hotel.setPartner(user);
+        hotel.setPartner(currentUser);
         Set<Convenience> newConveniences = hotel.getConveniences().stream()
                 .filter(convenience -> convenience.getId() == null)
                 .collect(Collectors.toSet());

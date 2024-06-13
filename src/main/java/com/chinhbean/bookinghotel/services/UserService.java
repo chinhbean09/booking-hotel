@@ -9,12 +9,15 @@ import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
 import com.chinhbean.bookinghotel.dtos.DataMailDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.entities.Role;
+import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.RoleRepository;
+import com.chinhbean.bookinghotel.repositories.TokenRepository;
 import com.chinhbean.bookinghotel.repositories.UserRepository;
+import com.chinhbean.bookinghotel.responses.UserResponse;
 import com.chinhbean.bookinghotel.services.sendmails.MailService;
 import com.chinhbean.bookinghotel.utils.MailTemplate;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
@@ -25,19 +28,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +55,7 @@ public class UserService implements IUserService {
     private final AuthenticationManager authenticationManager;
     private final AmazonS3 amazonS3;
     private final MailService mailService;
-
+    private final TokenRepository tokenRepository;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
@@ -81,7 +85,7 @@ public class UserService implements IUserService {
                 .email(userDTO.getEmail())
                 .phoneNumber(userDTO.getPhoneNumber())
                 .password(userDTO.getPassword())
-                .active(false)
+                .active(true)
                 .facebookAccountId(userDTO.getFacebookAccountId())
                 .googleAccountId(userDTO.getGoogleAccountId())
                 .build();
@@ -99,12 +103,10 @@ public class UserService implements IUserService {
         return user;
     }
 
-
     @Override
     public String login(
             String emailOrPhone,
-            String password,
-            Long roleId
+            String password
     ) throws Exception {
         Optional<User> optionalUser;
         if (isEmail(emailOrPhone)) {
@@ -122,10 +124,6 @@ public class UserService implements IUserService {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
         }
-        Optional<Role> optionalRole = roleRepository.findById(roleId);
-        if (optionalRole.isEmpty() || !roleId.equals(existingUser.getRole().getId())) {
-            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS));
-        }
         if (!optionalUser.get().isActive()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_IS_LOCKED));
         }
@@ -137,6 +135,18 @@ public class UserService implements IUserService {
         // authenticate with Java Spring security
         authenticationManager.authenticate(authenticationToken);
         return jwtTokenUtils.generateToken(existingUser);
+    }
+
+    @Override
+    public Page<UserResponse> getAllUsers(String keyword, PageRequest pageRequest) {
+        Page<User> usersPage;
+        usersPage = userRepository.searchUsers(keyword, pageRequest);
+        return usersPage.map(UserResponse::fromUser);
+    }
+
+    @Override
+    public User getUser(Long id) throws DataNotFoundException {
+        return userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found"));
     }
 
     private boolean isEmail(String emailOrPhone) {
@@ -157,6 +167,14 @@ public class UserService implements IUserService {
         } else {
             throw new Exception("User not found");
         }
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        List<Token> tokens = tokenRepository.findByUserId(userId);
+        tokenRepository.deleteAll(tokens);
+        optionalUser.ifPresent(userRepository::delete);
     }
 
     @Override
@@ -217,8 +235,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
-    public User changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException {
+    @Transactional
+    public void changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException {
         User exsistingUser = userRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), exsistingUser.getPassword())) {
@@ -229,12 +247,11 @@ public class UserService implements IUserService {
         }
         exsistingUser.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
         userRepository.save(exsistingUser);
-        return exsistingUser;
     }
 
     @Override
-    public void updatePassword(String email, String password) throws DataNotFoundException {
-        User user = userRepository.findByEmail(email)
+    public void updatePassword(String phone, String password) throws DataNotFoundException {
+        User user = userRepository.findByPhoneNumber(phone)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
@@ -247,5 +264,31 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         existingUser.setActive(active);
         userRepository.save(existingUser);
+    }
+
+    @Override
+    public void updateUser(UserDTO userDTO) throws Exception {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+        currentUser.setEmail(userDTO.getEmail());
+        currentUser.setFullName(userDTO.getFullName());
+        currentUser.setPhoneNumber(userDTO.getPhoneNumber());
+        currentUser.setAddress(userDTO.getAddress());
+        currentUser.setDateOfBirth(userDTO.getDateOfBirth());
+        currentUser.setGender(userDTO.getGender());
+        userRepository.save(currentUser);
+
+    }
+
+    @Override
+    public User getUserDetailsFromRefreshToken(String refreshToken) throws Exception {
+        Token existingToken = tokenRepository.findByRefreshToken(refreshToken);
+        return getUserDetailsFromToken(existingToken.getToken());
+    }
+
+    @Override
+    public List<UserResponse> getAllUsers(Long roleId) {
+        List<User> users = userRepository.findByRoleId(roleId);
+        return users.stream().map(UserResponse::fromUser).toList();
     }
 }

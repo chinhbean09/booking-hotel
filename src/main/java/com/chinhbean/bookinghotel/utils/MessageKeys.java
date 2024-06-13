@@ -83,4 +83,7 @@ public class MessageKeys {
     public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_VIEW_BOOKINGS = "booking.list_booking.user_does_not_have_permission_to_view_bookings";
     public static final String UPDATE_LICENSE_SUCCESSFULLY = "license.update_license.update_successfully";
     public static final String HOTEL_IS_PENDING = "hotel.update_status.hotel_is_pending";
+
+    public static final String HOTEL_IS_CLOSED = "hotel.update_status.hotel_is_closed";
+    public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_HOTEL = "hotel.create_hotel.USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_HOTEL";
 }
