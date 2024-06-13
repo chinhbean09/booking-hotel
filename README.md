@@ -1,7 +1,6 @@
 # Booking Hotel System:
 
 Project Rules:
-
 Commit Title:
 Each commit should have a clear title describing the change it introduces.
 Titles should be written in English and follow Title Case.
