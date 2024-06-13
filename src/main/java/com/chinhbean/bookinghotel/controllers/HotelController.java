@@ -1,6 +1,7 @@
 package com.chinhbean.bookinghotel.controllers;
 
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
+import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +34,25 @@ public class HotelController {
     private final IHotelService hotelService;
     private final IHotelImageService hotelImageService;
 
-    @GetMapping("/getListHotels")
-    public ResponseEntity<ResponseObject> getAllHotels() throws DataNotFoundException {
-        Page<HotelResponse> hotels = hotelService.getAllHotels();
-        return ResponseEntity.ok().body(ResponseObject.builder()
-                .status(HttpStatus.OK)
-                .data(hotels)
-                .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
-                .build());
+    @GetMapping("/getAllHotels")
+    public ResponseEntity<ResponseObject> getAllHotels(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        String token = authHeader.substring(7);
+        Page<HotelResponse> hotels = hotelService.getAllHotels(token, page, size);
+        if (hotels.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message(MessageKeys.NO_HOTELS_FOUND)
+                    .build());
+        } else {
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(hotels)
+                    .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
+                    .build());
+        }
     }
 
     @GetMapping("/detail/{hotelId}")
@@ -185,5 +198,16 @@ public class HotelController {
                     .message(e.getMessage())
                     .build());
         }
+
+    @PutMapping(value = "/update-business-license/{hotelId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseObject> updateBusinessLicense(@PathVariable long hotelId,
+                                                                @RequestParam("license") MultipartFile license) throws DataNotFoundException, IOException {
+        Hotel hotel = hotelService.uploadBusinessLicense(hotelId, license);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .status(HttpStatus.OK)
+                .data(HotelResponse.fromHotel(hotel))
+                .message(MessageKeys.UPDATE_LICENSE_SUCCESSFULLY)
+                .build());
+
     }
 }

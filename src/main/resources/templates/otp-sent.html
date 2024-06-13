@@ -1,18 +1,41 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'/>
-    <style>
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'/>
+    <style type="text/css">
         body {
             font-family: 'Roboto', sans-serif;
             font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .otp {
+            font-size: 24px;
+            color: #56caff;
+            margin-top: 20px;
+        }
+
+        .note {
+            font-size: 14px;
+            color: #999;
+            margin-top: 30px;
         }
     </style>
+    <title>OTP Verification Code</title>
 </head>
 <body>
-<p th:text="'Đây là mã OTP xác thực của bạn: ' + ${otp}"></p>
-<p>Lưu ý: mã này chỉ có hiệu lực trong 1 phút</p>
-<p>Đây là email tự động, vui lòng không trả lời.</p>
+<div class="container">
+    <h2>Your OTP Verification Code</h2>
+    <p class="otp" th:text="'Here is your OTP verification code: ' + ${otp}"></p>
+    <p>Note: This code is only valid for 1 minute.</p>
+    <p class="note">This is an automated email, please do not reply.</p>
+</div>
 </body>
 </html>

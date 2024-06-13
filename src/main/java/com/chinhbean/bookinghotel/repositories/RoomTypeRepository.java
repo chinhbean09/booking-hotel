@@ -20,7 +20,7 @@ public interface RoomTypeRepository extends JpaRepository<RoomType, Long> {
     List<RoomType> findWithTypesAndRoomConveniencesByHotelId(Long hotelId);
 
     @EntityGraph(attributePaths = {"type", "roomConveniences", "roomImages"})
-    //@Query("SELECT r FROM RoomType r WHERE r.id = :id")
+        //@Query("SELECT r FROM RoomType r WHERE r.id = :id")
     Optional<RoomType> findWithTypesAndRoomConveniencesById(Long id);
 
     @Query("SELECT rt FROM RoomType rt JOIN rt.type t JOIN rt.roomConveniences rc WHERE " +

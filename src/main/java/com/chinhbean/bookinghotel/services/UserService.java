@@ -100,11 +100,16 @@ public class UserService implements IUserService {
 
     @Override
     public String login(
-            String phoneNumber,
+            String emailOrPhone,
             String password,
             Long roleId
     ) throws Exception {
-        Optional<User> optionalUser = userRepository.findByPhoneNumber(phoneNumber);
+        Optional<User> optionalUser;
+        if (isEmail(emailOrPhone)) {
+            optionalUser = userRepository.findByEmail(emailOrPhone);
+        } else {
+            optionalUser = userRepository.findByPhoneNumber(emailOrPhone);
+        }
         if (optionalUser.isEmpty()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
         }
@@ -123,13 +128,17 @@ public class UserService implements IUserService {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_IS_LOCKED));
         }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                phoneNumber, password,
+                emailOrPhone, password,
                 existingUser.getAuthorities()
         );
 
         // authenticate with Java Spring security
         authenticationManager.authenticate(authenticationToken);
         return jwtTokenUtils.generateToken(existingUser);
+    }
+
+    private boolean isEmail(String emailOrPhone) {
+        return emailOrPhone.contains("@");
     }
 
 
@@ -230,7 +239,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));

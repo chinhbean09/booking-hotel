@@ -169,7 +169,7 @@ public class RoomTypeService implements IRoomTypeService {
         ).orElseGet(() -> createNewType(typeRoomDTO));
     }
 
-    private RoomConvenience convertToRoomConvenienceEntity(ConvenienceRoomDTO convenienceRoomDTO){
+    private RoomConvenience convertToRoomConvenienceEntity(ConvenienceRoomDTO convenienceRoomDTO) {
         return convenienceRoomRepository.findByWardrobeAndAirConditioningAndTvAndWifiAndToiletriesAndKitchen(
                 convenienceRoomDTO.getWardrobe(),
                 convenienceRoomDTO.getAirConditioning(),
@@ -189,7 +189,7 @@ public class RoomTypeService implements IRoomTypeService {
         return type;
     }
 
-    private RoomConvenience createNewRoomConvenience(ConvenienceRoomDTO convenienceRoomDTO){
+    private RoomConvenience createNewRoomConvenience(ConvenienceRoomDTO convenienceRoomDTO) {
         RoomConvenience roomConvenience = new RoomConvenience();
         roomConvenience.setWardrobe(convenienceRoomDTO.getWardrobe());
         roomConvenience.setAirConditioning(convenienceRoomDTO.getAirConditioning());
