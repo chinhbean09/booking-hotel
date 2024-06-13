@@ -12,6 +12,7 @@ import com.chinhbean.bookinghotel.utils.MessageKeys;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Date;
 
 
 @RestController
@@ -160,5 +162,29 @@ public class HotelController {
                 .data(HotelResponse.fromHotel(hotel))
                 .message(MessageKeys.UPDATE_LICENSE_SUCCESSFULLY)
                 .build());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ResponseObject> findByProvinceAndCapacityPerRoomAndAvailability(
+            @RequestParam String province,
+            @RequestParam int numPeople,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date checkInDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date checkOutDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Hotel> result = hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size);
+        if (result.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message(MessageKeys.NO_HOTELS_FOUND)
+                    .build());
+        } else {
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(result)
+                    .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
+                    .build());
+        }
     }
 }

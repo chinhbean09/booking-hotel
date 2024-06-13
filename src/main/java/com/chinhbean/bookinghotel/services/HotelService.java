@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -259,5 +260,14 @@ public class HotelService implements IHotelService {
         metadata.setContentType(file.getContentType());
         metadata.setContentLength(file.getSize());
         return metadata;
+    }
+
+    @Override
+    public Page<Hotel> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
+        if (checkInDate.after(checkOutDate)) {
+            throw new IllegalArgumentException("Check-in date must be before check-out date");
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        return hotelRepository.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, pageable);
     }
 }

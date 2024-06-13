@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Date;
 
 @Service
 public interface IHotelService {
@@ -28,4 +29,6 @@ public interface IHotelService {
     void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException;
 
     Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException;
+
+    Page<Hotel> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size);
 }
