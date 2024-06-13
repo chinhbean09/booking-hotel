@@ -197,7 +197,7 @@ public class HotelController {
                     .message(e.getMessage())
                     .build());
         }
-
+    }
     @PutMapping(value = "/update-business-license/{hotelId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseObject> updateBusinessLicense(@PathVariable long hotelId,
                                                                 @RequestParam("license") MultipartFile license) throws DataNotFoundException, IOException {
