@@ -27,6 +27,7 @@ pipeline {
             steps {
                 sh(script: """ echo "Stop old process..." """)
                 // sh(script: """ ${killScript} """, label: "terminate the running process")
+                
                 sh(script: """ echo "Running build script..." """)
                 sh(script: """ ${buildScript} """, label: "Building")
                 sh(script: """ echo "Build script completed." """)
