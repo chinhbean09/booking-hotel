@@ -94,7 +94,7 @@ public class HotelController {
     }
 
     @SecurityRequirement(name = "bearer-key")
-    @PutMapping("updateHotel/{hotelId}")
+    @PutMapping("/updateHotel/{hotelId}")
     public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {

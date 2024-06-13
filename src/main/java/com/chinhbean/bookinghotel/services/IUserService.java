@@ -4,13 +4,18 @@ import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.responses.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface IUserService {
 
     User registerUser(UserDTO userDTO) throws Exception;
 
-    String login(String phoneNumber, String password, Long roleId) throws Exception;
+    String login(String phoneNumber, String password) throws Exception;
 
     User getUserDetailsFromToken(String token) throws Exception;
 
@@ -23,5 +28,12 @@ public interface IUserService {
     void updatePassword(String email, String password) throws DataNotFoundException;
 
     void blockOrEnable(Long userId, Boolean active) throws Exception;
+     Page<UserResponse> getAllUsers(String keyword, PageRequest pageRequest);
+     User getUser(Long id) throws DataNotFoundException;
 
+     void deleteUser(Long userId);
+    User updateUser(UserDTO userDTO) throws Exception;
+    User getUserDetailsFromRefreshToken(String refreshToken) throws Exception;
+
+    List<UserResponse> getAllUsers(Long roleId);
 }

@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -18,11 +20,20 @@ public class UserDTO {
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 
+    @JsonProperty("full_name")
+    @NotBlank(message = "Full Name is required")
+    private String fullName;
+
     @NotBlank(message = "email is required")
     private String email;
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
+
+    private String address;
+
+    @JsonProperty("old_password")
+    private String oldPassword;
 
     @JsonProperty("retype_password")
     private String retypePassword;
@@ -30,6 +41,14 @@ public class UserDTO {
     @NotNull(message = "Role ID is required")
     @JsonProperty("role_id")
     private Long roleId;
+
+    @JsonProperty("date_of_birth")
+    private Date dateOfBirth;
+
+    @JsonProperty("gender")
+    private String gender;
+
+    private boolean active;
 
     @JsonProperty("facebook_account_id")
     private int facebookAccountId;
