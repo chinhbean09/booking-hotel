@@ -1,3 +1,40 @@
+http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel
+http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon
+[![Build Status](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon)](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/)
+
+[![Build Status](http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel)](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/)
+<a href='http://103.77.246.24/job/Action_in_lab/job/booking-hotel/'><img src='http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon'></a>
+<a href='http://103.77.246.24/job/Action_in_lab/job/booking-hotel/'><img src='http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel'></a>
+
+image:http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon[link='http://103.77.246.24/job/Action_in_lab/job/booking-hotel/']
+
+image:http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel)[link='http://103.77.246.24/job/Action_in_lab/job/booking-hotel/']
+
+[!http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon!|http://103.77.246.24/job/Action_in_lab/job/booking-hotel/]
+
+
+[!http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel!|http://103.77.246.24/job/Action_in_lab/job/booking-hotel/]
+[[image:http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon>>http://103.77.246.24/job/Action_in_lab/job/booking-hotel/||target='__new']]
+[[image:http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel>>http://103.77.246.24/job/Action_in_lab/job/booking-hotel/||target='__new']]
+{<img src='http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon'/>}[http://103.77.246.24/job/Action_in_lab/job/booking-hotel/]
+{<img src='http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel'/>}[http://103.77.246.24/job/Action_in_lab/job/booking-hotel/]
+
+
+"!http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon!":http://103.77.246.24/job/Action_in_lab/job/booking-hotel/
+"!http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel!":http://103.77.246.24/job/Action_in_lab/job/booking-hotel/
+[Build Status](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/badge/icon "http://103.77.246.24/job/Action_in_lab/job/booking-hotel/")
+[Build Status](http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel "http://103.77.246.24/job/Action_in_lab/job/booking-hotel/")
+
+
+
+
+
+
+
+
+
+
+
 # Booking Hotel System:
 
 Project Rules:
