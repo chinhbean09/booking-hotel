@@ -100,6 +100,7 @@ public class UserService implements IUserService {
         sendMailForRegisterSuccess(userDTO.getEmail(), userDTO.getPassword(), user.getId());
         return user;
     }
+
     @Override
     public String login(
             String emailOrPhone,
@@ -145,6 +146,7 @@ public class UserService implements IUserService {
     public User getUser(Long id) throws DataNotFoundException {
         return userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found"));
     }
+
     private boolean isEmail(String emailOrPhone) {
         return emailOrPhone.contains("@");
     }
@@ -164,6 +166,7 @@ public class UserService implements IUserService {
             throw new Exception("User not found");
         }
     }
+
     @Override
     public void deleteUser(Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
@@ -275,11 +278,13 @@ public class UserService implements IUserService {
         return userRepository.save(currentUser);
 
     }
+
     @Override
     public User getUserDetailsFromRefreshToken(String refreshToken) throws Exception {
         Token existingToken = tokenRepository.findByRefreshToken(refreshToken);
         return getUserDetailsFromToken(existingToken.getToken());
     }
+
     @Override
     public List<UserResponse> getAllUsers(Long roleId) {
         List<User> users = userRepository.findByRoleId(roleId);
