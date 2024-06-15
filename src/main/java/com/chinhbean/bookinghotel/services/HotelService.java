@@ -54,22 +54,29 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public Page<HotelResponse> getAllHotels(String token, int page, int size) {
+    public Page<HotelResponse> getAllHotels(int page, int size) {
         logger.info("Fetching all hotels from the database.");
         Pageable pageable = PageRequest.of(page, size);
-        Page<Hotel> hotels;
-        String userRole = jwtTokenUtils.extractUserRole(token);
-        if (Role.PARTNER.equals(userRole)) {
-            Long userId = jwtTokenUtils.extractUserId(token);
-            hotels = hotelRepository.findAllByPartnerId(userId, pageable);
-        } else {
-            hotels = hotelRepository.findAll(pageable);
-        }
+        Page<Hotel> hotels = hotelRepository.findAll(pageable);
         if (hotels.isEmpty()) {
             logger.warn("No hotels found in the database.");
             return Page.empty();
         }
         logger.info("Successfully retrieved all hotels.");
+        return hotels.map(HotelResponse::fromHotel);
+    }
+
+    @Transactional
+    @Override
+    public Page<HotelResponse> getPartnerHotels(String token, int page, int size) {
+        Long userId = jwtTokenUtils.extractUserId(token);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Hotel> hotels = hotelRepository.findAllByPartnerId(userId, pageable);
+        if (hotels.isEmpty()) {
+            logger.warn("No hotels found for the partner.");
+            return Page.empty();
+        }
+        logger.info("Successfully retrieved all hotels for the partner.");
         return hotels.map(HotelResponse::fromHotel);
     }
 
@@ -88,12 +95,9 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse createHotel(HotelDTO hotelDTO) throws PermissionDenyException {
+    public HotelResponse createHotel(HotelDTO hotelDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
-//        if (!currentUser.getRole().equals(Role.PARTNER)) {
-//            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_HOTEL));
-//        }
         logger.info("Creating a new hotel with name: {}", hotelDTO.getHotelName());
         Hotel hotel = convertToEntity(hotelDTO);
         hotel.setPartner(currentUser);

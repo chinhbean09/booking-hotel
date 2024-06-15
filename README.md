@@ -1,4 +1,5 @@
 [![Build Status](http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel)](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/)
+
 # Booking Hotel System:
 
 Project Rules:

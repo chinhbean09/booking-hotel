@@ -28,11 +28,15 @@ public interface IUserService {
     void updatePassword(String email, String password) throws DataNotFoundException;
 
     void blockOrEnable(Long userId, Boolean active) throws Exception;
-     Page<UserResponse> getAllUsers(String keyword, PageRequest pageRequest);
-     User getUser(Long id) throws DataNotFoundException;
 
-     void deleteUser(Long userId);
+    Page<UserResponse> getAllUsers(String keyword, PageRequest pageRequest);
+
+    User getUser(Long id) throws DataNotFoundException;
+
+    void deleteUser(Long userId);
+
     User updateUser(UserDTO userDTO) throws Exception;
+
     User getUserDetailsFromRefreshToken(String refreshToken) throws Exception;
 
     List<UserResponse> getAllUsers(Long roleId);

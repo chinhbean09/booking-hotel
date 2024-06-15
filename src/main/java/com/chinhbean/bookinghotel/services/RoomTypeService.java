@@ -126,8 +126,8 @@ public class RoomTypeService implements IRoomTypeService {
 
     @Override
     public List<RoomTypeResponse> filterRoomType(Long hotelId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom,
-            Boolean doubleBedroom, Boolean wardrobe, Boolean airConditioning, Boolean tv, Boolean wifi, Boolean toiletries,
-            Boolean kitchen, Double minPrice, Double maxPrice) {
+                                                 Boolean doubleBedroom, Boolean wardrobe, Boolean airConditioning, Boolean tv, Boolean wifi, Boolean toiletries,
+                                                 Boolean kitchen, Double minPrice, Double maxPrice) {
 
         List<RoomType> roomTypes = roomTypeRepository.findByTypeAndConveniencesAndPriceAndHotel(hotelId, luxury, singleBedroom, twinBedroom, doubleBedroom,
                 wardrobe, airConditioning, tv, wifi, toiletries, kitchen, minPrice, maxPrice);

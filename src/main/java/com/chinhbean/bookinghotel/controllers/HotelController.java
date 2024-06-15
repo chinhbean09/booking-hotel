@@ -16,9 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
- 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,13 +35,33 @@ public class HotelController {
     private final IHotelService hotelService;
     private final IHotelImageService hotelImageService;
 
-    @GetMapping("/getAllHotels")
+    @GetMapping("/partnerHotels")
+    @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
     public ResponseEntity<ResponseObject> getAllHotels(
             @RequestHeader("Authorization") String authHeader,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         String token = authHeader.substring(7);
-        Page<HotelResponse> hotels = hotelService.getAllHotels(token, page, size);
+        Page<HotelResponse> hotels = hotelService.getPartnerHotels(token, page, size);
+        if (hotels.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message(MessageKeys.NO_HOTELS_FOUND)
+                    .build());
+        } else {
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(hotels)
+                    .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
+                    .build());
+        }
+    }
+
+    @GetMapping("/getAllHotels")
+    public ResponseEntity<ResponseObject> getAllHotels(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<HotelResponse> hotels = hotelService.getAllHotels(page, size);
         if (hotels.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
@@ -159,7 +178,7 @@ public class HotelController {
     @PostMapping("/upload-images/{hotelId}")
     @Transactional
     public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) throws IOException {
-        try{
+        try {
             HotelResponse hotelImageResponse = hotelImageService.uploadImages(images, hotelId);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
                     .status(HttpStatus.CREATED)
@@ -198,6 +217,7 @@ public class HotelController {
                     .build());
         }
     }
+
     @PutMapping(value = "/update-business-license/{hotelId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseObject> updateBusinessLicense(@PathVariable long hotelId,
                                                                 @RequestParam("license") MultipartFile license) throws DataNotFoundException, IOException {

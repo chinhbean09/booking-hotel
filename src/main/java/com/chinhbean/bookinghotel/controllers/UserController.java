@@ -38,7 +38,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -74,7 +73,7 @@ public class UserController {
                     .message(errorMessages.toString())
                     .build());
         }
-        if(userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
+        if (userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .status(HttpStatus.BAD_REQUEST)
                     .data(null)
@@ -126,6 +125,7 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .build());
     }
+
     @PostMapping("/logout")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
     public ResponseEntity<?> logout(HttpServletRequest request) {
@@ -142,6 +142,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("An error occurred during logout: " + e.getMessage());
         }
     }
+
     private boolean isMobileDevice(String userAgent) {
         return userAgent.toLowerCase().contains("mobile");
     }
@@ -194,11 +195,12 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @GetMapping("/get-all-user")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
     public ResponseEntity<UserListResponse> getAllUsers(
             @RequestParam(defaultValue = "") String keyword,
-            @NonNull @RequestParam("page") int page ,
+            @NonNull @RequestParam("page") int page,
             @RequestParam("limit") int limit) {
         try {
             PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("fullName").ascending());
@@ -242,6 +244,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
     @Transactional
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
