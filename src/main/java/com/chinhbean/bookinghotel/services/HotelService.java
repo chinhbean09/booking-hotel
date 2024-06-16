@@ -14,7 +14,6 @@ import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IConvenienceRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.transaction.Transactional;
@@ -32,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,13 +44,14 @@ public class HotelService implements IHotelService {
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
     private final IConvenienceRepository IConvenienceRepository;
-    private final UserRepository userRepository;
     private final AmazonS3 amazonS3;
 
-    private static final String UPLOAD_DIR = "business-license-uploads/";
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
+
+    @Value("${amazonProperties.uploadDir}")
+    private String uploadDir;
 
     @Transactional
     @Override
@@ -68,10 +69,11 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public Page<HotelResponse> getPartnerHotels(String token, int page, int size) {
-        Long userId = jwtTokenUtils.extractUserId(token);
+    public Page<HotelResponse> getPartnerHotels(int page, int size) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Hotel> hotels = hotelRepository.findAllByPartnerId(userId, pageable);
+        Page<Hotel> hotels = hotelRepository.findAllByPartnerId(currentUser.getId(), pageable);
         if (hotels.isEmpty()) {
             logger.warn("No hotels found for the partner.");
             return Page.empty();
@@ -159,17 +161,18 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO, String token) throws DataNotFoundException, PermissionDenyException {
-        User user = getUserDetailsFromToken(token);
-
+    public HotelResponse updateHotel(Long hotelId, HotelDTO updateDTO) throws DataNotFoundException, PermissionDenyException {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         if (hotel.getStatus() == HotelStatus.PENDING) {
             throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_IS_PENDING));
         }
-
-        hotel.setPartner(user);
+        if (!currentUser.getId().equals(hotel.getPartner().getId())) {
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_UPDATE_HOTEL));
+        }
         if (updateDTO.getHotelName() != null) {
             hotel.setHotelName(updateDTO.getHotelName());
         }
@@ -200,27 +203,20 @@ public class HotelService implements IHotelService {
         return HotelResponse.fromHotel(updatedHotel);
     }
 
-    @Override
-    public User getUserDetailsFromToken(String token) throws DataNotFoundException {
-        if (jwtTokenUtils.isTokenExpired(token)) {
-            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.TOKEN_IS_EXPIRED));
-        }
-        Long id = jwtTokenUtils.extractUserId(token);
-        return userRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_EXISTS)));
-    }
-
     @Transactional
     @Override
-    public void updateStatus(Long hotelId, HotelStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
+    public void updateStatus(Long hotelId, HotelStatus newStatus) throws DataNotFoundException, PermissionDenyException {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS)));
-        String userRole = jwtTokenUtils.extractUserRole(token);
-        if (Role.ADMIN.equals(userRole)) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+        if (Role.ADMIN.equals(currentUser.getRole().getRoleName())) {
             hotel.setStatus(newStatus);
-        } else if (Role.PARTNER.equals(userRole)) {
+            hotel.setPartner(currentUser);
+        } else if (Role.PARTNER.equals(currentUser.getRole().getRoleName())) {
             if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE || newStatus == HotelStatus.CLOSED) {
                 hotel.setStatus(newStatus);
+                hotel.setPartner(currentUser);
             } else {
                 throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
             }
@@ -231,8 +227,9 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException {
+    public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException, PermissionDenyException {
         Hotel hotel = getHotelById(hotelId);
+        validateUserPermission(hotel);
         validateFile(file);
         String objectKey = buildObjectKey(hotel.getId(), file.getOriginalFilename());
         ObjectMetadata metadata = createObjectMetadata(file);
@@ -242,9 +239,18 @@ public class HotelService implements IHotelService {
         return hotelRepository.save(hotel);
     }
 
-    private Hotel getHotelById(Long hotelId) throws DataNotFoundException {
+    @Override
+    public Hotel getHotelById(Long hotelId) throws DataNotFoundException {
         return hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.NO_HOTELS_FOUND, hotelId)));
+    }
+
+    private void validateUserPermission(Hotel hotel) throws PermissionDenyException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+        if (!currentUser.getId().equals(hotel.getPartner().getId())) {
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_UPDATE_HOTEL));
+        }
     }
 
     private void validateFile(MultipartFile file) {
@@ -256,7 +262,7 @@ public class HotelService implements IHotelService {
     }
 
     private String buildObjectKey(Long hotelId, String originalFileName) {
-        return UPLOAD_DIR + hotelId + "/" + originalFileName;
+        return uploadDir + hotelId + "/" + originalFileName;
     }
 
     private void uploadFileToS3(String bucketName, String objectKey, MultipartFile file, ObjectMetadata metadata) throws IOException {
@@ -268,5 +274,28 @@ public class HotelService implements IHotelService {
         metadata.setContentType(file.getContentType());
         metadata.setContentLength(file.getSize());
         return metadata;
+    }
+
+    @Override
+    public Page<Hotel> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
+        if (checkInDate.after(checkOutDate)) {
+            throw new IllegalArgumentException("Check-in date must be before check-out date");
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        return hotelRepository.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, pageable);
+    }
+
+    @Override
+    public Page<Hotel> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Long typeId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return hotelRepository.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, pageable);
+    }
+
+    @Override
+    public void deleteHotel(Long hotelId) throws DataNotFoundException {
+        if (!hotelRepository.existsById(hotelId)) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS, hotelId));
+        }
+        hotelRepository.deleteById(hotelId);
     }
 }

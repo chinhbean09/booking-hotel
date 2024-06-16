@@ -10,20 +10,22 @@ import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.services.IHotelImageService;
 import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Date;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -37,31 +39,20 @@ public class HotelController {
 
     @GetMapping("/partnerHotels")
     @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
-    public ResponseEntity<ResponseObject> getAllHotels(
-            @RequestHeader("Authorization") String authHeader,
+    public ResponseEntity<ResponseObject> getPartnerHotels(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        String token = authHeader.substring(7);
-        Page<HotelResponse> hotels = hotelService.getPartnerHotels(token, page, size);
-        if (hotels.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
-                    .status(HttpStatus.NOT_FOUND)
-                    .message(MessageKeys.NO_HOTELS_FOUND)
-                    .build());
-        } else {
-            return ResponseEntity.ok().body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(hotels)
-                    .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
-                    .build());
-        }
+        return getHotelsResponse(hotelService.getPartnerHotels(page, size));
     }
 
     @GetMapping("/getAllHotels")
     public ResponseEntity<ResponseObject> getAllHotels(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<HotelResponse> hotels = hotelService.getAllHotels(page, size);
+        return getHotelsResponse(hotelService.getAllHotels(page, size));
+    }
+
+    private ResponseEntity<ResponseObject> getHotelsResponse(Page<HotelResponse> hotels) {
         if (hotels.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
@@ -117,15 +108,11 @@ public class HotelController {
         }
     }
 
-    @SecurityRequirement(name = "bearer-key")
     @PutMapping("/updateHotel/{hotelId}")
-    public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO, @RequestHeader("Authorization") String authHeader) {
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<ResponseObject> updateHotel(@PathVariable Long hotelId, @RequestBody HotelDTO hotelDTO) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new IllegalArgumentException("Invalid token");
-            }
-            String token = authHeader.substring(7);
-            HotelResponse updatedHotel = hotelService.updateHotel(hotelId, hotelDTO, token);
+            HotelResponse updatedHotel = hotelService.updateHotel(hotelId, hotelDTO);
             return ResponseEntity.ok().body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .message(MessageKeys.UPDATE_HOTEL_SUCCESSFULLY)
@@ -144,15 +131,11 @@ public class HotelController {
         }
     }
 
-    @SecurityRequirement(name = "bearer-key")
     @PutMapping("/updateStatus/{hotelId}")
-    public ResponseEntity<ResponseObject> updateHotelStatus(@PathVariable Long hotelId, @RequestBody HotelStatus newStatus, @RequestHeader("Authorization") String authHeader) {
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<ResponseObject> updateHotelStatus(@PathVariable Long hotelId, @RequestBody HotelStatus newStatus) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new IllegalArgumentException("Invalid token");
-            }
-            String token = authHeader.substring(7);
-            hotelService.updateStatus(hotelId, newStatus, token);
+            hotelService.updateStatus(hotelId, newStatus);
             return ResponseEntity.ok().body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .message(MessageKeys.UPDATE_HOTEL_STATUS_SUCCESSFULLY)
@@ -176,7 +159,7 @@ public class HotelController {
     }
 
     @PostMapping("/upload-images/{hotelId}")
-    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) throws IOException {
         try {
             HotelResponse hotelImageResponse = hotelImageService.uploadImages(images, hotelId);
@@ -194,22 +177,18 @@ public class HotelController {
     }
 
     @PutMapping("/update-images/{hotelId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<ResponseObject> updateRoomImages(@PathVariable Long hotelId, @RequestParam Map<String, MultipartFile> images) {
         try {
-            // Convert image indices to integer keys
             Map<Integer, MultipartFile> imageMap = images.entrySet().stream()
                     .collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue));
-
-            // Call the updateHotelImages method from the hotelImageService to update the hotel images.
             HotelResponse updateHotelImages = hotelImageService.updateHotelImages(imageMap, hotelId);
-
-            // Return a ResponseEntity with a status of OK, the updated room data, and a success message.
             return ResponseEntity.ok().body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .data(updateHotelImages)
                     .message(MessageKeys.UPDATED_IMAGES_SUCCESSFULLY)
                     .build());
-        } catch (DataNotFoundException | IOException e) {
+        } catch (DataNotFoundException | IOException | PermissionDenyException e) {
             HttpStatus status = e instanceof DataNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
             return ResponseEntity.status(status).body(ResponseObject.builder()
                     .status(status)
@@ -219,14 +198,94 @@ public class HotelController {
     }
 
     @PutMapping(value = "/update-business-license/{hotelId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
     public ResponseEntity<ResponseObject> updateBusinessLicense(@PathVariable long hotelId,
-                                                                @RequestParam("license") MultipartFile license) throws DataNotFoundException, IOException {
+                                                                @RequestParam("license") MultipartFile license) throws DataNotFoundException, IOException, PermissionDenyException {
         Hotel hotel = hotelService.uploadBusinessLicense(hotelId, license);
         return ResponseEntity.ok(ResponseObject.builder()
                 .status(HttpStatus.OK)
                 .data(HotelResponse.fromHotel(hotel))
                 .message(MessageKeys.UPDATE_LICENSE_SUCCESSFULLY)
                 .build());
+    }
 
+    @GetMapping("/search")
+    public ResponseEntity<ResponseObject> findByProvinceAndCapacityPerRoomAndAvailability(
+            @RequestParam String province,
+            @RequestParam int numPeople,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date checkInDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date checkOutDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Hotel> result = hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size);
+        if (result.isEmpty()) {
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(Collections.emptyList())
+                    .message(MessageKeys.NO_HOTELS_FOUND)
+                    .build());
+        } else {
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(result)
+                    .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
+                    .build());
+        }
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ResponseObject> filterHotels(
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) Set<Long> convenienceIds,
+            @RequestParam(required = false) Long typeId,
+            @RequestParam(required = false) Boolean luxury,
+            @RequestParam(required = false) Boolean singleBedroom,
+            @RequestParam(required = false) Boolean twinBedroom,
+            @RequestParam(required = false) Boolean doubleBedroom,
+            @RequestParam(required = false) Boolean freeBreakfast,
+            @RequestParam(required = false) Boolean pickUpDropOff,
+            @RequestParam(required = false) Boolean restaurant,
+            @RequestParam(required = false) Boolean bar,
+            @RequestParam(required = false) Boolean pool,
+            @RequestParam(required = false) Boolean freeInternet,
+            @RequestParam(required = false) Boolean reception24h,
+            @RequestParam(required = false) Boolean laundry,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Page<Hotel> hotels = hotelService.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, page, size);
+            if (hotels.isEmpty()) {
+                return ResponseEntity.ok().body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(Collections.emptyList())
+                        .message(MessageKeys.NO_HOTELS_FOUND)
+                        .build());
+            } else {
+                return ResponseEntity.ok().body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(hotels)
+                        .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
+                        .build());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .data(Collections.emptyList())
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @DeleteMapping("/{hotelId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<Void> deleteHotel(@PathVariable Long hotelId) {
+        try {
+            hotelService.deleteHotel(hotelId);
+            return ResponseEntity.noContent().build();
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 }

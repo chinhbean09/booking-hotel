@@ -21,6 +21,9 @@ public class RoomTypeDTO {
     @JsonProperty("number_of_rooms")
     private Integer numberOfRooms;
 
+    @JsonProperty("capacity_per_room")
+    private int capacityPerRoom;
+
     @JsonProperty("room_price")
     private Double roomPrice;
 
