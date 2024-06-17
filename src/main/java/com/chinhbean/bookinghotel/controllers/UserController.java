@@ -179,7 +179,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/block-or-enable/{userId}/{active}")
+    @PutMapping("/block-or-enable/{userId}/{active}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
 
     public ResponseEntity<String> blockOrEnable(
