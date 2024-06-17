@@ -226,6 +226,8 @@ public class HotelController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) Integer rating,
             @RequestParam(required = false) Set<Long> convenienceIds,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) Long typeId,
             @RequestParam(required = false) Boolean luxury,
             @RequestParam(required = false) Boolean singleBedroom,
@@ -242,7 +244,10 @@ public class HotelController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            return getHotelsResponse(hotelService.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, page, size));
+            if (page < 0 || size <= 0) {
+                throw new IllegalArgumentException("Page and size parameters must be positive.");
+            }
+            return getHotelsResponse(hotelService.filterHotels(province, rating, convenienceIds, minPrice, maxPrice, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, typeId, page, size));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
