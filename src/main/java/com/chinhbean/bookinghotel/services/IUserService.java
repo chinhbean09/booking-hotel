@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.services;
 
 import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
+import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.responses.UserResponse;
@@ -15,8 +16,7 @@ public interface IUserService {
 
     User registerUser(UserDTO userDTO) throws Exception;
 
-    String login(String phoneNumber, String password) throws Exception;
-
+    String login(UserLoginDTO userLoginDTO) throws Exception;
     User getUserDetailsFromToken(String token) throws Exception;
 
     User updateUserAvatar(long id, MultipartFile avatar);

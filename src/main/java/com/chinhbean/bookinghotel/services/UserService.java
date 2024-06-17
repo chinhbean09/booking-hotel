@@ -8,6 +8,7 @@ import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
 import com.chinhbean.bookinghotel.dtos.DataMailDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
+import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Role;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
@@ -103,31 +104,35 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public String login(
-            String emailOrPhone,
-            String password
-    ) throws Exception {
-        Optional<User> optionalUser;
-        if (isEmail(emailOrPhone)) {
-            optionalUser = userRepository.findByEmail(emailOrPhone);
-        } else {
-            optionalUser = userRepository.findByPhoneNumber(emailOrPhone);
+    public String login(UserLoginDTO userLoginDTO) throws Exception {
+        Optional<User> optionalUser = Optional.empty();
+        String subject = null;
+
+        if (userLoginDTO.getPhoneNumber() != null && !userLoginDTO.getPhoneNumber().isBlank()) {
+            optionalUser = userRepository.findByPhoneNumber(userLoginDTO.getPhoneNumber());
+            subject = userLoginDTO.getPhoneNumber();
         }
+        if (optionalUser.isEmpty() && userLoginDTO.getEmail() != null) {
+            optionalUser = userRepository.findByEmail(userLoginDTO.getEmail());
+            subject = userLoginDTO.getEmail();
+        }
+
         if (optionalUser.isEmpty()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
         }
         User existingUser = optionalUser.get();
+
         if (existingUser.getFacebookAccountId() == 0
                 && existingUser.getGoogleAccountId() == 0) {
-            if (!passwordEncoder.matches(password, existingUser.getPassword())) {
+            if (!passwordEncoder.matches(userLoginDTO.getPassword(), existingUser.getPassword())) {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
         }
-        if (!optionalUser.get().isActive()) {
+        if (!existingUser.isActive()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_IS_LOCKED));
         }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                emailOrPhone, password,
+                subject, userLoginDTO.getPassword(),
                 existingUser.getAuthorities()
         );
 

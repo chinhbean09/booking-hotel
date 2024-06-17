@@ -18,6 +18,7 @@ import com.chinhbean.bookinghotel.responses.UserResponse;
 import com.chinhbean.bookinghotel.services.ITokenService;
 import com.chinhbean.bookinghotel.services.IUserService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import com.chinhbean.bookinghotel.utils.ValidationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +74,24 @@ public class UserController {
                     .message(errorMessages.toString())
                     .build());
         }
+        if (userDTO.getEmail() == null || userDTO.getEmail().trim().isBlank()) {
+            if(userDTO.getPhoneNumber() == null || userDTO.getPhoneNumber().trim().isBlank()) {
+                return ResponseEntity.badRequest().body(ResponseObject.builder()
+                        .status(HttpStatus.BAD_REQUEST)
+                        .data(null)
+                        .message("At least email or phone number is required")
+                        .build());
+
+        } else {
+                if (!ValidationUtils.isValidPhoneNumber(userDTO.getPhoneNumber())) {
+                    throw new Exception("Invalid phone number");
+                }
+            }
+        } else {
+            if (!ValidationUtils.isValidEmail(userDTO.getEmail())) {
+                throw new Exception("Invalid email");
+            }
+        }
         if (userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .status(HttpStatus.BAD_REQUEST)
@@ -89,7 +108,7 @@ public class UserController {
         }
         User user = userService.registerUser(userDTO);
         return ResponseEntity.ok(ResponseObject.builder()
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .data(UserResponse.fromUser(user))
                 .message(MessageKeys.REGISTER_SUCCESSFULLY)
                 .build());
@@ -100,10 +119,7 @@ public class UserController {
             @Valid @RequestBody UserLoginDTO userLoginDTO,
             HttpServletRequest request
     ) throws Exception {
-        String token = userService.login(
-                userLoginDTO.getEmailOrPhone(),
-                userLoginDTO.getPassword()
-        );
+        String token = userService.login(userLoginDTO);
         String userAgent = request.getHeader("User-Agent");
 
         User userDetail = userService.getUserDetailsFromToken(token);
