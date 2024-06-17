@@ -113,7 +113,7 @@ public class RoomTypeService implements IRoomTypeService {
     public void deleteRoomType(Long id) throws DataNotFoundException {
         RoomType roomType = roomTypeRepository.findWithTypesAndRoomConveniencesById(id)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
-        roomType.getRoomImages().forEach(roomImageRepository::delete);
+        roomImageRepository.deleteAll(roomType.getRoomImages());
         roomTypeRepository.delete(roomType);
     }
 
@@ -151,6 +151,7 @@ public class RoomTypeService implements IRoomTypeService {
         return RoomType.builder()
                 .hotel(hotel)
                 .numberOfRoom(roomTypeDTO.getNumberOfRooms())
+                .capacityPerRoom(roomTypeDTO.getCapacityPerRoom())
                 .roomPrice(roomTypeDTO.getRoomPrice())
                 .description(roomTypeDTO.getDescription())
                 .status(roomTypeDTO.getStatus())

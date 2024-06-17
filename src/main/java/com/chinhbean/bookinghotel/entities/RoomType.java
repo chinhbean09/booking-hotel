@@ -26,6 +26,9 @@ public class RoomType {
     @Column(name = "room_price", nullable = false)
     private Double roomPrice;
 
+    @Column(name = "capacity_per_room", nullable = false)
+    private int capacityPerRoom;
+
     @Column(name = "number_of_room", nullable = false)
     private Integer numberOfRoom;
 

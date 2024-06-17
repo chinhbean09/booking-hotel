@@ -6,7 +6,9 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.entities.HotelImages;
+import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.HotelImageRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
 import com.chinhbean.bookinghotel.responses.HotelImageResponse;
@@ -16,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,61 +33,37 @@ public class HotelImageService implements IHotelImageService {
     private final HotelImageRepository hotelImageRepository;
     private final AmazonS3 amazonS3;
     private final IHotelRepository hotelRepository;
+    private final IHotelService hotelService;
     private final LocalizationUtils localizationUtils;
 
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
 
+    @Value("${amazonProperties.imagePath}")
+    private String imagePath;
+
     @Override
-    public HotelResponse uploadImages(List<MultipartFile> images, Long hotelId) throws IOException {
-        List<String> imageUrls = new ArrayList<>();
+    public HotelResponse uploadImages(List<MultipartFile> images, Long hotelId) throws IOException, PermissionDenyException, DataNotFoundException {
+        Hotel hotel = hotelService.getHotelById(hotelId);
+        validateUserPermission(hotel);
+
         List<HotelImageResponse> hotelImageResponses = new ArrayList<>();
-        if (hotelRepository.findById(hotelId).isEmpty()) {
-            throw new IllegalArgumentException(MessageKeys.HOTEL_DOES_NOT_EXISTS);
-        }
+        validateHotelExists(hotelId);
 
         for (MultipartFile image : images) {
             validateImageFile(image);
-            String imageName = image.getOriginalFilename();
-            String key = "hotel_images/" + hotelId + "/" + imageName;
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(image.getContentType());
-            metadata.setContentLength(image.getSize());
-            amazonS3.putObject(bucketName, key, image.getInputStream(), metadata);
-            String imageUrl = amazonS3.getUrl(bucketName, key).toString();
-            // Check if the image URL already exists
-            if (hotelImageRepository.findByImageUrlAndHotelId(imageUrl, hotelId).isPresent()) {
-                throw new DuplicateKeyException("Image URL already exists for this hotel " + hotelId);
-            }
-            imageUrls.add(imageUrl);
-
-            // Create RoomImage entity and save it to the database
-            HotelImages hotelImages = HotelImages.builder()
-                    .imageUrl(imageUrl)
-                    .hotel(Hotel.builder().id(hotelId).build()) // Assuming you have a constructor or builder method to set the id of the Room entity
-                    .build();
-            hotelImages = hotelImageRepository.save(hotelImages);
-
-            // Create RoomImageResponse and set id and room_id
-            HotelImageResponse hotelImageResponse = HotelImageResponse.builder()
-                    .id(hotelImages.getId()) // Set the id
-                    .imageUrl(hotelImages.getImageUrl())
-                    .hotelId(hotelId) // Set the room_id
-                    .build();
-            hotelImageResponses.add(hotelImageResponse);
+            String imageUrl = uploadImageToS3(image, hotelId);
+            validateImageUrl(imageUrl, hotelId);
+            HotelImages hotelImages = saveImageToDatabase(imageUrl, hotelId);
+            hotelImageResponses.add(buildHotelImageResponse(hotelImages, hotelId));
         }
-
-        // Create the response object in the desired format
-        Hotel roomType = hotelRepository.findById(hotelId).orElseThrow(() -> new IllegalArgumentException(MessageKeys.HOTEL_DOES_NOT_EXISTS));
-        HotelResponse hotelResponse = HotelResponse.fromHotel(roomType);
-        hotelResponse.setImageUrls(hotelImageResponses); // Set the image URLs
-        return hotelResponse;
+        return buildHotelResponse(hotelId, hotelImageResponses);
     }
 
     @Override
-    public HotelResponse updateHotelImages(Map<Integer, MultipartFile> imageMap, Long hotelId) throws DataNotFoundException, IOException {
-        Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
+    public HotelResponse updateHotelImages(Map<Integer, MultipartFile> imageMap, Long hotelId) throws IOException, PermissionDenyException, DataNotFoundException {
+        Hotel hotel = hotelService.getHotelById(hotelId);
+        validateUserPermission(hotel);
 
         List<HotelImageResponse> hotelImageResponses = new ArrayList<>();
 
@@ -91,48 +71,36 @@ public class HotelImageService implements IHotelImageService {
             Integer imageIndex = entry.getKey();
             MultipartFile imageFile = entry.getValue();
 
-            // Validate image file
             validateImageFile(imageFile);
 
-            // Find the room image by index
             Optional<HotelImages> optionalRoomImage = hotelImageRepository.findById(Long.valueOf(imageIndex));
 
             if (optionalRoomImage.isPresent()) {
                 HotelImages existingImage = optionalRoomImage.get();
 
-                // Upload new image to S3
                 String imageUrl = uploadImageToS3(imageFile, hotelId);
-
-                // Delete previous image from S3
                 deleteImageFromS3(existingImage.getImageUrl());
-
-                // Update existing image URL
                 existingImage.setImageUrl(imageUrl);
                 hotelImageRepository.save(existingImage);
-
-                // Create RoomImageResponse and add to response list
-                HotelImageResponse roomImageResponse = HotelImageResponse.builder()
-                        .id(existingImage.getId())
-                        .imageUrl(existingImage.getImageUrl())
-                        .hotelId(hotelId)
-                        .build();
-                hotelImageResponses.add(roomImageResponse);
+                hotelImageResponses.add(buildHotelImageResponse(existingImage, hotelId));
             }
         }
 
-        HotelResponse hotelResponse = HotelResponse.fromHotel(hotel);
-        hotelResponse.setImageUrls(hotelImageResponses); // Set the image URLs
-        return hotelResponse;
+        return buildHotelResponse(hotelId, hotelImageResponses);
     }
 
-    private String uploadImageToS3(MultipartFile imageFile, Long hotelId) throws IOException {
-        String imageName = imageFile.getOriginalFilename();
-        String key = "hotel_images/" + hotelId + "/" + imageName;
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType(imageFile.getContentType());
-        metadata.setContentLength(imageFile.getSize());
-        amazonS3.putObject(bucketName, key, imageFile.getInputStream(), metadata);
-        return amazonS3.getUrl(bucketName, key).toString();
+    private void validateUserPermission(Hotel hotel) throws PermissionDenyException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+        if (!currentUser.getId().equals(hotel.getPartner().getId())) {
+            throw new PermissionDenyException(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_UPDATE_HOTEL);
+        }
+    }
+
+    private void validateHotelExists(Long hotelId) {
+        if (hotelRepository.findById(hotelId).isEmpty()) {
+            throw new IllegalArgumentException(MessageKeys.HOTEL_DOES_NOT_EXISTS);
+        }
     }
 
     private void validateImageFile(MultipartFile imageFile) {
@@ -142,12 +110,50 @@ public class HotelImageService implements IHotelImageService {
         }
     }
 
+    private String uploadImageToS3(MultipartFile imageFile, Long hotelId) throws IOException {
+        String imageName = imageFile.getOriginalFilename();
+        String key = imagePath + hotelId + "/" + imageName;
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(imageFile.getContentType());
+        metadata.setContentLength(imageFile.getSize());
+        amazonS3.putObject(bucketName, key, imageFile.getInputStream(), metadata);
+        return amazonS3.getUrl(bucketName, key).toString();
+    }
+
+    private void validateImageUrl(String imageUrl, Long hotelId) {
+        if (hotelImageRepository.findByImageUrlAndHotelId(imageUrl, hotelId).isPresent()) {
+            throw new DuplicateKeyException("Image URL already exists for this hotel " + hotelId);
+        }
+    }
+
+    private HotelImages saveImageToDatabase(String imageUrl, Long hotelId) {
+        HotelImages hotelImages = HotelImages.builder()
+                .imageUrl(imageUrl)
+                .hotel(Hotel.builder().id(hotelId).build())
+                .build();
+        return hotelImageRepository.save(hotelImages);
+    }
+
+    private HotelImageResponse buildHotelImageResponse(HotelImages hotelImages, Long hotelId) {
+        return HotelImageResponse.builder()
+                .id(hotelImages.getId())
+                .imageUrl(hotelImages.getImageUrl())
+                .hotelId(hotelId)
+                .build();
+    }
+
+    private HotelResponse buildHotelResponse(Long hotelId, List<HotelImageResponse> hotelImageResponses) {
+        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(() -> new IllegalArgumentException(MessageKeys.HOTEL_DOES_NOT_EXISTS));
+        HotelResponse hotelResponse = HotelResponse.fromHotel(hotel);
+        hotelResponse.setImageUrls(hotelImageResponses);
+        return hotelResponse;
+    }
+
     private void deleteImageFromS3(String imageUrl) {
         try {
             String key = imageUrl.substring(imageUrl.indexOf(bucketName) + bucketName.length() + 1);
             amazonS3.deleteObject(bucketName, key);
         } catch (AmazonS3Exception e) {
-            // Log or handle the exception
             System.err.println("Error deleting image from S3: " + e.getMessage());
         }
     }

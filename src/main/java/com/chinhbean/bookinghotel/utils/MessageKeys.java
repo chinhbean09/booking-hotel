@@ -86,4 +86,5 @@ public class MessageKeys {
 
     public static final String HOTEL_IS_CLOSED = "hotel.update_status.hotel_is_closed";
     public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_HOTEL = "hotel.create_hotel.USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_HOTEL";
+    public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_UPDATE_HOTEL = "hotel.update_hotel.USER_DOES_NOT_HAVE_PERMISSION_TO_UPDATE_HOTEL";
 }

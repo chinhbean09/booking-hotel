@@ -54,6 +54,9 @@ public class HotelResponse {
     @JsonProperty("image_urls")
     private List<HotelImageResponse> imageUrls;
 
+    @JsonProperty("business_license")
+    private String businessLicense;
+
     public static HotelResponse fromHotel(Hotel hotel) {
         HotelLocationResponse locationResponse = (hotel.getLocation() != null) ? HotelLocationResponse.fromHotelLocation(hotel.getLocation()) : null;
         UserResponse partnerResponse = (hotel.getPartner() != null) ? UserResponse.fromUser(hotel.getPartner()) : null;
@@ -95,6 +98,7 @@ public class HotelResponse {
                 .roomTypes(roomTypeResponses)
                 .feedbacks(feedbackResponses)
                 .imageUrls(hotelImageResponses)
+                .businessLicense(hotel.getBusinessLicense())
                 .build();
     }
 }

@@ -25,6 +25,9 @@ public class RoomTypeResponse {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("capacity_per_room")
+    private int capacityPerRoom;
+
     @JsonProperty("number_of_rooms")
     private Integer numberOfRooms;
 
@@ -60,6 +63,7 @@ public class RoomTypeResponse {
                 .id(roomType.getId())
                 .hotelId(roomType.getHotel().getId())
                 .description(roomType.getDescription())
+                .capacityPerRoom(roomType.getCapacityPerRoom())
                 .numberOfRooms(roomType.getNumberOfRoom())
                 .roomPrice(roomType.getRoomPrice())
                 .status(roomType.getStatus())
