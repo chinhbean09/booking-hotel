@@ -2,7 +2,7 @@ package com.chinhbean.bookinghotel.services;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.chinhbean.bookinghotel.components.JwtTokenUtils;
+
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
 public class HotelService implements IHotelService {
 
     private final IHotelRepository hotelRepository;
-    private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
     private final IConvenienceRepository IConvenienceRepository;
     private final AmazonS3 amazonS3;
@@ -277,18 +276,20 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Page<Hotel> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
+    public Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
         if (checkInDate.after(checkOutDate)) {
             throw new IllegalArgumentException("Check-in date must be before check-out date");
         }
         Pageable pageable = PageRequest.of(page, size);
-        return hotelRepository.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, pageable);
+        Page<Hotel> hotels = hotelRepository.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, pageable);
+        return hotels.map(HotelResponse::fromHotel);
     }
 
     @Override
-    public Page<Hotel> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Long typeId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
+    public Page<HotelResponse> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Long typeId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return hotelRepository.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, pageable);
+        Page<Hotel> hotels = hotelRepository.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, pageable);
+        return hotels.map(HotelResponse::fromHotel);
     }
 
     @Override

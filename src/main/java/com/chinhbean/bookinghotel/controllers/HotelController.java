@@ -218,20 +218,7 @@ public class HotelController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<Hotel> result = hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size);
-        if (result.isEmpty()) {
-            return ResponseEntity.ok().body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(Collections.emptyList())
-                    .message(MessageKeys.NO_HOTELS_FOUND)
-                    .build());
-        } else {
-            return ResponseEntity.ok().body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(result)
-                    .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
-                    .build());
-        }
+        return getHotelsResponse(hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size));
     }
 
     @GetMapping("/filter")
@@ -255,20 +242,7 @@ public class HotelController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<Hotel> hotels = hotelService.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, page, size);
-            if (hotels.isEmpty()) {
-                return ResponseEntity.ok().body(ResponseObject.builder()
-                        .status(HttpStatus.OK)
-                        .data(Collections.emptyList())
-                        .message(MessageKeys.NO_HOTELS_FOUND)
-                        .build());
-            } else {
-                return ResponseEntity.ok().body(ResponseObject.builder()
-                        .status(HttpStatus.OK)
-                        .data(hotels)
-                        .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
-                        .build());
-            }
+            return getHotelsResponse(hotelService.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, page, size));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
