@@ -2,7 +2,7 @@ package com.chinhbean.bookinghotel.services;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.chinhbean.bookinghotel.components.JwtTokenUtils;
+import com.chinhbean.bookinghotel.Specifications.HotelSpecification;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,7 +42,6 @@ import java.util.stream.Collectors;
 public class HotelService implements IHotelService {
 
     private final IHotelRepository hotelRepository;
-    private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
     private final IConvenienceRepository IConvenienceRepository;
     private final AmazonS3 amazonS3;
@@ -277,18 +277,74 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Page<Hotel> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
+    public Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
         if (checkInDate.after(checkOutDate)) {
             throw new IllegalArgumentException("Check-in date must be before check-out date");
         }
         Pageable pageable = PageRequest.of(page, size);
-        return hotelRepository.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, pageable);
+        Specification<Hotel> spec = Specification.where(HotelSpecification.hasProvince(province))
+                .and(HotelSpecification.hasCapacityPerRoom(numPeople))
+                .and(HotelSpecification.hasAvailability(checkInDate, checkOutDate));
+        Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
+        return hotels.map(HotelResponse::fromHotel);
     }
 
     @Override
-    public Page<Hotel> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Long typeId, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
+    public Page<HotelResponse> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Double minPrice, Double maxPrice, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, Long typeId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return hotelRepository.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, pageable);
+        Specification<Hotel> spec = Specification.where(null);
+        if (province != null) {
+            spec = spec.and(HotelSpecification.hasProvince(province));
+        }
+        if (rating != null) {
+            spec = spec.and(HotelSpecification.hasRating(rating));
+        }
+        if (convenienceIds != null && !convenienceIds.isEmpty()) {
+            spec = spec.and(HotelSpecification.hasConvenience(convenienceIds));
+        }
+        if (minPrice != null && maxPrice != null) {
+            spec = spec.and(HotelSpecification.hasPriceRange(minPrice, maxPrice));
+        }
+        if (luxury != null) {
+            spec = spec.and(HotelSpecification.hasLuxury(luxury));
+        }
+        if (singleBedroom != null) {
+            spec = spec.and(HotelSpecification.hasSingleBedroom(singleBedroom));
+        }
+        if (twinBedroom != null) {
+            spec = spec.and(HotelSpecification.hasTwinBedroom(twinBedroom));
+        }
+        if (doubleBedroom != null) {
+            spec = spec.and(HotelSpecification.hasDoubleBedroom(doubleBedroom));
+        }
+        if (freeBreakfast != null) {
+            spec = spec.and(HotelSpecification.hasFreeBreakfast(freeBreakfast));
+        }
+        if (pickUpDropOff != null) {
+            spec = spec.and(HotelSpecification.hasPickUpDropOff(pickUpDropOff));
+        }
+        if (restaurant != null) {
+            spec = spec.and(HotelSpecification.hasRestaurant(restaurant));
+        }
+        if (bar != null) {
+            spec = spec.and(HotelSpecification.hasBar(bar));
+        }
+        if (pool != null) {
+            spec = spec.and(HotelSpecification.hasPool(pool));
+        }
+        if (freeInternet != null) {
+            spec = spec.and(HotelSpecification.hasFreeInternet(freeInternet));
+        }
+        if (reception24h != null) {
+            spec = spec.and(HotelSpecification.hasReception24h(reception24h));
+        }
+        if (laundry != null) {
+            spec = spec.and(HotelSpecification.hasLaundry(laundry));
+        }
+        if (typeId != null) {
+            spec = spec.and(HotelSpecification.hasType(typeId));
+        }
+        return hotelRepository.findAll(spec, pageable).map(HotelResponse::fromHotel);
     }
 
     @Override

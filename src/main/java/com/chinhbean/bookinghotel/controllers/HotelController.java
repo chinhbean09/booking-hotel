@@ -218,20 +218,7 @@ public class HotelController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<Hotel> result = hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size);
-        if (result.isEmpty()) {
-            return ResponseEntity.ok().body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(Collections.emptyList())
-                    .message(MessageKeys.NO_HOTELS_FOUND)
-                    .build());
-        } else {
-            return ResponseEntity.ok().body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(result)
-                    .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
-                    .build());
-        }
+        return getHotelsResponse(hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size));
     }
 
     @GetMapping("/filter")
@@ -239,6 +226,8 @@ public class HotelController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) Integer rating,
             @RequestParam(required = false) Set<Long> convenienceIds,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) Long typeId,
             @RequestParam(required = false) Boolean luxury,
             @RequestParam(required = false) Boolean singleBedroom,
@@ -255,20 +244,10 @@ public class HotelController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<Hotel> hotels = hotelService.filterHotels(province, rating, convenienceIds, typeId, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, page, size);
-            if (hotels.isEmpty()) {
-                return ResponseEntity.ok().body(ResponseObject.builder()
-                        .status(HttpStatus.OK)
-                        .data(Collections.emptyList())
-                        .message(MessageKeys.NO_HOTELS_FOUND)
-                        .build());
-            } else {
-                return ResponseEntity.ok().body(ResponseObject.builder()
-                        .status(HttpStatus.OK)
-                        .data(hotels)
-                        .message(MessageKeys.RETRIEVED_ALL_HOTELS_SUCCESSFULLY)
-                        .build());
+            if (page < 0 || size <= 0) {
+                throw new IllegalArgumentException("Page and size parameters must be positive.");
             }
+            return getHotelsResponse(hotelService.filterHotels(province, rating, convenienceIds, minPrice, maxPrice, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, typeId, page, size));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
