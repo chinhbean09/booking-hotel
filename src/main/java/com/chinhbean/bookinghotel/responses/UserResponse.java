@@ -15,8 +15,8 @@ public class UserResponse {
     @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("user_name")
-    private String userName;
+//    @JsonProperty("user_name")
+//    private String userName;
 
     @NotBlank(message = "email is required")
     private String email;

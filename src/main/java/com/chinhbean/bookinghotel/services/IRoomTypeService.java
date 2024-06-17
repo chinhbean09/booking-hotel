@@ -3,6 +3,7 @@ package com.chinhbean.bookinghotel.services;
 import com.chinhbean.bookinghotel.dtos.RoomTypeDTO;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public interface IRoomTypeService {
 
     RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException;
 
-    List<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId) throws DataNotFoundException;
+    Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException;
 
     RoomTypeResponse updateRoomType(Long roomTypeId, RoomTypeDTO roomTypeDTO) throws DataNotFoundException;
 
