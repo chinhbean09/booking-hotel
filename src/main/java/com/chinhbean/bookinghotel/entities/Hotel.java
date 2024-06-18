@@ -42,7 +42,7 @@ public class Hotel {
     @Enumerated(EnumType.STRING)
     private HotelStatus status;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "hotel_conveniences",
             joinColumns = @JoinColumn(name = "hotel_id"),
