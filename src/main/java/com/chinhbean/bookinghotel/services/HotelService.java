@@ -57,8 +57,15 @@ public class HotelService implements IHotelService {
     @Override
     public Page<HotelResponse> getAllHotels(int page, int size) {
         logger.info("Fetching all hotels from the database.");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Hotel> hotels = hotelRepository.findAll(pageable);
+        Page<Hotel> hotels;
+        if ("ROLE_ADMIN".equals(currentUser.getRole().getRoleName())) {
+            hotels = hotelRepository.findAll(pageable);
+        } else {
+            hotels = hotelRepository.findAllByStatus(HotelStatus.ACTIVE, pageable);
+        }
         if (hotels.isEmpty()) {
             logger.warn("No hotels found in the database.");
             return Page.empty();
