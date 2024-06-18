@@ -2,7 +2,7 @@ package com.chinhbean.bookinghotel.services;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.chinhbean.bookinghotel.Specifications.HotelSpecification;
+import com.chinhbean.bookinghotel.specifications.HotelSpecification;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
@@ -57,8 +57,15 @@ public class HotelService implements IHotelService {
     @Override
     public Page<HotelResponse> getAllHotels(int page, int size) {
         logger.info("Fetching all hotels from the database.");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Hotel> hotels = hotelRepository.findAll(pageable);
+        Page<Hotel> hotels;
+        if ("ROLE_ADMIN".equals(currentUser.getRole().getRoleName())) {
+            hotels = hotelRepository.findAll(pageable);
+        } else {
+            hotels = hotelRepository.findAllByStatus(HotelStatus.ACTIVE, pageable);
+        }
         if (hotels.isEmpty()) {
             logger.warn("No hotels found in the database.");
             return Page.empty();

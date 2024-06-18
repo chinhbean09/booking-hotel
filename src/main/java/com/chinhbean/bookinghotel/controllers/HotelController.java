@@ -160,7 +160,7 @@ public class HotelController {
 
     @PostMapping("/upload-images/{hotelId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) throws IOException {
+    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) {
         try {
             HotelResponse hotelImageResponse = hotelImageService.uploadImages(images, hotelId);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()

@@ -1,4 +1,4 @@
-package com.chinhbean.bookinghotel.Specifications;
+package com.chinhbean.bookinghotel.specifications;
 
 import com.chinhbean.bookinghotel.entities.Hotel;
 import org.springframework.data.jpa.domain.Specification;
