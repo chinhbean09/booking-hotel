@@ -2,7 +2,7 @@ package com.chinhbean.bookinghotel.services;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.chinhbean.bookinghotel.Specifications.HotelSpecification;
+import com.chinhbean.bookinghotel.specifications.HotelSpecification;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
