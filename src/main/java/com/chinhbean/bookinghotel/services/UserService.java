@@ -106,19 +106,17 @@ public class UserService implements IUserService {
     @Override
     public String login(UserLoginDTO userLoginDTO) throws Exception {
         Optional<User> optionalUser = Optional.empty();
-        String subject = null;
+//        String subject = null;
+        String subject = userLoginDTO.getLoginIdentifier();
 
-        if (userLoginDTO.getPhoneNumber() != null && !userLoginDTO.getPhoneNumber().isBlank()) {
-            optionalUser = userRepository.findByPhoneNumber(userLoginDTO.getPhoneNumber());
-            subject = userLoginDTO.getPhoneNumber();
-        }
-        if (optionalUser.isEmpty() && userLoginDTO.getEmail() != null) {
-            optionalUser = userRepository.findByEmail(userLoginDTO.getEmail());
-            subject = userLoginDTO.getEmail();
+        if (subject.contains("@")) {
+            optionalUser = userRepository.findByEmail(subject);
+        } else {
+            optionalUser = userRepository.findByPhoneNumber(subject);
         }
 
         if (optionalUser.isEmpty()) {
-            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_NOT_FOUND));
         }
         User existingUser = optionalUser.get();
 
