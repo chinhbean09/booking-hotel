@@ -9,6 +9,7 @@ import com.chinhbean.bookinghotel.services.IRoomImageService;
 import com.chinhbean.bookinghotel.services.IRoomTypeService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,9 +52,11 @@ public class RoomTypeController {
     @GetMapping("/get-all-room/{hotelId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
 
-    public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@PathVariable Long hotelId) {
+    public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@PathVariable Long hotelId,
+                                                                   @RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "10") int size) {
         try {
-            List<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId);
+            Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId, page, size);
             return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .data(roomTypes)

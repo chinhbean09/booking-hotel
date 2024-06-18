@@ -24,13 +24,13 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @Column(name = "full_name", length = 100)
     private String fullName;
 
-    @Column(name = "phone_number", length = 10, nullable = false)
+    @Column(name = "phone_number", length = 10, nullable = true)
     private String phoneNumber;
 
     @Column(name = "address", length = 200)
     private String address;
 
-    @Column(name = "email", length = 200)
+    @Column(name = "email", length = 255, nullable = true)
     private String email;
 
     @Column(name = "password", length = 200, nullable = false)
@@ -81,9 +81,13 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
 
     @Override
     public String getUsername() {
-        return phoneNumber;
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            return phoneNumber;
+        } else if (email != null && !email.isEmpty()) {
+            return email;
+        }
+        return "";
     }
-
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -106,6 +110,6 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return null;
+        return getAttribute("fullname");
     }
 }

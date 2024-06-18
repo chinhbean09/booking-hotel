@@ -1,5 +1,6 @@
 package com.chinhbean.bookinghotel.configurations;
 
+import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -20,12 +23,21 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return phoneNumber -> userRepository
-                .findByPhoneNumber(phoneNumber)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException(
-                                "Cannot find user with phone number = " + phoneNumber));
+        return subject -> {
+            Optional<User> userByPhoneNumber = userRepository.findByPhoneNumber(subject);
+            if (userByPhoneNumber.isPresent()) {
+                return userByPhoneNumber.get();
+            }
+
+            Optional<User> userByEmail = userRepository.findByEmail(subject);
+            if (userByEmail.isPresent()) {
+                return userByEmail.get();
+            }
+
+            throw new UsernameNotFoundException("User not found with subject: " + subject);
+        };
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -12,6 +12,9 @@ import com.chinhbean.bookinghotel.repositories.TypeRepository;
 import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,15 +60,15 @@ public class RoomTypeService implements IRoomTypeService {
 
 
     @Override
-    public List<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId) throws DataNotFoundException {
-        List<RoomType> roomTypes = roomTypeRepository.findWithTypesAndRoomConveniencesByHotelId(hotelId);
+    public Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RoomType> roomTypes = roomTypeRepository.findWithTypesAndRoomConveniencesByHotelId(hotelId, pageable);
 
         if (roomTypes.isEmpty()) {
             throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
         }
-        return roomTypes.stream()
-                .map(RoomTypeResponse::fromType)
-                .collect(Collectors.toList());
+        return roomTypes.map(RoomTypeResponse::fromType);
     }
 
     @Override

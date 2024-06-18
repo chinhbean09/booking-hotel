@@ -1,6 +1,8 @@
 package com.chinhbean.bookinghotel.repositories;
 
 import com.chinhbean.bookinghotel.entities.RoomType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,7 +19,7 @@ public interface RoomTypeRepository extends JpaRepository<RoomType, Long> {
     List<RoomType> findWithTypesByHotelId(Long hotelId);
 
     @Query("SELECT DISTINCT r FROM RoomType r LEFT JOIN FETCH r.type LEFT JOIN FETCH r.roomConveniences WHERE r.hotel.id = :hotelId")
-    List<RoomType> findWithTypesAndRoomConveniencesByHotelId(Long hotelId);
+    Page<RoomType> findWithTypesAndRoomConveniencesByHotelId(Long hotelId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"type", "roomConveniences", "roomImages"})
         //@Query("SELECT r FROM RoomType r WHERE r.id = :id")
