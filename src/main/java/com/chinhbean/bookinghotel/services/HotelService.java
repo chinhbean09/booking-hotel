@@ -61,7 +61,7 @@ public class HotelService implements IHotelService {
         User currentUser = (User) authentication.getPrincipal();
         Pageable pageable = PageRequest.of(page, size);
         Page<Hotel> hotels;
-        if ("ROLE_ADMIN".equals(currentUser.getRole().getRoleName())) {
+        if ("ADMIN".equals(currentUser.getRole().getRoleName())) {
             hotels = hotelRepository.findAll(pageable);
         } else {
             hotels = hotelRepository.findAllByStatus(HotelStatus.ACTIVE, pageable);
