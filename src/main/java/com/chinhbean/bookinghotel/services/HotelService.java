@@ -9,6 +9,7 @@ import com.chinhbean.bookinghotel.dtos.HotelLocationDTO;
 import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.exceptions.InvalidDateFormatException;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IConvenienceRepository;
@@ -32,7 +33,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -291,16 +295,33 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
-        if (checkInDate.after(checkOutDate)) {
-            throw new IllegalArgumentException("Check-in date must be before check-out date");
+    public Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, String checkInDateStr, String checkOutDateStr, int page, int size) {
+        try {
+            Date checkInDate = convertHttpDateHeaderToDate(checkInDateStr);
+            Date checkOutDate = convertHttpDateHeaderToDate(checkOutDateStr);
+
+            Date currentDate = new Date();
+            if (checkInDate.before(currentDate) || checkOutDate.before(currentDate)) {
+                throw new IllegalArgumentException("Check-in and check-out dates must not be in the past");
+            }
+
+            if (checkInDate.after(checkOutDate)) {
+                throw new IllegalArgumentException("Check-in date must be before check-out date");
+            }
+            Pageable pageable = PageRequest.of(page, size);
+            Specification<Hotel> spec = Specification.where(HotelSpecification.hasProvince(province))
+                    .and(HotelSpecification.hasCapacityPerRoom(numPeople))
+                    .and(HotelSpecification.hasAvailability(checkInDate, checkOutDate));
+            Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
+            return hotels.map(HotelResponse::fromHotel);
+        } catch (ParseException e) {
+            throw new InvalidDateFormatException(localizationUtils.getLocalizedMessage(MessageKeys.INVALID_DATE_FORMAT));
         }
-        Pageable pageable = PageRequest.of(page, size);
-        Specification<Hotel> spec = Specification.where(HotelSpecification.hasProvince(province))
-                .and(HotelSpecification.hasCapacityPerRoom(numPeople))
-                .and(HotelSpecification.hasAvailability(checkInDate, checkOutDate));
-        Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
-        return hotels.map(HotelResponse::fromHotel);
+    }
+
+    public Date convertHttpDateHeaderToDate(String httpDateHeader) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", new Locale("en", "VN"));
+        return format.parse(httpDateHeader);
     }
 
     @Override

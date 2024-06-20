@@ -3,7 +3,7 @@ package com.chinhbean.bookinghotel.specifications;
 import com.chinhbean.bookinghotel.entities.Hotel;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.Set;
 
 public class HotelSpecification {
