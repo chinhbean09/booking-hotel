@@ -1,7 +1,9 @@
 package com.chinhbean.bookinghotel.services;
 
 import com.chinhbean.bookinghotel.dtos.RoomTypeDTO;
+import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import org.springframework.data.domain.Page;
 
@@ -23,4 +25,7 @@ public interface IRoomTypeService {
                                           Boolean doubleBedroom, Boolean wardrobe, Boolean airConditioning,
                                           Boolean tv, Boolean wifi, Boolean toiletries, Boolean kitchen,
                                           Double minPrice, Double maxPrice);
+    void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException;
+
+    Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size);
 }
