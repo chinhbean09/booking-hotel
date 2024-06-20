@@ -18,6 +18,8 @@ import java.util.Set;
 public interface IHotelService {
     Page<HotelResponse> getAllHotels(int page, int size);
 
+    Page<HotelResponse> getAdminHotels(int page, int size);
+
     Page<HotelResponse> getPartnerHotels(int page, int size);
 
     HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException;

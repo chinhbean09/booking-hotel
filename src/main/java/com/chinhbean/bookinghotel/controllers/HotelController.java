@@ -37,7 +37,7 @@ public class HotelController {
     private final IHotelService hotelService;
     private final IHotelImageService hotelImageService;
 
-    @GetMapping("/partnerHotels")
+    @GetMapping("/getPartnerHotels")
     @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
     public ResponseEntity<ResponseObject> getPartnerHotels(
             @RequestParam(defaultValue = "0") int page,
@@ -50,6 +50,14 @@ public class HotelController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return getHotelsResponse(hotelService.getAllHotels(page, size));
+    }
+
+    @GetMapping("/getAdminHotels")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ResponseObject> getAdminHotels(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return getHotelsResponse(hotelService.getAdminHotels(page, size));
     }
 
     private ResponseEntity<ResponseObject> getHotelsResponse(Page<HotelResponse> hotels) {

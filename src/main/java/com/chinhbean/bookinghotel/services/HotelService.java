@@ -2,7 +2,6 @@ package com.chinhbean.bookinghotel.services;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.chinhbean.bookinghotel.specifications.HotelSpecification;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
@@ -15,6 +14,7 @@ import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IConvenienceRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
+import com.chinhbean.bookinghotel.specifications.HotelSpecification;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ public class HotelService implements IHotelService {
 
     private final IHotelRepository hotelRepository;
     private final LocalizationUtils localizationUtils;
-    private final IConvenienceRepository IConvenienceRepository;
+    private final IConvenienceRepository convenienceRepository;
     private final AmazonS3 amazonS3;
 
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
@@ -56,16 +56,23 @@ public class HotelService implements IHotelService {
     @Transactional
     @Override
     public Page<HotelResponse> getAllHotels(int page, int size) {
-        logger.info("Fetching all hotels from the database.");
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) authentication.getPrincipal();
+        logger.info("Fetching all ACTIVE hotels from the database.");
         Pageable pageable = PageRequest.of(page, size);
-        Page<Hotel> hotels;
-        if ("ROLE_ADMIN".equals(currentUser.getRole().getRoleName())) {
-            hotels = hotelRepository.findAll(pageable);
-        } else {
-            hotels = hotelRepository.findAllByStatus(HotelStatus.ACTIVE, pageable);
+        Page<Hotel> hotels = hotelRepository.findAllByStatus(HotelStatus.ACTIVE, pageable);
+        if (hotels.isEmpty()) {
+            logger.warn("No ACTIVE hotels found in the database.");
+            return Page.empty();
         }
+        logger.info("Successfully retrieved all ACTIVE hotels.");
+        return hotels.map(HotelResponse::fromHotel);
+    }
+
+    @Transactional
+    @Override
+    public Page<HotelResponse> getAdminHotels(int page, int size) {
+        logger.info("Fetching all hotels from the database.");
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Hotel> hotels = hotelRepository.findAll(pageable);
         if (hotels.isEmpty()) {
             logger.warn("No hotels found in the database.");
             return Page.empty();
@@ -113,7 +120,7 @@ public class HotelService implements IHotelService {
         Set<Convenience> newConveniences = hotel.getConveniences().stream()
                 .filter(convenience -> convenience.getId() == null)
                 .collect(Collectors.toSet());
-        IConvenienceRepository.saveAll(newConveniences);
+        convenienceRepository.saveAll(newConveniences);
         Hotel savedHotel = hotelRepository.save(hotel);
         logger.info("Hotel created successfully with ID: {}", savedHotel.getId());
         return HotelResponse.fromHotel(savedHotel);
@@ -141,7 +148,7 @@ public class HotelService implements IHotelService {
     }
 
     private Convenience convertToConvenienceEntity(ConvenienceDTO dto) {
-        return IConvenienceRepository.findByFreeBreakfastAndPickUpDropOffAndRestaurantAndBarAndPoolAndFreeInternetAndReception24hAndLaundry(
+        return convenienceRepository.findByFreeBreakfastAndPickUpDropOffAndRestaurantAndBarAndPoolAndFreeInternetAndReception24hAndLaundry(
                         dto.getFreeBreakfast(),
                         dto.getPickUpDropOff(),
                         dto.getRestaurant(),
