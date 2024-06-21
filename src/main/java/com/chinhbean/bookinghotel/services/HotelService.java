@@ -56,7 +56,9 @@ public class HotelService implements IHotelService {
     @Transactional
     @Override
     public Page<HotelResponse> getAllHotels(int page, int size) {
-        logger.info("Fetching all hotels from the database.");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
         Pageable pageable = PageRequest.of(page, size);
         Page<Hotel> hotels = hotelRepository.findAll(pageable);
         if (hotels.isEmpty()) {
