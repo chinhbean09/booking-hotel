@@ -4,7 +4,9 @@ import com.chinhbean.bookinghotel.dtos.ConvenienceRoomDTO;
 import com.chinhbean.bookinghotel.dtos.RoomTypeDTO;
 import com.chinhbean.bookinghotel.dtos.TypeRoomDTO;
 import com.chinhbean.bookinghotel.entities.*;
+import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.ConvenienceRoomRepository;
 import com.chinhbean.bookinghotel.repositories.RoomImageRepository;
 import com.chinhbean.bookinghotel.repositories.RoomTypeRepository;
@@ -15,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,10 +45,17 @@ public class RoomTypeService implements IRoomTypeService {
 
         // Save the new Type entity
         Type newType = convertToTypeEntity(roomTypeDTO.getTypes());
-        Type savedType = typeRepository.save(newType);
-
-        // Assign the saved Type to the RoomType
-        roomType.setType(savedType);
+//        Type savedType = typeRepository.save(newType);
+//
+//        // Assign the saved Type to the RoomType
+//        roomType.setType(savedType);
+        if (isValidType(newType)) {
+            Type savedType = typeRepository.save(newType);
+            // Assign the saved Type to the RoomType
+            roomType.setType(savedType);
+        } else {
+            throw new IllegalArgumentException("Only one bedroom type can be selected");
+        }
         Set<RoomConvenience> newConveniences = roomType.getRoomConveniences().stream()
                 .filter(convenience -> convenience.getId() == null)
                 .collect(Collectors.toSet());
@@ -86,9 +97,9 @@ public class RoomTypeService implements IRoomTypeService {
         if (roomTypeDTO.getRoomPrice() != null) {
             roomType.setRoomPrice(roomTypeDTO.getRoomPrice());
         }
-        if (roomTypeDTO.getStatus() != null) {
-            roomType.setStatus(roomTypeDTO.getStatus());
-        }
+//        if (roomTypeDTO.getStatus() != null) {
+//            roomType.setStatus(roomTypeDTO.getStatus());
+//        }
 
         if (roomTypeDTO.getTypes() != null) {
             TypeRoomDTO typeRoomDTO = roomTypeDTO.getTypes(); // Assuming getTypes() returns a single TypeRoomDTO object
@@ -140,6 +151,24 @@ public class RoomTypeService implements IRoomTypeService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException {
+        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+                .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
+        roomType.setStatus(newStatus);
+        roomTypeRepository.save(roomType);
+    }
+
+    @Override
+    public Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RoomType> roomTypes = roomTypeRepository.findAllByStatusAndHotelId(RoomTypeStatus.AVAILABLE, pageable, hotelId);
+        if (roomTypes.isEmpty()) {
+            return Page.empty();
+        }
+        return roomTypes.map(RoomTypeResponse::fromType);
+    }
+
     private RoomType convertToEntity(RoomTypeDTO roomTypeDTO) {
         Type types = convertToTypeEntity(roomTypeDTO.getTypes());
 
@@ -154,10 +183,11 @@ public class RoomTypeService implements IRoomTypeService {
         return RoomType.builder()
                 .hotel(hotel)
                 .numberOfRoom(roomTypeDTO.getNumberOfRooms())
+                .roomTypeName(roomTypeDTO.getRoomTypeName())
                 .capacityPerRoom(roomTypeDTO.getCapacityPerRoom())
                 .roomPrice(roomTypeDTO.getRoomPrice())
                 .description(roomTypeDTO.getDescription())
-                .status(roomTypeDTO.getStatus())
+                .status(RoomTypeStatus.AVAILABLE)
                 .roomImages(roomImages)
                 .type(types)
                 .roomConveniences(roomConveniences)
@@ -191,6 +221,14 @@ public class RoomTypeService implements IRoomTypeService {
         type.setTwinBedroom(typeRoomDTO.getTwinBedroom());
         type.setDoubleBedroom(typeRoomDTO.getDoubleBedroom());
         return type;
+    }
+
+    private boolean isValidType(Type type) {
+        int count = 0;
+        if (Boolean.TRUE.equals(type.getSingleBedroom())) count++;
+        if (Boolean.TRUE.equals(type.getTwinBedroom())) count++;
+        if (Boolean.TRUE.equals(type.getDoubleBedroom())) count++;
+        return count == 1;
     }
 
     private RoomConvenience createNewRoomConvenience(ConvenienceRoomDTO convenienceRoomDTO) {
