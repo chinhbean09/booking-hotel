@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.controllers;
 
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
 import com.chinhbean.bookinghotel.entities.Hotel;
+import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,20 +40,23 @@ public class HotelController {
     private final IHotelService hotelService;
     private final IHotelImageService hotelImageService;
 
-    @GetMapping("/partnerHotels")
-    @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
-    public ResponseEntity<ResponseObject> getPartnerHotels(
+    @GetMapping("/get-hotels")
+    @PreAuthorize("hasAnyAuthority('ROLE_PARTNER', 'ROLE_ADMIN')")
+    public ResponseEntity<ResponseObject> getHotels(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return getHotelsResponse(hotelService.getPartnerHotels(page, size));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
+        if (currentUser.getRole().getId() == 1) {
+            return getHotelsResponse(hotelService.getAdminHotels(page, size));
+        } else if (currentUser.getRole().getId() == 2) {
+            return getHotelsResponse(hotelService.getPartnerHotels(page, size));
+        } else {
+            return getHotelsResponse(hotelService.getAllHotels(page, size));
+        }
     }
 
-    @GetMapping("/getAllHotels")
-    public ResponseEntity<ResponseObject> getAllHotels(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return getHotelsResponse(hotelService.getAllHotels(page, size));
-    }
 
     private ResponseEntity<ResponseObject> getHotelsResponse(Page<HotelResponse> hotels) {
         if (hotels.isEmpty()) {
@@ -160,7 +166,7 @@ public class HotelController {
 
     @PostMapping("/upload-images/{hotelId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) throws IOException {
+    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) {
         try {
             HotelResponse hotelImageResponse = hotelImageService.uploadImages(images, hotelId);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
