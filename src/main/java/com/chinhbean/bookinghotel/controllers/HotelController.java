@@ -25,10 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.Date;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -41,21 +38,26 @@ public class HotelController {
     private final IHotelImageService hotelImageService;
 
     @GetMapping("/get-hotels")
-    @PreAuthorize("hasAnyAuthority('ROLE_PARTNER', 'ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> getHotels(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) authentication.getPrincipal();
+        Optional<User> currentUserOptional = Optional.ofNullable((User) authentication.getPrincipal());
 
-        if (currentUser.getRole().getId() == 1) {
-            return getHotelsResponse(hotelService.getAdminHotels(page, size));
-        } else if (currentUser.getRole().getId() == 2) {
-            return getHotelsResponse(hotelService.getPartnerHotels(page, size));
+        if (currentUserOptional.isPresent()) {
+            User currentUser = currentUserOptional.get();
+            if (currentUser.getRole().getId() == 1) {
+                return getHotelsResponse(hotelService.getAdminHotels(page, size));
+            } else if (currentUser.getRole().getId() == 2) {
+                return getHotelsResponse(hotelService.getPartnerHotels(page, size));
+            } else {
+                return getHotelsResponse(hotelService.getAllHotels(page, size));
+            }
         } else {
             return getHotelsResponse(hotelService.getAllHotels(page, size));
         }
     }
+
 
 
     private ResponseEntity<ResponseObject> getHotelsResponse(Page<HotelResponse> hotels) {
