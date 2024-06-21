@@ -42,10 +42,9 @@ public class HotelController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Optional<User> currentUserOptional = Optional.ofNullable((User) authentication.getPrincipal());
 
-        if (currentUserOptional.isPresent()) {
-            User currentUser = currentUserOptional.get();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            User currentUser = (User) authentication.getPrincipal();
             if (currentUser.getRole().getId() == 1) {
                 return getHotelsResponse(hotelService.getAdminHotels(page, size));
             } else if (currentUser.getRole().getId() == 2) {
@@ -57,6 +56,7 @@ public class HotelController {
             return getHotelsResponse(hotelService.getAllHotels(page, size));
         }
     }
+
 
 
 
