@@ -45,26 +45,27 @@ public class HotelController {
 
     @GetMapping("/get-hotels")
     public ResponseEntity<ResponseObject> getHotels(@NonNull HttpServletRequest request,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size) {
         final String authHeader = request.getHeader("Authorization");
-        final String token = authHeader.substring(7);
-        final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
-        User userDetails = null;
-        if (phoneNumber != null) {
-            userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
-        }
-        if (userDetails != null) {
-            if (userDetails.getRole().getId() == 1) {
-                return getHotelsResponse(hotelService.getAdminHotels(page, size));
-            } else if (userDetails.getRole().getId() == 2) {
-                return getHotelsResponse(hotelService.getPartnerHotels(page, size, userDetails));
-            } else {
-                return getHotelsResponse(hotelService.getAllHotels(page, size));
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            final String token = authHeader.substring(7);
+            final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
+            User userDetails = null;
+            if (phoneNumber != null) {
+                userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
             }
-        } else {
-            return getHotelsResponse(hotelService.getAllHotels(page, size));
+            if (userDetails != null) {
+                if (userDetails.getRole().getId() == 1) {
+                    return getHotelsResponse(hotelService.getAdminHotels(page, size));
+                } else if (userDetails.getRole().getId() == 2) {
+                    return getHotelsResponse(hotelService.getPartnerHotels(page, size, userDetails));
+                } else {
+                    return getHotelsResponse(hotelService.getAllHotels(page, size));
+                }
+            }
         }
+        return getHotelsResponse(hotelService.getAllHotels(page, size));
     }
 
     private ResponseEntity<ResponseObject> getHotelsResponse(Page<HotelResponse> hotels) {
