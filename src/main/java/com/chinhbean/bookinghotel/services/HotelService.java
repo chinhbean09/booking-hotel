@@ -83,18 +83,18 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public Page<HotelResponse> getPartnerHotels(int page, int size) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) authentication.getPrincipal();
+    public Page<HotelResponse> getPartnerHotels(int page, int size, User userDetails) {
+        logger.info("Getting hotels for partner with ID: {}", userDetails.getId());
         Pageable pageable = PageRequest.of(page, size);
-        Page<Hotel> hotels = hotelRepository.findAllByPartnerId(currentUser.getId(), pageable);
+        Page<Hotel> hotels = hotelRepository.findHotelsByPartnerId(userDetails.getId(), pageable);
         if (hotels.isEmpty()) {
-            logger.warn("No hotels found for the partner.");
+            logger.warn("No hotels found for the partner with ID: {}", userDetails.getId());
             return Page.empty();
         }
-        logger.info("Successfully retrieved all hotels for the partner.");
+        logger.info("Successfully retrieved all hotels for the partner with ID: {}", userDetails.getId());
         return hotels.map(HotelResponse::fromHotel);
     }
+
 
     @Transactional
     @Override

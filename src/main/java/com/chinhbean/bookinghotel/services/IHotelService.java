@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.services;
 
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
 import com.chinhbean.bookinghotel.entities.Hotel;
+import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
@@ -20,7 +21,7 @@ public interface IHotelService {
 
     Page<HotelResponse> getAdminHotels(int page, int size);
 
-    Page<HotelResponse> getPartnerHotels(int page, int size);
+    Page<HotelResponse> getPartnerHotels(int page, int size, User userDetails);
 
     HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException;
 

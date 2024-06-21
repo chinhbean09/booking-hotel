@@ -1,5 +1,6 @@
 package com.chinhbean.bookinghotel.controllers;
 
+import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
 import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.entities.User;
@@ -11,6 +12,8 @@ import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.services.IHotelImageService;
 import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,19 +40,25 @@ import java.util.stream.Collectors;
 public class HotelController {
     private final IHotelService hotelService;
     private final IHotelImageService hotelImageService;
+    private final JwtTokenUtils jwtTokenUtils;
+    private final UserDetailsService userDetailsService;
 
     @GetMapping("/get-hotels")
-    public ResponseEntity<ResponseObject> getHotels(
+    public ResponseEntity<ResponseObject> getHotels(@NonNull HttpServletRequest request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getPrincipal() instanceof User) {
-            User currentUser = (User) authentication.getPrincipal();
-            if (currentUser.getRole().getId() == 1) {
+        final String authHeader = request.getHeader("Authorization");
+        final String token = authHeader.substring(7);
+        final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
+        User userDetails = null;
+        if (phoneNumber != null) {
+            userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
+        }
+        if (userDetails != null) {
+            if (userDetails.getRole().getId() == 1) {
                 return getHotelsResponse(hotelService.getAdminHotels(page, size));
-            } else if (currentUser.getRole().getId() == 2) {
-                return getHotelsResponse(hotelService.getPartnerHotels(page, size));
+            } else if (userDetails.getRole().getId() == 2) {
+                return getHotelsResponse(hotelService.getPartnerHotels(page, size, userDetails));
             } else {
                 return getHotelsResponse(hotelService.getAllHotels(page, size));
             }
@@ -56,9 +66,6 @@ public class HotelController {
             return getHotelsResponse(hotelService.getAllHotels(page, size));
         }
     }
-
-
-
 
     private ResponseEntity<ResponseObject> getHotelsResponse(Page<HotelResponse> hotels) {
         if (hotels.isEmpty()) {
