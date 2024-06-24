@@ -9,7 +9,6 @@ import com.chinhbean.bookinghotel.dtos.HotelLocationDTO;
 import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.exceptions.InvalidDateFormatException;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IConvenienceRepository;
@@ -33,10 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -295,92 +291,51 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, String checkInDateStr, String checkOutDateStr, int page, int size) {
-        try {
-            Date checkInDate = convertHttpDateHeaderToDate(checkInDateStr);
-            Date checkOutDate = convertHttpDateHeaderToDate(checkOutDateStr);
-
-            Date currentDate = new Date();
-            if (checkInDate.before(currentDate) || checkOutDate.before(currentDate)) {
-                throw new IllegalArgumentException("Check-in and check-out dates must not be in the past");
-            }
-
-            if (checkInDate.after(checkOutDate)) {
-                throw new IllegalArgumentException("Check-in date must be before check-out date");
-            }
-            Pageable pageable = PageRequest.of(page, size);
-            Specification<Hotel> spec = Specification.where(HotelSpecification.hasProvince(province))
-                    .and(HotelSpecification.hasCapacityPerRoom(numPeople))
-                    .and(HotelSpecification.hasAvailability(checkInDate, checkOutDate));
-            Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
-            return hotels.map(HotelResponse::fromHotel);
-        } catch (ParseException e) {
-            throw new InvalidDateFormatException(localizationUtils.getLocalizedMessage(MessageKeys.INVALID_DATE_FORMAT));
+    public Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
+        if (checkInDate.after(checkOutDate)) {
+            throw new IllegalArgumentException("Check-in date must be before check-out date");
         }
-    }
-
-    public Date convertHttpDateHeaderToDate(String httpDateHeader) throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", new Locale("en", "VN"));
-        return format.parse(httpDateHeader);
+        Pageable pageable = PageRequest.of(page, size);
+        Specification<Hotel> spec = Specification.where(HotelSpecification.hasProvince(province))
+                .and(HotelSpecification.hasCapacityPerRoom(numPeople))
+                .and(HotelSpecification.hasAvailability(checkInDate, checkOutDate));
+        Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
+        return hotels.map(HotelResponse::fromHotel);
     }
 
     @Override
-    public Page<HotelResponse> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Double minPrice, Double maxPrice, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, Long typeId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Specification<Hotel> spec = Specification.where(null);
-        if (province != null) {
-            spec = spec.and(HotelSpecification.hasProvince(province));
-        }
-        if (rating != null) {
-            spec = spec.and(HotelSpecification.hasRating(rating));
-        }
-        if (convenienceIds != null && !convenienceIds.isEmpty()) {
-            spec = spec.and(HotelSpecification.hasConvenience(convenienceIds));
-        }
-        if (minPrice != null && maxPrice != null) {
-            spec = spec.and(HotelSpecification.hasPriceRange(minPrice, maxPrice));
-        }
-        if (luxury != null) {
-            spec = spec.and(HotelSpecification.hasLuxury(luxury));
-        }
-        if (singleBedroom != null) {
-            spec = spec.and(HotelSpecification.hasSingleBedroom(singleBedroom));
-        }
-        if (twinBedroom != null) {
-            spec = spec.and(HotelSpecification.hasTwinBedroom(twinBedroom));
-        }
-        if (doubleBedroom != null) {
-            spec = spec.and(HotelSpecification.hasDoubleBedroom(doubleBedroom));
-        }
-        if (freeBreakfast != null) {
-            spec = spec.and(HotelSpecification.hasFreeBreakfast(freeBreakfast));
-        }
-        if (pickUpDropOff != null) {
-            spec = spec.and(HotelSpecification.hasPickUpDropOff(pickUpDropOff));
-        }
-        if (restaurant != null) {
-            spec = spec.and(HotelSpecification.hasRestaurant(restaurant));
-        }
-        if (bar != null) {
-            spec = spec.and(HotelSpecification.hasBar(bar));
-        }
-        if (pool != null) {
-            spec = spec.and(HotelSpecification.hasPool(pool));
-        }
-        if (freeInternet != null) {
-            spec = spec.and(HotelSpecification.hasFreeInternet(freeInternet));
-        }
-        if (reception24h != null) {
-            spec = spec.and(HotelSpecification.hasReception24h(reception24h));
-        }
-        if (laundry != null) {
-            spec = spec.and(HotelSpecification.hasLaundry(laundry));
-        }
-        if (typeId != null) {
-            spec = spec.and(HotelSpecification.hasType(typeId));
-        }
-        return hotelRepository.findAll(spec, pageable).map(HotelResponse::fromHotel);
+public Page<HotelResponse> filterHotelsByConveniencesAndRating(Integer rating, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    Specification<Hotel> spec = Specification.where(null);
+    if (rating != null) {
+        spec = spec.and(HotelSpecification.hasRating(rating));
     }
+    if (freeBreakfast != null) {
+        spec = spec.and(HotelSpecification.hasFreeBreakfast(freeBreakfast));
+    }
+    if (pickUpDropOff != null) {
+        spec = spec.and(HotelSpecification.hasPickUpDropOff(pickUpDropOff));
+    }
+    if (restaurant != null) {
+        spec = spec.and(HotelSpecification.hasRestaurant(restaurant));
+    }
+    if (bar != null) {
+        spec = spec.and(HotelSpecification.hasBar(bar));
+    }
+    if (pool != null) {
+        spec = spec.and(HotelSpecification.hasPool(pool));
+    }
+    if (freeInternet != null) {
+        spec = spec.and(HotelSpecification.hasFreeInternet(freeInternet));
+    }
+    if (reception24h != null) {
+        spec = spec.and(HotelSpecification.hasReception24h(reception24h));
+    }
+    if (laundry != null) {
+        spec = spec.and(HotelSpecification.hasLaundry(laundry));
+    }
+    return hotelRepository.findAll(spec, pageable).map(HotelResponse::fromHotel);
+}
 
     @Override
     public void deleteHotel(Long hotelId) throws DataNotFoundException {

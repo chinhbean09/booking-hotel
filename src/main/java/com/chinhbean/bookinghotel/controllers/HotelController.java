@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.controllers;
 
 import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
+import com.chinhbean.bookinghotel.dtos.HotelFilterDTO;
 import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
@@ -237,41 +238,32 @@ public class HotelController {
         return getHotelsResponse(hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size));
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<ResponseObject> filterHotels(
-            @RequestParam(required = false) String province,
-            @RequestParam(required = false) Integer rating,
-            @RequestParam(required = false) Set<Long> convenienceIds,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) Long typeId,
-            @RequestParam(required = false) Boolean luxury,
-            @RequestParam(required = false) Boolean singleBedroom,
-            @RequestParam(required = false) Boolean twinBedroom,
-            @RequestParam(required = false) Boolean doubleBedroom,
-            @RequestParam(required = false) Boolean freeBreakfast,
-            @RequestParam(required = false) Boolean pickUpDropOff,
-            @RequestParam(required = false) Boolean restaurant,
-            @RequestParam(required = false) Boolean bar,
-            @RequestParam(required = false) Boolean pool,
-            @RequestParam(required = false) Boolean freeInternet,
-            @RequestParam(required = false) Boolean reception24h,
-            @RequestParam(required = false) Boolean laundry,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        try {
-            if (page < 0 || size <= 0) {
-                throw new IllegalArgumentException("Page and size parameters must be positive.");
-            }
-            return getHotelsResponse(hotelService.filterHotels(province, rating, convenienceIds, minPrice, maxPrice, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, typeId, page, size));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .data(Collections.emptyList())
-                    .message(e.getMessage())
-                    .build());
+    @PostMapping("/filter")
+public ResponseEntity<ResponseObject> filterHotels(@RequestBody HotelFilterDTO filterDTO) {
+    try {
+        if (filterDTO.getPage() < 0 || filterDTO.getSize() <= 0) {
+            throw new IllegalArgumentException("Page and size parameters must be positive.");
         }
+        return getHotelsResponse(hotelService.filterHotelsByConveniencesAndRating(
+                filterDTO.getRating(),
+                filterDTO.getFreeBreakfast(),
+                filterDTO.getPickUpDropOff(),
+                filterDTO.getRestaurant(),
+                filterDTO.getBar(),
+                filterDTO.getPool(),
+                filterDTO.getFreeInternet(),
+                filterDTO.getReception24h(),
+                filterDTO.getLaundry(),
+                filterDTO.getPage(),
+                filterDTO.getSize()));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .data(Collections.emptyList())
+                .message(e.getMessage())
+                .build());
     }
+}
 
     @DeleteMapping("/{hotelId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
