@@ -1,5 +1,6 @@
 package com.chinhbean.bookinghotel.entities;
 
+import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
@@ -35,6 +36,9 @@ public class RoomType {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Column(name = "room_type_name", nullable = false)
+    private String roomTypeName;
+
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "room_type_id")
     private Set<RoomImage> roomImages;
@@ -52,7 +56,8 @@ public class RoomType {
     @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
-    @Column(name = "status")
-    private Integer status;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private RoomTypeStatus status;
 
 }

@@ -53,6 +53,7 @@ public class MessageKeys {
     public static final String RETRIEVED_HOTEL_DETAILS_SUCCESSFULLY = "hotel.hotel_detail.retrieved_hotel_details_successfully";
     public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_CHANGE_STATUS = "hotel.update_status.user_does_not_have_permission_to_change_status";
     public static final String ROOM_DOES_NOT_EXISTS = "room.list_room.room_not_exist";
+    public static final String UPDATED_ROOM_STATUS_SUCCESSFULLY = "room.update_status.update_room_status_successfully";
 
     public static final String TOKEN_GENERATION_FAILEDSTRING = "user.login.jwt.token_can_not_create";
     public static final String INSERT_ROOM_SUCCESSFULLY = "room.create_room.create_successfully";

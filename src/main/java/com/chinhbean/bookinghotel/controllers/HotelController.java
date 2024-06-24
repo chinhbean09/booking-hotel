@@ -1,7 +1,9 @@
 package com.chinhbean.bookinghotel.controllers;
 
+import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
 import com.chinhbean.bookinghotel.entities.Hotel;
+import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
@@ -10,20 +12,24 @@ import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.services.IHotelImageService;
 import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.sql.Date;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -34,28 +40,32 @@ import java.util.stream.Collectors;
 public class HotelController {
     private final IHotelService hotelService;
     private final IHotelImageService hotelImageService;
+    private final JwtTokenUtils jwtTokenUtils;
+    private final UserDetailsService userDetailsService;
 
-    @GetMapping("/getPartnerHotels")
-    @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
-    public ResponseEntity<ResponseObject> getPartnerHotels(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return getHotelsResponse(hotelService.getPartnerHotels(page, size));
-    }
-
-    @GetMapping("/getAllHotels")
-    public ResponseEntity<ResponseObject> getAllHotels(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    @GetMapping("/get-hotels")
+    public ResponseEntity<ResponseObject> getHotels(@NonNull HttpServletRequest request,
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size) {
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            final String token = authHeader.substring(7);
+            final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
+            User userDetails = null;
+            if (phoneNumber != null) {
+                userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
+            }
+            if (userDetails != null) {
+                if (userDetails.getRole().getId() == 1) {
+                    return getHotelsResponse(hotelService.getAdminHotels(page, size));
+                } else if (userDetails.getRole().getId() == 2) {
+                    return getHotelsResponse(hotelService.getPartnerHotels(page, size, userDetails));
+                } else {
+                    return getHotelsResponse(hotelService.getAllHotels(page, size));
+                }
+            }
+        }
         return getHotelsResponse(hotelService.getAllHotels(page, size));
-    }
-
-    @GetMapping("/getAdminHotels")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
-    public ResponseEntity<ResponseObject> getAdminHotels(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return getHotelsResponse(hotelService.getAdminHotels(page, size));
     }
 
     private ResponseEntity<ResponseObject> getHotelsResponse(Page<HotelResponse> hotels) {
@@ -219,12 +229,12 @@ public class HotelController {
     public ResponseEntity<ResponseObject> findByProvinceAndCapacityPerRoomAndAvailability(
             @RequestParam String province,
             @RequestParam int numPeople,
-            @RequestParam String checkInDateStr,
-            @RequestParam String checkOutDateStr,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date checkInDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date checkOutDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        return getHotelsResponse(hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDateStr, checkOutDateStr, page, size));
+        return getHotelsResponse(hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size));
     }
 
     @GetMapping("/filter")

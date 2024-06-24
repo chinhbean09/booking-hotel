@@ -1,6 +1,7 @@
 package com.chinhbean.bookinghotel.repositories;
 
 import com.chinhbean.bookinghotel.entities.RoomType;
+import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -38,7 +39,8 @@ public interface RoomTypeRepository extends JpaRepository<RoomType, Long> {
             "(rc.toiletries = :toiletries OR :toiletries IS NULL) AND " +
             "(rc.kitchen = :kitchen OR :kitchen IS NULL) AND " +
             "(rt.roomPrice >= :minPrice OR :minPrice IS NULL) AND " +
-            "(rt.roomPrice <= :maxPrice OR :maxPrice IS NULL)")
+            "(rt.roomPrice <= :maxPrice OR :maxPrice IS NULL) AND " +
+            "rt.status = AVAILABLE")
     List<RoomType> findByTypeAndConveniencesAndPriceAndHotel(
             @Param("hotelId") Long hotelId,
             @Param("luxury") Boolean luxury,
@@ -54,4 +56,6 @@ public interface RoomTypeRepository extends JpaRepository<RoomType, Long> {
             @Param("minPrice") Double minPrice,
             @Param("maxPrice") Double maxPrice
     );
+
+    Page<RoomType> findAllByStatusAndHotelId(RoomTypeStatus roomTypeStatus, Pageable pageable, Long hotelId);
 }

@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.responses;
 
 import com.chinhbean.bookinghotel.entities.RoomType;
 import com.chinhbean.bookinghotel.entities.Type;
+import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,8 +35,11 @@ public class RoomTypeResponse {
     @JsonProperty("room_price")
     private Double roomPrice;
 
+    @JsonProperty("room_type_name")
+    private String roomTypeName;
+
     @JsonProperty("status")
-    private Integer status;
+    private RoomTypeStatus status;
 
     @JsonProperty("image_urls")
     private List<RoomImageResponse> imageUrls;
@@ -62,6 +66,7 @@ public class RoomTypeResponse {
         return RoomTypeResponse.builder()
                 .id(roomType.getId())
                 .hotelId(roomType.getHotel().getId())
+                .roomTypeName(roomType.getRoomTypeName())
                 .description(roomType.getDescription())
                 .capacityPerRoom(roomType.getCapacityPerRoom())
                 .numberOfRooms(roomType.getNumberOfRoom())
