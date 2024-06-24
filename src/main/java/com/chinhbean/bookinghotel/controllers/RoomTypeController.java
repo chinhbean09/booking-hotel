@@ -74,23 +74,23 @@ public class RoomTypeController {
 
     @GetMapping("/get-all-room-status/{hotelId}")
     public ResponseEntity<ResponseObject> getAllRoomTypesByStatus(@PathVariable Long hotelId,
-                                                                   @RequestParam(defaultValue = "0") int page,
-                                                                   @RequestParam(defaultValue = "10") int size) {
+                                                                  @RequestParam(defaultValue = "0") int page,
+                                                                  @RequestParam(defaultValue = "10") int size) {
 
-            Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByStatus(hotelId, page, size);
-            if (roomTypes.isEmpty())
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
-                        .status(HttpStatus.NOT_FOUND)
-                        .message(MessageKeys.ROOM_TYPE_NOT_FOUND)
-                        .data(null)
-                        .build());
-            else {
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
-                        .status(HttpStatus.OK)
-                        .data(roomTypes)
-                        .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
-                        .build());
-            }
+        Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByStatus(hotelId, page, size);
+        if (roomTypes.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message(MessageKeys.ROOM_TYPE_NOT_FOUND)
+                    .data(null)
+                    .build());
+        else {
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(roomTypes)
+                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                    .build());
+        }
     }
 
     @PutMapping("/update/{roomTypeId}")

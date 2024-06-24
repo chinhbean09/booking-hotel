@@ -17,6 +17,7 @@ public interface IUserService {
     User registerUser(UserDTO userDTO) throws Exception;
 
     String login(UserLoginDTO userLoginDTO) throws Exception;
+
     User getUserDetailsFromToken(String token) throws Exception;
 
     User updateUserAvatar(long id, MultipartFile avatar);

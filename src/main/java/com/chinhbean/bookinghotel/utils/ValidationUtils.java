@@ -15,6 +15,7 @@ public class ValidationUtils {
         Pattern pattern = Pattern.compile(phoneRegex);
         return phoneNumber != null && pattern.matcher(phoneNumber).matches();
     }
+
     public static boolean isValidPassword(String password) {
         return password != null && password.length() >= 3;
     }

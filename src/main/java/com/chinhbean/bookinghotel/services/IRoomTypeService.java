@@ -25,6 +25,7 @@ public interface IRoomTypeService {
                                           Boolean doubleBedroom, Boolean wardrobe, Boolean airConditioning,
                                           Boolean tv, Boolean wifi, Boolean toiletries, Boolean kitchen,
                                           Double minPrice, Double maxPrice);
+
     void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException;
 
     Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size);

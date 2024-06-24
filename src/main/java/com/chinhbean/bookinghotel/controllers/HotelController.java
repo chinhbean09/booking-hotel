@@ -22,15 +22,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.Date;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -239,31 +239,31 @@ public class HotelController {
     }
 
     @PostMapping("/filter")
-public ResponseEntity<ResponseObject> filterHotels(@RequestBody HotelFilterDTO filterDTO) {
-    try {
-        if (filterDTO.getPage() < 0 || filterDTO.getSize() <= 0) {
-            throw new IllegalArgumentException("Page and size parameters must be positive.");
+    public ResponseEntity<ResponseObject> filterHotels(@RequestBody HotelFilterDTO filterDTO) {
+        try {
+            if (filterDTO.getPage() < 0 || filterDTO.getSize() <= 0) {
+                throw new IllegalArgumentException("Page and size parameters must be positive.");
+            }
+            return getHotelsResponse(hotelService.filterHotelsByConveniencesAndRating(
+                    filterDTO.getRating(),
+                    filterDTO.getFreeBreakfast(),
+                    filterDTO.getPickUpDropOff(),
+                    filterDTO.getRestaurant(),
+                    filterDTO.getBar(),
+                    filterDTO.getPool(),
+                    filterDTO.getFreeInternet(),
+                    filterDTO.getReception24h(),
+                    filterDTO.getLaundry(),
+                    filterDTO.getPage(),
+                    filterDTO.getSize()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .data(Collections.emptyList())
+                    .message(e.getMessage())
+                    .build());
         }
-        return getHotelsResponse(hotelService.filterHotelsByConveniencesAndRating(
-                filterDTO.getRating(),
-                filterDTO.getFreeBreakfast(),
-                filterDTO.getPickUpDropOff(),
-                filterDTO.getRestaurant(),
-                filterDTO.getBar(),
-                filterDTO.getPool(),
-                filterDTO.getFreeInternet(),
-                filterDTO.getReception24h(),
-                filterDTO.getLaundry(),
-                filterDTO.getPage(),
-                filterDTO.getSize()));
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .data(Collections.emptyList())
-                .message(e.getMessage())
-                .build());
     }
-}
 
     @DeleteMapping("/{hotelId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")

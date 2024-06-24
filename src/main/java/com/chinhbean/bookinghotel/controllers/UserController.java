@@ -75,14 +75,14 @@ public class UserController {
                     .build());
         }
         if (userDTO.getEmail() == null || userDTO.getEmail().trim().isBlank()) {
-            if(userDTO.getPhoneNumber() == null || userDTO.getPhoneNumber().trim().isBlank()) {
+            if (userDTO.getPhoneNumber() == null || userDTO.getPhoneNumber().trim().isBlank()) {
                 return ResponseEntity.badRequest().body(ResponseObject.builder()
                         .status(HttpStatus.BAD_REQUEST)
                         .data(null)
                         .message("At least email or phone number is required")
                         .build());
 
-        } else {
+            } else {
                 if (!ValidationUtils.isValidPhoneNumber(userDTO.getPhoneNumber())) {
                     throw new Exception("Invalid phone number");
                 }
