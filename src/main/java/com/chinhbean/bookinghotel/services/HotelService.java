@@ -240,18 +240,18 @@ public class HotelService implements IHotelService {
         hotelRepository.save(hotel);
     }
 
-    @Override
-    public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException, PermissionDenyException {
-        Hotel hotel = getHotelById(hotelId);
-        validateUserPermission(hotel);
-        validateFile(file);
-        String objectKey = buildObjectKey(hotel.getId(), file.getOriginalFilename());
-        ObjectMetadata metadata = createObjectMetadata(file);
-        uploadFileToS3(bucketName, objectKey, file, metadata);
-        String licenseUrl = amazonS3.getUrl(bucketName, objectKey).toString();
-        hotel.setBusinessLicense(licenseUrl);
-        return hotelRepository.save(hotel);
-    }
+//    @Override
+//    public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException, PermissionDenyException {
+//        Hotel hotel = getHotelById(hotelId);
+//        validateUserPermission(hotel);
+//        validateFile(file);
+//        String objectKey = buildObjectKey(hotel.getId(), file.getOriginalFilename());
+//        ObjectMetadata metadata = createObjectMetadata(file);
+//        uploadFileToS3(bucketName, objectKey, file, metadata);
+//        String licenseUrl = amazonS3.getUrl(bucketName, objectKey).toString();
+//        hotel.setBusinessLicense(licenseUrl);
+//        return hotelRepository.save(hotel);
+//    }
 
     @Override
     public Hotel getHotelById(Long hotelId) throws DataNotFoundException {
