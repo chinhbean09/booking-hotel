@@ -22,11 +22,15 @@ public class HotelStatusUpdater {
     public void updateHotelStatus() {
         List<Hotel> hotels = hotelRepository.findAll();
         for (Hotel hotel : hotels) {
-            boolean allRoomTypesAreFull = hotel.getRoomTypes().stream()
-                    .allMatch(roomType -> roomType.getStatus() != RoomTypeStatus.AVAILABLE);
-            if (allRoomTypesAreFull) {
+            boolean allRoomTypesAreUnavailable = hotel.getRoomTypes().stream()
+                    .allMatch(roomType -> roomType.getStatus() == RoomTypeStatus.UNAVAILABLE);
+            boolean allRoomTypesAreDisabled = hotel.getRoomTypes().stream()
+                    .allMatch(roomType -> roomType.getStatus() == RoomTypeStatus.DISABLED);
+            if (allRoomTypesAreUnavailable) {
                 hotel.setStatus(HotelStatus.CLOSED);
-            } else if (hotel.getStatus() == HotelStatus.CLOSED) {
+            } else if (allRoomTypesAreDisabled) {
+                hotel.setStatus(HotelStatus.APPROVED);
+            } else if (hotel.getStatus() == HotelStatus.CLOSED || hotel.getStatus() == HotelStatus.APPROVED) {
                 hotel.setStatus(HotelStatus.ACTIVE);
             }
             hotelRepository.save(hotel);
