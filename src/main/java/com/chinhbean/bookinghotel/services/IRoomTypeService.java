@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface IRoomTypeService {
 
-    RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException;
+    RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException, PermissionDenyException;
 
     Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException;
 

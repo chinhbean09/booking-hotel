@@ -226,11 +226,9 @@ public class HotelService implements IHotelService {
         User currentUser = (User) authentication.getPrincipal();
         if (Role.ADMIN.equals(currentUser.getRole().getRoleName())) {
             hotel.setStatus(newStatus);
-            hotel.setPartner(currentUser);
         } else if (Role.PARTNER.equals(currentUser.getRole().getRoleName())) {
             if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE || newStatus == HotelStatus.CLOSED) {
                 hotel.setStatus(newStatus);
-                hotel.setPartner(currentUser);
             } else {
                 throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
             }

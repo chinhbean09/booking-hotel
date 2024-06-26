@@ -4,6 +4,7 @@ import com.chinhbean.bookinghotel.dtos.ConvenienceRoomDTO;
 import com.chinhbean.bookinghotel.dtos.RoomTypeDTO;
 import com.chinhbean.bookinghotel.dtos.TypeRoomDTO;
 import com.chinhbean.bookinghotel.entities.*;
+import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
@@ -34,10 +35,11 @@ public class RoomTypeService implements IRoomTypeService {
     private final RoomTypeRepository roomTypeRepository;
     private final ConvenienceRoomRepository convenienceRoomRepository;
     private final RoomImageRepository roomImageRepository;
+    private final IHotelService hotelService;
 
     @Override
     @Transactional
-    public RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException {
+    public RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException, PermissionDenyException {
         // Convert DTO to entity
         RoomType roomType = convertToEntity(roomTypeDTO);
 
@@ -62,6 +64,12 @@ public class RoomTypeService implements IRoomTypeService {
 
         // Save the RoomType
         RoomType savedRoomType = roomTypeRepository.save(roomType);
+
+        // Get the related Hotel
+        Hotel hotel = hotelService.getHotelById(roomTypeDTO.getHotelId());
+
+        // Update the Hotel status to ACTIVE
+        hotelService.updateStatus(hotel.getId(), HotelStatus.ACTIVE);
 
         // Return the RoomType response
         return RoomTypeResponse.fromType(savedRoomType);
