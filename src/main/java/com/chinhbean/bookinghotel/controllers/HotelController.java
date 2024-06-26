@@ -10,6 +10,7 @@ import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
+import com.chinhbean.bookinghotel.services.IHotelBusinessLicenseService;
 import com.chinhbean.bookinghotel.services.IHotelImageService;
 import com.chinhbean.bookinghotel.services.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
@@ -43,6 +44,7 @@ public class HotelController {
     private final IHotelImageService hotelImageService;
     private final JwtTokenUtils jwtTokenUtils;
     private final UserDetailsService userDetailsService;
+    private final IHotelBusinessLicenseService hotelBusinessLicenseService;
 
     @GetMapping("/get-hotels")
     public ResponseEntity<ResponseObject> getHotels(@NonNull HttpServletRequest request,
@@ -214,16 +216,22 @@ public class HotelController {
         }
     }
 
-    @PutMapping(value = "/update-business-license/{hotelId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping("/update-business-license/{hotelId}")
     @PreAuthorize("hasAnyAuthority('ROLE_PARTNER')")
-    public ResponseEntity<ResponseObject> updateBusinessLicense(@PathVariable long hotelId,
-                                                                @RequestParam("license") MultipartFile license) throws DataNotFoundException, IOException, PermissionDenyException {
-        Hotel hotel = hotelService.uploadBusinessLicense(hotelId, license);
-        return ResponseEntity.ok(ResponseObject.builder()
-                .status(HttpStatus.OK)
-                .data(HotelResponse.fromHotel(hotel))
-                .message(MessageKeys.UPDATE_LICENSE_SUCCESSFULLY)
-                .build());
+    public ResponseEntity<ResponseObject> uploadBusinessLicense(@RequestParam("license") List<MultipartFile> images, @PathVariable("hotelId") Long hotelId) {
+        try {
+            HotelResponse hotelImageResponse = hotelBusinessLicenseService.uploadBusinessLicense(images, hotelId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
+                    .status(HttpStatus.CREATED)
+                    .data(hotelImageResponse)
+                    .message(MessageKeys.UPLOAD_IMAGES_SUCCESSFULLY)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build());
+        }
     }
 
     @GetMapping("/search")

@@ -55,7 +55,7 @@ public class HotelResponse {
     private List<HotelImageResponse> imageUrls;
 
     @JsonProperty("business_license")
-    private String businessLicense;
+    private List<HotelBusinessLicenseResponse> businessLicenseUrls;
 
     public static HotelResponse fromHotel(Hotel hotel) {
         HotelLocationResponse locationResponse = (hotel.getLocation() != null) ? HotelLocationResponse.fromHotelLocation(hotel.getLocation()) : null;
@@ -85,6 +85,12 @@ public class HotelResponse {
                 .map(HotelImageResponse::fromHotelImage)
                 .collect(Collectors.toList());
 
+        List<HotelBusinessLicenseResponse> hotelBusinessLicenseResponses = Optional.ofNullable(hotel.getHotelBusinessLicenses())
+                .orElseGet(Collections::emptySet)
+                .stream()
+                .map(HotelBusinessLicenseResponse::fromHotelBusinessLicense)
+                .collect(Collectors.toList());
+
         return HotelResponse.builder()
                 .id(hotel.getId())
                 .hotelName(hotel.getHotelName())
@@ -98,7 +104,7 @@ public class HotelResponse {
                 .roomTypes(roomTypeResponses)
                 .feedbacks(feedbackResponses)
                 .imageUrls(hotelImageResponses)
-                .businessLicense(hotel.getBusinessLicense())
+                .businessLicenseUrls(hotelBusinessLicenseResponses)
                 .build();
     }
 }

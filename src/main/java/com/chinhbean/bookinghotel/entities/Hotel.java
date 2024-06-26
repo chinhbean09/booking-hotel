@@ -32,8 +32,8 @@ public class Hotel {
     @JoinColumn(name = "partner_id", nullable = false)
     private User partner;
 
-    @Column(name = "business_license")
-    private String businessLicense;
+//    @Column(name = "business_license")
+//    private String businessLicense;
 
     @Column(nullable = false)
     private String brand;
@@ -62,5 +62,9 @@ public class Hotel {
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "hotel_id")
     private Set<HotelImages> hotelImages;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "hotel_id")
+    private Set<HotelBusinessLicense> hotelBusinessLicenses;
 
 }
