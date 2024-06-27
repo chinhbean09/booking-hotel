@@ -34,6 +34,7 @@ public class RoomType {
     private Integer numberOfRoom;
 
     @Column(name = "description", nullable = false)
+    @Lob
     private String description;
 
     @Column(name = "room_type_name", nullable = false)

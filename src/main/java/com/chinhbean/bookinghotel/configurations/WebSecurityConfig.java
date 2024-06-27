@@ -44,7 +44,10 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                                 String.format("%s/hotels/get-hotels", apiPrefix),
                                 String.format("%s/hotels/detail/**", apiPrefix),
                                 String.format("%s/hotels/filter", apiPrefix),
-                                String.format("%s/hotels/search", apiPrefix)
+                                String.format("%s/hotels/search", apiPrefix),
+                                String.format("%s/room-types/filter/**", apiPrefix),
+                                String.format("%s/room-types/get-room/**", apiPrefix),
+                                String.format("%s/room-types/get-all-room-status/**", apiPrefix)
                         )
                         .permitAll()
                         .anyRequest()
