@@ -33,8 +33,7 @@ public class RoomType {
     @Column(name = "number_of_room", nullable = false)
     private Integer numberOfRoom;
 
-    @Column(name = "description", nullable = false)
-    @Lob
+    @Column(name = "description", nullable = false, length = 1000)
     private String description;
 
     @Column(name = "room_type_name", nullable = false)

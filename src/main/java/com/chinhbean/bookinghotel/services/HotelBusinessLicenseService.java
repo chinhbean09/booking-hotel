@@ -5,15 +5,11 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.entities.HotelBusinessLicense;
-import com.chinhbean.bookinghotel.entities.RoomImage;
-import com.chinhbean.bookinghotel.entities.RoomType;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.repositories.HotelBusinessLicenseRepository;
+import com.chinhbean.bookinghotel.repositories.IHotelBusinessLicenseRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
 import com.chinhbean.bookinghotel.responses.HotelBusinessLicenseResponse;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
-import com.chinhbean.bookinghotel.responses.RoomImageResponse;
-import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +27,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class HotelBusinessLicenseService implements IHotelBusinessLicenseService {
 
-    private final HotelBusinessLicenseRepository hotelBusinessLicenseRepository;
+    private final IHotelBusinessLicenseRepository IHotelBusinessLicenseRepository;
     private final AmazonS3 amazonS3;
     private final IHotelRepository hotelRepository;
     private final LocalizationUtils localizationUtils;
@@ -61,7 +57,7 @@ public class HotelBusinessLicenseService implements IHotelBusinessLicenseService
             amazonS3.putObject(bucketName, key, image.getInputStream(), metadata);
             String imageUrl = amazonS3.getUrl(bucketName, key).toString();
             // Check if the image URL already exists
-            if (hotelBusinessLicenseRepository.findByBusinessLicenseAndHotelId(imageUrl, hotelId).isPresent()) {
+            if (IHotelBusinessLicenseRepository.findByBusinessLicenseAndHotelId(imageUrl, hotelId).isPresent()) {
                 throw new DuplicateKeyException("License URL already exists for this hotel " + hotelId);
             }
             imageUrls.add(imageUrl);
@@ -71,7 +67,7 @@ public class HotelBusinessLicenseService implements IHotelBusinessLicenseService
                     .businessLicense(imageUrl)
                     .hotel(Hotel.builder().id(hotelId).build()) // Assuming you have a constructor or builder method to set the id of the Room entity
                     .build();
-            hotelBusinessLicense = hotelBusinessLicenseRepository.save(hotelBusinessLicense);
+            hotelBusinessLicense = IHotelBusinessLicenseRepository.save(hotelBusinessLicense);
 
             // Create RoomImageResponse and set id and room_id
             HotelBusinessLicenseResponse hotelBusinessLicenseResponse = HotelBusinessLicenseResponse.builder()

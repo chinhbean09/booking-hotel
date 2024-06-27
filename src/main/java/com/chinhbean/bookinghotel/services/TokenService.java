@@ -5,7 +5,7 @@ import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.ExpiredTokenException;
-import com.chinhbean.bookinghotel.repositories.TokenRepository;
+import com.chinhbean.bookinghotel.repositories.ITokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,14 +25,14 @@ public class TokenService implements ITokenService {
     @Value("${jwt.expiration-refresh-token}")
     private int expirationRefreshToken;
 
-    private final TokenRepository tokenRepository;
+    private final ITokenRepository ITokenRepository;
     private final JwtTokenUtils jwtTokenUtils;
 
 
     @Transactional
     @Override
     public Token addToken(User user, String token, boolean isMobileDevice) {
-        List<Token> userTokens = tokenRepository.findByUser(user);
+        List<Token> userTokens = ITokenRepository.findByUser(user);
         int tokenCount = userTokens.size();
         if (tokenCount >= MAX_TOKENS) {
             boolean hasNonMobileToken = !userTokens.stream().allMatch(Token::isMobile);
@@ -45,7 +45,7 @@ public class TokenService implements ITokenService {
             } else {
                 tokenToDelete = userTokens.get(0);
             }
-            tokenRepository.delete(tokenToDelete);
+            ITokenRepository.delete(tokenToDelete);
         }
         long expirationInSeconds = expiration;
         LocalDateTime expirationDateTime = LocalDateTime.now().plusSeconds(expirationInSeconds);
@@ -60,19 +60,19 @@ public class TokenService implements ITokenService {
                 .build();
         newToken.setRefreshToken(UUID.randomUUID().toString());
         newToken.setRefreshExpirationDate(LocalDateTime.now().plusSeconds(expirationRefreshToken));
-        tokenRepository.save(newToken);
+        ITokenRepository.save(newToken);
         return newToken;
 
     }
 
     @Override
     public Token refreshToken(String refreshToken, User user) throws Exception {
-        Token existingToken = tokenRepository.findByRefreshToken(refreshToken);
+        Token existingToken = ITokenRepository.findByRefreshToken(refreshToken);
         if (existingToken == null) {
             throw new DataNotFoundException("Refresh token does not exist");
         }
         if (existingToken.getRefreshExpirationDate().isBefore(LocalDateTime.now())) {
-            tokenRepository.delete(existingToken);
+            ITokenRepository.delete(existingToken);
             throw new ExpiredTokenException("Refresh token is expired");
         }
         String token = jwtTokenUtils.generateToken(user);
@@ -81,15 +81,15 @@ public class TokenService implements ITokenService {
         existingToken.setToken(token);
         existingToken.setRefreshToken(UUID.randomUUID().toString());
         existingToken.setRefreshExpirationDate(LocalDateTime.now().plusSeconds(expirationRefreshToken));
-        existingToken = tokenRepository.save(existingToken);
+        existingToken = ITokenRepository.save(existingToken);
         return existingToken;
     }
 
     @Override
     public void deleteToken(String token) {
-        Token tokenEntity = tokenRepository.findByToken(token);
+        Token tokenEntity = ITokenRepository.findByToken(token);
         if (tokenEntity != null) {
-            tokenRepository.delete(tokenEntity);
+            ITokenRepository.delete(tokenEntity);
         } else {
             throw new RuntimeException("Token not found.");
         }

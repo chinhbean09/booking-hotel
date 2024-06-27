@@ -26,11 +26,11 @@ public class HotelStatusUpdater {
                     .allMatch(roomType -> roomType.getStatus() == RoomTypeStatus.UNAVAILABLE);
             boolean allRoomTypesAreDisabled = hotel.getRoomTypes().stream()
                     .allMatch(roomType -> roomType.getStatus() == RoomTypeStatus.DISABLED);
-            if (allRoomTypesAreUnavailable) {
+            if (allRoomTypesAreUnavailable && hotel.getStatus() != HotelStatus.CLOSED) {
                 hotel.setStatus(HotelStatus.CLOSED);
-            } else if (allRoomTypesAreDisabled) {
+            } else if (allRoomTypesAreDisabled && hotel.getStatus() != HotelStatus.APPROVED) {
                 hotel.setStatus(HotelStatus.APPROVED);
-            } else if (hotel.getStatus() == HotelStatus.CLOSED || hotel.getStatus() == HotelStatus.APPROVED) {
+            } else if ((hotel.getStatus() == HotelStatus.CLOSED || hotel.getStatus() == HotelStatus.APPROVED) && !allRoomTypesAreUnavailable && !allRoomTypesAreDisabled) {
                 hotel.setStatus(HotelStatus.ACTIVE);
             }
             hotelRepository.save(hotel);

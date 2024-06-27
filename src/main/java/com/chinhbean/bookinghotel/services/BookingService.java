@@ -9,7 +9,7 @@ import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IBookingRepository;
 import com.chinhbean.bookinghotel.repositories.IRoomTypeRepository;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
+import com.chinhbean.bookinghotel.repositories.IUserRepository;
 import com.chinhbean.bookinghotel.responses.BookingResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.transaction.Transactional;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class BookingService implements IBookingService {
 
     private final IBookingRepository bookingRepository;
-    private final UserRepository userRepository;
+    private final IUserRepository IUserRepository;
     private final JwtTokenUtils jwtTokenUtils;
     private final IRoomTypeRepository roomTypeRepository;
 
@@ -67,7 +67,7 @@ public class BookingService implements IBookingService {
     public Booking createBooking(BookingDTO bookingDTO, String token) {
         logger.info("Creating a new booking.");
         Long userId = jwtTokenUtils.extractUserId(token);
-        User user = userRepository.findById(userId).orElse(null);
+        User user = IUserRepository.findById(userId).orElse(null);
 
         Booking booking = getBooking(bookingDTO, user);
 
@@ -99,7 +99,7 @@ public class BookingService implements IBookingService {
     public Booking updateBooking(Long bookingId, BookingDTO bookingDTO, String token) throws DataNotFoundException {
         logger.info("Updating booking with ID: {}", bookingId);
         Long userId = jwtTokenUtils.extractUserId(token);
-        User user = userRepository.findById(userId).orElse(null);
+        User user = IUserRepository.findById(userId).orElse(null);
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.NO_BOOKINGS_FOUND));
 

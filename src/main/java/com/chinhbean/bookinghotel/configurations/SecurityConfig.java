@@ -1,7 +1,7 @@
 package com.chinhbean.bookinghotel.configurations;
 
 import com.chinhbean.bookinghotel.entities.User;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
+import com.chinhbean.bookinghotel.repositories.IUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,17 +19,17 @@ import java.util.Optional;
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final UserRepository userRepository;
+    private final IUserRepository IUserRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
         return subject -> {
-            Optional<User> userByPhoneNumber = userRepository.findByPhoneNumber(subject);
+            Optional<User> userByPhoneNumber = IUserRepository.findByPhoneNumber(subject);
             if (userByPhoneNumber.isPresent()) {
                 return userByPhoneNumber.get();
             }
 
-            Optional<User> userByEmail = userRepository.findByEmail(subject);
+            Optional<User> userByEmail = IUserRepository.findByEmail(subject);
             if (userByEmail.isPresent()) {
                 return userByEmail.get();
             }
