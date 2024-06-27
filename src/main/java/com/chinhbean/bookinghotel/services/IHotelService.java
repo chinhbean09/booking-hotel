@@ -12,8 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.sql.Date;
-import java.util.Set;
+import java.util.Date;
 
 @Service
 public interface IHotelService {
@@ -37,7 +36,7 @@ public interface IHotelService {
 
     Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size);
 
-    Page<HotelResponse> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Double minPrice, Double maxPrice, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, Long typeId, int page, int size);
+    Page<HotelResponse> filterHotelsByConveniencesAndRating(Integer rating, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size);
 
     void deleteHotel(Long hotelId) throws DataNotFoundException;
 }

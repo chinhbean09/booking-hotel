@@ -1,15 +1,19 @@
 package com.chinhbean.bookinghotel.specifications;
 
 import com.chinhbean.bookinghotel.entities.Hotel;
+import com.chinhbean.bookinghotel.enums.HotelStatus;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.sql.Date;
-import java.util.Set;
+import java.util.Date;
 
 public class HotelSpecification {
 
     public static Specification<Hotel> hasProvince(String province) {
         return (root, query, cb) -> cb.equal(root.get("location").get("province"), province);
+    }
+
+    public static Specification<Hotel> hasStatus(HotelStatus status) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("status"), status);
     }
 
     public static Specification<Hotel> hasCapacityPerRoom(int numPeople) {
@@ -25,30 +29,6 @@ public class HotelSpecification {
 
     public static Specification<Hotel> hasRating(Integer rating) {
         return (root, query, cb) -> cb.equal(root.get("rating"), rating);
-    }
-
-    public static Specification<Hotel> hasConvenience(Set<Long> convenienceIds) {
-        return (root, query, cb) -> root.get("conveniences").in(convenienceIds);
-    }
-
-    public static Specification<Hotel> hasPriceRange(Double minPrice, Double maxPrice) {
-        return (root, query, cb) -> cb.between(root.get("roomTypes").get("price"), minPrice, maxPrice);
-    }
-
-    public static Specification<Hotel> hasLuxury(Boolean luxury) {
-        return (root, query, cb) -> cb.equal(root.get("roomTypes").get("type").get("luxury"), luxury);
-    }
-
-    public static Specification<Hotel> hasSingleBedroom(Boolean singleBedroom) {
-        return (root, query, cb) -> cb.equal(root.get("roomTypes").get("type").get("singleBedroom"), singleBedroom);
-    }
-
-    public static Specification<Hotel> hasTwinBedroom(Boolean twinBedroom) {
-        return (root, query, cb) -> cb.equal(root.get("roomTypes").get("type").get("twinBedroom"), twinBedroom);
-    }
-
-    public static Specification<Hotel> hasDoubleBedroom(Boolean doubleBedroom) {
-        return (root, query, cb) -> cb.equal(root.get("roomTypes").get("type").get("doubleBedroom"), doubleBedroom);
     }
 
     public static Specification<Hotel> hasFreeBreakfast(Boolean freeBreakfast) {
@@ -83,7 +63,4 @@ public class HotelSpecification {
         return (root, query, cb) -> cb.equal(root.get("conveniences").get("laundry"), laundry);
     }
 
-    public static Specification<Hotel> hasType(Long typeId) {
-        return (root, query, cb) -> cb.equal(root.get("roomTypes").get("type").get("id"), typeId);
-    }
 }

@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.sql.Date;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -226,11 +226,9 @@ public class HotelService implements IHotelService {
         User currentUser = (User) authentication.getPrincipal();
         if (Role.ADMIN.equals(currentUser.getRole().getRoleName())) {
             hotel.setStatus(newStatus);
-            hotel.setPartner(currentUser);
         } else if (Role.PARTNER.equals(currentUser.getRole().getRoleName())) {
             if (newStatus == HotelStatus.ACTIVE || newStatus == HotelStatus.INACTIVE || newStatus == HotelStatus.CLOSED) {
                 hotel.setStatus(newStatus);
-                hotel.setPartner(currentUser);
             } else {
                 throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_CANNOT_CHANGE_STATUS_TO, newStatus.toString()));
             }
@@ -304,32 +302,11 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Page<HotelResponse> filterHotels(String province, Integer rating, Set<Long> convenienceIds, Double minPrice, Double maxPrice, Boolean luxury, Boolean singleBedroom, Boolean twinBedroom, Boolean doubleBedroom, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, Long typeId, int page, int size) {
+    public Page<HotelResponse> filterHotelsByConveniencesAndRating(Integer rating, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Specification<Hotel> spec = Specification.where(null);
-        if (province != null) {
-            spec = spec.and(HotelSpecification.hasProvince(province));
-        }
+        Specification<Hotel> spec = Specification.where(HotelSpecification.hasStatus(HotelStatus.ACTIVE));
         if (rating != null) {
             spec = spec.and(HotelSpecification.hasRating(rating));
-        }
-        if (convenienceIds != null && !convenienceIds.isEmpty()) {
-            spec = spec.and(HotelSpecification.hasConvenience(convenienceIds));
-        }
-        if (minPrice != null && maxPrice != null) {
-            spec = spec.and(HotelSpecification.hasPriceRange(minPrice, maxPrice));
-        }
-        if (luxury != null) {
-            spec = spec.and(HotelSpecification.hasLuxury(luxury));
-        }
-        if (singleBedroom != null) {
-            spec = spec.and(HotelSpecification.hasSingleBedroom(singleBedroom));
-        }
-        if (twinBedroom != null) {
-            spec = spec.and(HotelSpecification.hasTwinBedroom(twinBedroom));
-        }
-        if (doubleBedroom != null) {
-            spec = spec.and(HotelSpecification.hasDoubleBedroom(doubleBedroom));
         }
         if (freeBreakfast != null) {
             spec = spec.and(HotelSpecification.hasFreeBreakfast(freeBreakfast));
@@ -354,9 +331,6 @@ public class HotelService implements IHotelService {
         }
         if (laundry != null) {
             spec = spec.and(HotelSpecification.hasLaundry(laundry));
-        }
-        if (typeId != null) {
-            spec = spec.and(HotelSpecification.hasType(typeId));
         }
         return hotelRepository.findAll(spec, pageable).map(HotelResponse::fromHotel);
     }
