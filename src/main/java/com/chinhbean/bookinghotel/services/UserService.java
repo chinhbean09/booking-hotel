@@ -15,9 +15,9 @@ import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
-import com.chinhbean.bookinghotel.repositories.RoleRepository;
-import com.chinhbean.bookinghotel.repositories.TokenRepository;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
+import com.chinhbean.bookinghotel.repositories.IRoleRepository;
+import com.chinhbean.bookinghotel.repositories.ITokenRepository;
+import com.chinhbean.bookinghotel.repositories.IUserRepository;
 import com.chinhbean.bookinghotel.responses.UserResponse;
 import com.chinhbean.bookinghotel.services.sendmails.MailService;
 import com.chinhbean.bookinghotel.utils.MailTemplate;
@@ -48,15 +48,15 @@ import java.util.*;
 @RequiredArgsConstructor
 
 public class UserService implements IUserService {
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final IUserRepository IUserRepository;
+    private final IRoleRepository IRoleRepository;
     private final LocalizationUtils localizationUtils;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtils jwtTokenUtils;
     private final AuthenticationManager authenticationManager;
     private final AmazonS3 amazonS3;
     private final MailService mailService;
-    private final TokenRepository tokenRepository;
+    private final ITokenRepository ITokenRepository;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
@@ -65,13 +65,13 @@ public class UserService implements IUserService {
     @Transactional
     public User registerUser(UserDTO userDTO) throws Exception {
         String phoneNumber = userDTO.getPhoneNumber();
-        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+        if (IUserRepository.existsByPhoneNumber(phoneNumber)) {
             throw new DataIntegrityViolationException(localizationUtils.getLocalizedMessage(MessageKeys.PHONE_NUMBER_ALREADY_EXISTS));
         }
 
         // Sử dụng roleId mặc định là 2 nếu không được truyền vào
         Long roleId = userDTO.getRoleId() != null ? userDTO.getRoleId() : 3L;
-        Role role = roleRepository.findById(roleId)
+        Role role = IRoleRepository.findById(roleId)
                 .orElseThrow(() -> new DataNotFoundException(
                         localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
 
@@ -97,7 +97,7 @@ public class UserService implements IUserService {
             String encodedPassword = passwordEncoder.encode(password);
             newUser.setPassword(encodedPassword);
         }
-        User user = userRepository.save(newUser);
+        User user = IUserRepository.save(newUser);
         //send mail
         sendMailForRegisterSuccess(userDTO.getEmail(), userDTO.getPassword(), user.getId());
         return user;
@@ -110,9 +110,9 @@ public class UserService implements IUserService {
         String subject = userLoginDTO.getLoginIdentifier();
 
         if (subject.contains("@")) {
-            optionalUser = userRepository.findByEmail(subject);
+            optionalUser = IUserRepository.findByEmail(subject);
         } else {
-            optionalUser = userRepository.findByPhoneNumber(subject);
+            optionalUser = IUserRepository.findByPhoneNumber(subject);
         }
 
         if (optionalUser.isEmpty()) {
@@ -142,13 +142,13 @@ public class UserService implements IUserService {
     @Override
     public Page<UserResponse> getAllUsers(String keyword, PageRequest pageRequest) {
         Page<User> usersPage;
-        usersPage = userRepository.searchUsers(keyword, pageRequest);
+        usersPage = IUserRepository.searchUsers(keyword, pageRequest);
         return usersPage.map(UserResponse::fromUser);
     }
 
     @Override
     public User getUser(Long id) throws DataNotFoundException {
-        return userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found"));
+        return IUserRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found"));
     }
 
     private boolean isEmail(String emailOrPhone) {
@@ -162,7 +162,7 @@ public class UserService implements IUserService {
             throw new DataNotFoundException("Token is expired");
         }
         String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
-        Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
+        Optional<User> user = IUserRepository.findByPhoneNumber(phoneNumber);
 
         if (user.isPresent()) {
             return user.get();
@@ -173,15 +173,15 @@ public class UserService implements IUserService {
 
     @Override
     public void deleteUser(Long userId) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-        List<Token> tokens = tokenRepository.findByUserId(userId);
-        tokenRepository.deleteAll(tokens);
-        optionalUser.ifPresent(userRepository::delete);
+        Optional<User> optionalUser = IUserRepository.findById(userId);
+        List<Token> tokens = ITokenRepository.findByUserId(userId);
+        ITokenRepository.deleteAll(tokens);
+        optionalUser.ifPresent(IUserRepository::delete);
     }
 
     @Override
     public User updateUserAvatar(long id, MultipartFile avatar) {
-        User user = userRepository.findById(id).orElse(null);
+        User user = IUserRepository.findById(id).orElse(null);
         if (user != null && avatar != null && !avatar.isEmpty()) {
             try {
                 // Check if the uploaded file is an image
@@ -206,7 +206,7 @@ public class UserService implements IUserService {
                 String avatarUrl = amazonS3.getUrl(bucketName, objectKey).toString();
                 user.setAvatar(avatarUrl);
                 // Save the updated user entity
-                userRepository.save(user);
+                IUserRepository.save(user);
                 return user;
             } catch (IOException e) {
                 logger.error("Failed to upload avatar for user with ID " + id, e);
@@ -239,7 +239,7 @@ public class UserService implements IUserService {
     @Override
     @org.springframework.transaction.annotation.Transactional
     public User changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException {
-        User exsistingUser = userRepository.findById(id)
+        User exsistingUser = IUserRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), exsistingUser.getPassword())) {
             throw new DataNotFoundException(MessageKeys.OLD_PASSWORD_WRONG);
@@ -248,25 +248,25 @@ public class UserService implements IUserService {
             throw new DataNotFoundException(MessageKeys.CONFIRM_PASSWORD_NOT_MATCH);
         }
         exsistingUser.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
-        userRepository.save(exsistingUser);
+        IUserRepository.save(exsistingUser);
         return exsistingUser;
     }
 
     @Override
     public void updatePassword(String phone, String password) throws DataNotFoundException {
-        User user = userRepository.findByPhoneNumber(phone)
+        User user = IUserRepository.findByPhoneNumber(phone)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         user.setPassword(passwordEncoder.encode(password));
-        userRepository.save(user);
+        IUserRepository.save(user);
     }
 
     @Override
     @Transactional
     public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {
-        User existingUser = userRepository.findById(userId)
+        User existingUser = IUserRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         existingUser.setActive(active);
-        userRepository.save(existingUser);
+        IUserRepository.save(existingUser);
     }
 
     @Override
@@ -279,19 +279,19 @@ public class UserService implements IUserService {
         currentUser.setAddress(userDTO.getAddress());
         currentUser.setDateOfBirth(userDTO.getDateOfBirth());
         currentUser.setGender(userDTO.getGender());
-        return userRepository.save(currentUser);
+        return IUserRepository.save(currentUser);
 
     }
 
     @Override
     public User getUserDetailsFromRefreshToken(String refreshToken) throws Exception {
-        Token existingToken = tokenRepository.findByRefreshToken(refreshToken);
+        Token existingToken = ITokenRepository.findByRefreshToken(refreshToken);
         return getUserDetailsFromToken(existingToken.getToken());
     }
 
     @Override
     public List<UserResponse> getAllUsers(Long roleId) {
-        List<User> users = userRepository.findByRoleId(roleId);
+        List<User> users = IUserRepository.findByRoleId(roleId);
         return users.stream().map(UserResponse::fromUser).toList();
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface HotelBusinessLicenseRepository extends JpaRepository<HotelBusinessLicense, Long> {
+public interface IHotelBusinessLicenseRepository extends JpaRepository<HotelBusinessLicense, Long> {
 
     Optional<HotelBusinessLicense> findByBusinessLicenseAndHotelId(String businessLicense, Long hotelId);
 }

@@ -9,7 +9,7 @@ import com.chinhbean.bookinghotel.entities.HotelImages;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
-import com.chinhbean.bookinghotel.repositories.HotelImageRepository;
+import com.chinhbean.bookinghotel.repositories.IHotelImageRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
 import com.chinhbean.bookinghotel.responses.HotelImageResponse;
 import com.chinhbean.bookinghotel.responses.HotelResponse;
@@ -30,7 +30,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class HotelImageService implements IHotelImageService {
 
-    private final HotelImageRepository hotelImageRepository;
+    private final IHotelImageRepository IHotelImageRepository;
     private final AmazonS3 amazonS3;
     private final IHotelRepository hotelRepository;
     private final IHotelService hotelService;
@@ -73,7 +73,7 @@ public class HotelImageService implements IHotelImageService {
 
             validateImageFile(imageFile);
 
-            Optional<HotelImages> optionalRoomImage = hotelImageRepository.findById(Long.valueOf(imageIndex));
+            Optional<HotelImages> optionalRoomImage = IHotelImageRepository.findById(Long.valueOf(imageIndex));
 
             if (optionalRoomImage.isPresent()) {
                 HotelImages existingImage = optionalRoomImage.get();
@@ -81,7 +81,7 @@ public class HotelImageService implements IHotelImageService {
                 String imageUrl = uploadImageToS3(imageFile, hotelId);
                 deleteImageFromS3(existingImage.getImageUrl());
                 existingImage.setImageUrl(imageUrl);
-                hotelImageRepository.save(existingImage);
+                IHotelImageRepository.save(existingImage);
                 hotelImageResponses.add(buildHotelImageResponse(existingImage, hotelId));
             }
         }
@@ -121,7 +121,7 @@ public class HotelImageService implements IHotelImageService {
     }
 
     private void validateImageUrl(String imageUrl, Long hotelId) {
-        if (hotelImageRepository.findByImageUrlAndHotelId(imageUrl, hotelId).isPresent()) {
+        if (IHotelImageRepository.findByImageUrlAndHotelId(imageUrl, hotelId).isPresent()) {
             throw new DuplicateKeyException("Image URL already exists for this hotel " + hotelId);
         }
     }
@@ -131,7 +131,7 @@ public class HotelImageService implements IHotelImageService {
                 .imageUrl(imageUrl)
                 .hotel(Hotel.builder().id(hotelId).build())
                 .build();
-        return hotelImageRepository.save(hotelImages);
+        return IHotelImageRepository.save(hotelImages);
     }
 
     private HotelImageResponse buildHotelImageResponse(HotelImages hotelImages, Long hotelId) {

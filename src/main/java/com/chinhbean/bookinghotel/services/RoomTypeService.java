@@ -7,18 +7,16 @@ import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
-import com.chinhbean.bookinghotel.repositories.ConvenienceRoomRepository;
-import com.chinhbean.bookinghotel.repositories.RoomImageRepository;
-import com.chinhbean.bookinghotel.repositories.RoomTypeRepository;
-import com.chinhbean.bookinghotel.repositories.TypeRepository;
+import com.chinhbean.bookinghotel.repositories.IConvenienceRoomRepository;
+import com.chinhbean.bookinghotel.repositories.IRoomImageRepository;
+import com.chinhbean.bookinghotel.repositories.IRoomTypeRepository;
+import com.chinhbean.bookinghotel.repositories.ITypeRepository;
 import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,10 +30,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoomTypeService implements IRoomTypeService {
 
-    private final TypeRepository typeRepository;
-    private final RoomTypeRepository roomTypeRepository;
-    private final ConvenienceRoomRepository convenienceRoomRepository;
-    private final RoomImageRepository roomImageRepository;
+    private final ITypeRepository typeRepository;
+    private final IRoomTypeRepository IRoomTypeRepository;
+    private final IConvenienceRoomRepository convenienceRoomRepository;
+    private final IRoomImageRepository roomImageRepository;
 
     @Override
     @Transactional
@@ -63,7 +61,7 @@ public class RoomTypeService implements IRoomTypeService {
         //roomType.setRoomConveniences(newConveniences);
 
         // Save the RoomType
-        RoomType savedRoomType = roomTypeRepository.save(roomType);
+        RoomType savedRoomType = IRoomTypeRepository.save(roomType);
 
         // Return the RoomType response
         return RoomTypeResponse.fromType(savedRoomType);
@@ -74,7 +72,7 @@ public class RoomTypeService implements IRoomTypeService {
     public Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException {
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<RoomType> roomTypes = roomTypeRepository.findWithTypesAndRoomConveniencesByHotelId(hotelId, pageable);
+        Page<RoomType> roomTypes = IRoomTypeRepository.findWithTypesAndRoomConveniencesByHotelId(hotelId, pageable);
 
         if (roomTypes.isEmpty()) {
             throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
@@ -85,7 +83,7 @@ public class RoomTypeService implements IRoomTypeService {
     @Override
     @Transactional
     public RoomTypeResponse updateRoomType(Long roomTypeId, RoomTypeDTO roomTypeDTO) throws DataNotFoundException {
-        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+        RoomType roomType = IRoomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
 
         if (roomTypeDTO.getDescription() != null) {
@@ -117,23 +115,23 @@ public class RoomTypeService implements IRoomTypeService {
             roomType.setRoomConveniences(updatedRoomConveniences);
         }
 
-        roomTypeRepository.save(roomType);
-        RoomType savedRoomType = roomTypeRepository.save(roomType);
+        IRoomTypeRepository.save(roomType);
+        RoomType savedRoomType = IRoomTypeRepository.save(roomType);
         return RoomTypeResponse.fromType(savedRoomType);
     }
 
     @Override
     @Transactional
     public void deleteRoomType(Long id) throws DataNotFoundException {
-        RoomType roomType = roomTypeRepository.findWithTypesAndRoomConveniencesById(id)
+        RoomType roomType = IRoomTypeRepository.findWithTypesAndRoomConveniencesById(id)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
         roomImageRepository.deleteAll(roomType.getRoomImages());
-        roomTypeRepository.delete(roomType);
+        IRoomTypeRepository.delete(roomType);
     }
 
     @Override
     public RoomTypeResponse getRoomTypeById(Long id) throws DataNotFoundException {
-        RoomType roomType = roomTypeRepository.findWithTypesAndRoomConveniencesById(id)
+        RoomType roomType = IRoomTypeRepository.findWithTypesAndRoomConveniencesById(id)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
         return RoomTypeResponse.fromType(roomType);
     }
@@ -143,7 +141,7 @@ public class RoomTypeService implements IRoomTypeService {
                                                  Boolean doubleBedroom, Boolean wardrobe, Boolean airConditioning, Boolean tv, Boolean wifi, Boolean toiletries,
                                                  Boolean kitchen, Double minPrice, Double maxPrice) {
 
-        List<RoomType> roomTypes = roomTypeRepository.findByTypeAndConveniencesAndPriceAndHotel(hotelId, luxury, singleBedroom, twinBedroom, doubleBedroom,
+        List<RoomType> roomTypes = IRoomTypeRepository.findByTypeAndConveniencesAndPriceAndHotel(hotelId, luxury, singleBedroom, twinBedroom, doubleBedroom,
                 wardrobe, airConditioning, tv, wifi, toiletries, kitchen, minPrice, maxPrice);
 
         return roomTypes.stream()
@@ -153,16 +151,16 @@ public class RoomTypeService implements IRoomTypeService {
 
     @Override
     public void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException {
-        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+        RoomType roomType = IRoomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
         roomType.setStatus(newStatus);
-        roomTypeRepository.save(roomType);
+        IRoomTypeRepository.save(roomType);
     }
 
     @Override
     public Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<RoomType> roomTypes = roomTypeRepository.findAllByStatusAndHotelId(RoomTypeStatus.AVAILABLE, pageable, hotelId);
+        Page<RoomType> roomTypes = IRoomTypeRepository.findAllByStatusAndHotelId(RoomTypeStatus.AVAILABLE, pageable, hotelId);
         if (roomTypes.isEmpty()) {
             return Page.empty();
         }

@@ -4,8 +4,8 @@ import com.chinhbean.bookinghotel.dtos.DataMailDTO;
 import com.chinhbean.bookinghotel.entities.ForgotPassword;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.repositories.ForgotPasswordRepository;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
+import com.chinhbean.bookinghotel.repositories.IForgotPasswordRepository;
+import com.chinhbean.bookinghotel.repositories.IUserRepository;
 import com.chinhbean.bookinghotel.services.sendmails.MailService;
 import com.chinhbean.bookinghotel.utils.MailTemplate;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
@@ -24,9 +24,9 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class ForgotPasswordService implements IForgotPasswordService {
-    private final ForgotPasswordRepository forgotPasswordRepository;
+    private final IForgotPasswordRepository IForgotPasswordRepository;
     private final MailService mailService;
-    private final UserRepository userRepository;
+    private final IUserRepository IUserRepository;
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     // Method to generate OTP
@@ -51,7 +51,7 @@ public class ForgotPasswordService implements IForgotPasswordService {
 
     @Override
     public void verifyEmailAndSendOtp(String email) throws DataNotFoundException {
-        User user = userRepository.findByEmail(email)
+        User user = IUserRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         int otp = otpGenerator();
         ForgotPassword fp = ForgotPassword.builder()
@@ -61,13 +61,13 @@ public class ForgotPasswordService implements IForgotPasswordService {
                 .user(user)
                 .build();
         sendOtpMail(fp);
-        forgotPasswordRepository.save(fp);
+        IForgotPasswordRepository.save(fp);
         executorService.schedule(() -> deleteExpiredOTP(fp), 60, TimeUnit.SECONDS);
     }
 
     @Override
     public void verifyOTP(String email, Integer otp) throws DataNotFoundException {
-        ForgotPassword forgotPassword = forgotPasswordRepository.findLatestOtpSent(email)
+        ForgotPassword forgotPassword = IForgotPasswordRepository.findLatestOtpSent(email)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.OTP_NOT_FOUND));
         if (!forgotPassword.getOtp().equals(otp)) {
             throw new DataNotFoundException(MessageKeys.OTP_INCORRECT);
@@ -76,13 +76,13 @@ public class ForgotPasswordService implements IForgotPasswordService {
             throw new DataNotFoundException(MessageKeys.OTP_IS_EXPIRED);
         }
         forgotPassword.setVerified(true);
-        forgotPasswordRepository.save(forgotPassword);
+        IForgotPasswordRepository.save(forgotPassword);
     }
 
     // Method to delete expired OTP
     private void deleteExpiredOTP(ForgotPassword forgotPassword) {
         if (forgotPassword.getExpirationTime().before(new Date())) {
-            forgotPasswordRepository.delete(forgotPassword);
+            IForgotPasswordRepository.delete(forgotPassword);
         }
     }
 }

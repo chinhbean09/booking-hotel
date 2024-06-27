@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ConvenienceRoomRepository extends JpaRepository<RoomConvenience, Long> {
+public interface IConvenienceRoomRepository extends JpaRepository<RoomConvenience, Long> {
     Optional<RoomConvenience> findByWardrobeAndAirConditioningAndTvAndWifiAndToiletriesAndKitchen(Boolean wardrobe, Boolean airConditioning, Boolean tv, Boolean wifi, Boolean toiletries, Boolean kitchen);
 }

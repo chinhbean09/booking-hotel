@@ -10,7 +10,7 @@ import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
+import com.chinhbean.bookinghotel.repositories.IUserRepository;
 import com.chinhbean.bookinghotel.responses.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.responses.UserListResponse;
@@ -50,7 +50,7 @@ public class UserController {
     private final ITokenService tokenService;
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
-    private final UserRepository userRepository;
+    private final IUserRepository IUserRepository;
 
     @GetMapping("/generate-secret-key")
     public ResponseEntity<?> generateSecretKey() {
@@ -92,7 +92,7 @@ public class UserController {
                 throw new Exception("Invalid email");
             }
         }
-        if (userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
+        if (IUserRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .status(HttpStatus.BAD_REQUEST)
                     .data(null)

@@ -25,8 +25,7 @@ public class Hotel {
     @Column(nullable = false)
     private Double rating;
 
-    @Column(nullable = false)
-    @Lob
+    @Column(nullable = false, length = 1000)
     private String description;
 
     @ManyToOne

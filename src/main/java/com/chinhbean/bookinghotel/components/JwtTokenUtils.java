@@ -2,7 +2,7 @@ package com.chinhbean.bookinghotel.components;
 
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
-import com.chinhbean.bookinghotel.repositories.TokenRepository;
+import com.chinhbean.bookinghotel.repositories.ITokenRepository;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -36,7 +36,7 @@ public class JwtTokenUtils {
     @Value("${jwt.secretKey}")
     private String secretKey;
 
-    private final TokenRepository tokenRepository;
+    private final ITokenRepository ITokenRepository;
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtils.class);
 
     public String generateToken(com.chinhbean.bookinghotel.entities.User user) throws InvalidParamException {
@@ -116,7 +116,7 @@ public class JwtTokenUtils {
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
             String phoneNumber = extractPhoneNumber(token);
-            Token existingToken = tokenRepository.findByToken(token);
+            Token existingToken = ITokenRepository.findByToken(token);
             if (existingToken == null || existingToken.isRevoked()) {
                 return false;
             }

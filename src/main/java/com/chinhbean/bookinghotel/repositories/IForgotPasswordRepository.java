@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ForgotPasswordRepository extends JpaRepository<ForgotPassword, Long> {
+public interface IForgotPasswordRepository extends JpaRepository<ForgotPassword, Long> {
 
     @Query("SELECT fp FROM ForgotPassword fp " +
             "WHERE fp.user.email = :email and fp.verified = false " +
