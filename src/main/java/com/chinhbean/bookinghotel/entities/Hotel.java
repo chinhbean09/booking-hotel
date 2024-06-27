@@ -26,6 +26,7 @@ public class Hotel {
     private Double rating;
 
     @Column(nullable = false)
+    @Lob
     private String description;
 
     @ManyToOne

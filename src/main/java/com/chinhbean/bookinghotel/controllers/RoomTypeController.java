@@ -150,6 +150,7 @@ public class RoomTypeController {
 
     @PostMapping("/upload-images/{roomTypeId}")
     @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("roomTypeId") Long roomTypeId) {
         try {
             RoomTypeResponse roomImageResponses = roomImageService.uploadImages(images, roomTypeId);
