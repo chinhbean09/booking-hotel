@@ -1,7 +1,6 @@
 package com.chinhbean.bookinghotel.services;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
@@ -9,7 +8,6 @@ import com.chinhbean.bookinghotel.dtos.HotelLocationDTO;
 import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IConvenienceRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
@@ -25,15 +23,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -238,54 +232,10 @@ public class HotelService implements IHotelService {
         hotelRepository.save(hotel);
     }
 
-//    @Override
-//    public Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException, PermissionDenyException {
-//        Hotel hotel = getHotelById(hotelId);
-//        validateUserPermission(hotel);
-//        validateFile(file);
-//        String objectKey = buildObjectKey(hotel.getId(), file.getOriginalFilename());
-//        ObjectMetadata metadata = createObjectMetadata(file);
-//        uploadFileToS3(bucketName, objectKey, file, metadata);
-//        String licenseUrl = amazonS3.getUrl(bucketName, objectKey).toString();
-//        hotel.setBusinessLicense(licenseUrl);
-//        return hotelRepository.save(hotel);
-//    }
-
     @Override
     public Hotel getHotelById(Long hotelId) throws DataNotFoundException {
         return hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.NO_HOTELS_FOUND, hotelId)));
-    }
-
-    private void validateUserPermission(Hotel hotel) throws PermissionDenyException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) authentication.getPrincipal();
-        if (!currentUser.getId().equals(hotel.getPartner().getId())) {
-            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_UPDATE_HOTEL));
-        }
-    }
-
-    private void validateFile(MultipartFile file) {
-        MediaType mediaType = MediaType.parseMediaType(Objects.requireNonNull(file.getContentType()));
-        if (!mediaType.isCompatibleWith(MediaType.IMAGE_JPEG) &&
-                !mediaType.isCompatibleWith(MediaType.IMAGE_PNG)) {
-            throw new InvalidParamException(localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE));
-        }
-    }
-
-    private String buildObjectKey(Long hotelId, String originalFileName) {
-        return uploadDir + hotelId + "/" + originalFileName;
-    }
-
-    private void uploadFileToS3(String bucketName, String objectKey, MultipartFile file, ObjectMetadata metadata) throws IOException {
-        amazonS3.putObject(bucketName, objectKey, file.getInputStream(), metadata);
-    }
-
-    private ObjectMetadata createObjectMetadata(MultipartFile file) {
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType(file.getContentType());
-        metadata.setContentLength(file.getSize());
-        return metadata;
     }
 
     @Override
