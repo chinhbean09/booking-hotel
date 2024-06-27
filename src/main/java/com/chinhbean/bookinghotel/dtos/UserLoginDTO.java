@@ -17,7 +17,7 @@ public class UserLoginDTO {
     @NotBlank(message = "Login identifier cannot be blank")
     @EmailOrPhone(message = "Login identifier must be a valid email or phone number")
     private String loginIdentifier;
-    
+
     @NotBlank(message = "Password cannot be blank")
     private String password;
 

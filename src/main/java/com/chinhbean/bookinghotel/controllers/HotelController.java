@@ -2,6 +2,7 @@ package com.chinhbean.bookinghotel.controllers;
 
 import com.chinhbean.bookinghotel.components.JwtTokenUtils;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
+import com.chinhbean.bookinghotel.dtos.HotelFilterDTO;
 import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
@@ -22,15 +23,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.Date;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -245,33 +246,24 @@ public class HotelController {
         return getHotelsResponse(hotelService.findByProvinceAndCapacityPerRoomAndAvailability(province, numPeople, checkInDate, checkOutDate, page, size));
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<ResponseObject> filterHotels(
-            @RequestParam(required = false) String province,
-            @RequestParam(required = false) Integer rating,
-            @RequestParam(required = false) Set<Long> convenienceIds,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) Long typeId,
-            @RequestParam(required = false) Boolean luxury,
-            @RequestParam(required = false) Boolean singleBedroom,
-            @RequestParam(required = false) Boolean twinBedroom,
-            @RequestParam(required = false) Boolean doubleBedroom,
-            @RequestParam(required = false) Boolean freeBreakfast,
-            @RequestParam(required = false) Boolean pickUpDropOff,
-            @RequestParam(required = false) Boolean restaurant,
-            @RequestParam(required = false) Boolean bar,
-            @RequestParam(required = false) Boolean pool,
-            @RequestParam(required = false) Boolean freeInternet,
-            @RequestParam(required = false) Boolean reception24h,
-            @RequestParam(required = false) Boolean laundry,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    @PostMapping("/filter")
+    public ResponseEntity<ResponseObject> filterHotels(@RequestBody HotelFilterDTO filterDTO) {
         try {
-            if (page < 0 || size <= 0) {
+            if (filterDTO.getPage() < 0 || filterDTO.getSize() <= 0) {
                 throw new IllegalArgumentException("Page and size parameters must be positive.");
             }
-            return getHotelsResponse(hotelService.filterHotels(province, rating, convenienceIds, minPrice, maxPrice, luxury, singleBedroom, twinBedroom, doubleBedroom, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, typeId, page, size));
+            return getHotelsResponse(hotelService.filterHotelsByConveniencesAndRating(
+                    filterDTO.getRating(),
+                    filterDTO.getFreeBreakfast(),
+                    filterDTO.getPickUpDropOff(),
+                    filterDTO.getRestaurant(),
+                    filterDTO.getBar(),
+                    filterDTO.getPool(),
+                    filterDTO.getFreeInternet(),
+                    filterDTO.getReception24h(),
+                    filterDTO.getLaundry(),
+                    filterDTO.getPage(),
+                    filterDTO.getSize()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)

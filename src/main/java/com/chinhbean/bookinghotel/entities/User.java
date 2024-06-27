@@ -88,6 +88,7 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
         }
         return "";
     }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
