@@ -7,8 +7,8 @@ import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.entities.RoomImage;
 import com.chinhbean.bookinghotel.entities.RoomType;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.repositories.RoomImageRepository;
-import com.chinhbean.bookinghotel.repositories.RoomTypeRepository;
+import com.chinhbean.bookinghotel.repositories.IRoomImageRepository;
+import com.chinhbean.bookinghotel.repositories.IRoomTypeRepository;
 import com.chinhbean.bookinghotel.responses.RoomImageResponse;
 import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
@@ -26,9 +26,9 @@ import java.util.*;
 @RequiredArgsConstructor
 @Service
 public class RoomImageService implements IRoomImageService {
-    private final RoomImageRepository roomImageRepository;
+    private final IRoomImageRepository roomImageRepository;
     private final AmazonS3 amazonS3;
-    private final RoomTypeRepository roomTypeRepository;
+    private final IRoomTypeRepository IRoomTypeRepository;
     private final LocalizationUtils localizationUtils;
 
     @Value("${amazonProperties.bucketName}")
@@ -38,7 +38,7 @@ public class RoomImageService implements IRoomImageService {
     public RoomTypeResponse uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException {
         List<String> imageUrls = new ArrayList<>();
         List<RoomImageResponse> roomImageResponses = new ArrayList<>();
-        if (roomTypeRepository.findById(roomTypeId).isEmpty()) {
+        if (IRoomTypeRepository.findById(roomTypeId).isEmpty()) {
             throw new IllegalArgumentException(MessageKeys.ROOM_DOES_NOT_EXISTS);
         }
 
@@ -74,7 +74,7 @@ public class RoomImageService implements IRoomImageService {
         }
 
         // Create the response object in the desired format
-        RoomType roomType = roomTypeRepository.findById(roomTypeId).orElseThrow(() -> new IllegalArgumentException(MessageKeys.ROOM_TYPE_NOT_FOUND));
+        RoomType roomType = IRoomTypeRepository.findById(roomTypeId).orElseThrow(() -> new IllegalArgumentException(MessageKeys.ROOM_TYPE_NOT_FOUND));
         RoomTypeResponse roomTypeResponse = RoomTypeResponse.fromType(roomType);
         roomTypeResponse.setImageUrls(roomImageResponses); // Set the image URLs
         return roomTypeResponse;
@@ -83,7 +83,7 @@ public class RoomImageService implements IRoomImageService {
     @Override
     @Transactional
     public RoomTypeResponse updateRoomImages(Map<Integer, MultipartFile> imageMap, Long roomTypeId) throws DataNotFoundException, IOException {
-        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+        RoomType roomType = IRoomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
 
         List<RoomImageResponse> roomImageResponses = new ArrayList<>();

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface TypeRepository extends JpaRepository<Type, Long> {
+public interface ITypeRepository extends JpaRepository<Type, Long> {
 
     Optional<Type> findByLuxuryAndSingleBedroomAndTwinBedroomAndDoubleBedroom
             (Boolean luxury,

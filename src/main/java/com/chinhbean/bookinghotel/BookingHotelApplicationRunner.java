@@ -2,8 +2,8 @@ package com.chinhbean.bookinghotel;
 
 import com.chinhbean.bookinghotel.entities.Role;
 import com.chinhbean.bookinghotel.entities.User;
-import com.chinhbean.bookinghotel.repositories.RoleRepository;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
+import com.chinhbean.bookinghotel.repositories.IRoleRepository;
+import com.chinhbean.bookinghotel.repositories.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -17,10 +17,10 @@ import java.util.Optional;
 @Component
 public class BookingHotelApplicationRunner implements ApplicationRunner {
     @Autowired
-    private UserRepository userRepository;
+    private IUserRepository IUserRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private IRoleRepository IRoleRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -47,8 +47,8 @@ public class BookingHotelApplicationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        Optional<User> findAccountResult = userRepository.findByPhoneNumber(phoneNumber);
-        Optional<Role> existRolePermission = roleRepository.findById((long) 1);
+        Optional<User> findAccountResult = IUserRepository.findByPhoneNumber(phoneNumber);
+        Optional<Role> existRolePermission = IRoleRepository.findById((long) 1);
 
 
         Role AdminRole = Role.builder()
@@ -69,9 +69,9 @@ public class BookingHotelApplicationRunner implements ApplicationRunner {
 
         }
 
-        roleRepository.save(AdminRole);
-        roleRepository.save(ParterRole);
-        roleRepository.save(CustomerRole);
+        IRoleRepository.save(AdminRole);
+        IRoleRepository.save(ParterRole);
+        IRoleRepository.save(CustomerRole);
 
         if (findAccountResult.isEmpty()) {
             String encodedPassword = passwordEncoder.encode(password);
@@ -87,7 +87,7 @@ public class BookingHotelApplicationRunner implements ApplicationRunner {
             user.setRole(AdminRole);
             user.setActive(true);
             user.setDateOfBirth(new Date());
-            userRepository.save(user);
+            IUserRepository.save(user);
             System.out.println("Admin initialized!");
         }
 
