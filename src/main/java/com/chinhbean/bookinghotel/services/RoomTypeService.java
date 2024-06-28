@@ -71,8 +71,9 @@ public class RoomTypeService implements IRoomTypeService {
 
         if (roomTypes.isEmpty()) {
             throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
+        } else {
+            return roomTypes.map(RoomTypeResponse::fromType);
         }
-        return roomTypes.map(RoomTypeResponse::fromType);
     }
 
     @Override
@@ -150,13 +151,14 @@ public class RoomTypeService implements IRoomTypeService {
     }
 
     @Override
-    public Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size) {
+    public Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size) throws DataNotFoundException {
         Pageable pageable = PageRequest.of(page, size);
         Page<RoomType> roomTypes = IRoomTypeRepository.findAllByStatusAndHotelId(RoomTypeStatus.AVAILABLE, pageable, hotelId);
         if (roomTypes.isEmpty()) {
-            return Page.empty();
+            throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
+        } else {
+            return roomTypes.map(RoomTypeResponse::fromType);
         }
-        return roomTypes.map(RoomTypeResponse::fromType);
     }
 
     private RoomType convertToEntity(RoomTypeDTO roomTypeDTO) {
