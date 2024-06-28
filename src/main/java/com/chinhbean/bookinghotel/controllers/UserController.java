@@ -264,7 +264,7 @@ public class UserController {
     @Transactional
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
-    public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) throws DataNotFoundException {
+    public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) {
         try {
             userService.deleteUser(id);
             return ResponseEntity.ok("Delete User Successfully");
@@ -275,7 +275,7 @@ public class UserController {
 
     @Transactional
     @PutMapping("/update-profile")
-    public ResponseEntity<?> updateUser(@RequestBody UserDTO userDTO) throws DataNotFoundException {
+    public ResponseEntity<?> updateUser(@RequestBody UserDTO userDTO) {
         try {
             userService.updateUser(userDTO);
             return ResponseEntity.ok("Update Successfully");

@@ -18,5 +18,5 @@ public interface IBookingService {
 
     Booking updateBooking(Long bookingId, BookingDTO bookingDTO, String token) throws DataNotFoundException;
 
-    void updateStatus(Long bookingId, BookingStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException, PermissionDenyException;
+    void updateStatus(Long bookingId, BookingStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException;
 }

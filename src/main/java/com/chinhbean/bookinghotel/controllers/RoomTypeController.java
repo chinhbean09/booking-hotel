@@ -235,7 +235,7 @@ public class RoomTypeController {
 
     @PutMapping("/updateStatus/{roomTypeId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<ResponseObject> updateStatus(@PathVariable Long roomTypeId, @RequestBody RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException {
+    public ResponseEntity<ResponseObject> updateStatus(@PathVariable Long roomTypeId, @RequestBody RoomTypeStatus newStatus) {
         try {
             roomTypeService.updateStatus(roomTypeId, newStatus);
             return ResponseEntity.ok().body(ResponseObject.builder()

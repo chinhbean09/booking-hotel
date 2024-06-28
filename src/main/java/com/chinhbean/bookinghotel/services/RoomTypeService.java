@@ -6,7 +6,6 @@ import com.chinhbean.bookinghotel.dtos.TypeRoomDTO;
 import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.repositories.IConvenienceRoomRepository;
 import com.chinhbean.bookinghotel.repositories.IRoomImageRepository;
 import com.chinhbean.bookinghotel.repositories.IRoomTypeRepository;
@@ -37,16 +36,12 @@ public class RoomTypeService implements IRoomTypeService {
 
     @Override
     @Transactional
-    public RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException {
+    public RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) {
         // Convert DTO to entity
         RoomType roomType = convertToEntity(roomTypeDTO);
 
         // Save the new Type entity
         Type newType = convertToTypeEntity(roomTypeDTO.getTypes());
-//        Type savedType = typeRepository.save(newType);
-//
-//        // Assign the saved Type to the RoomType
-//        roomType.setType(savedType);
         if (isValidType(newType)) {
             Type savedType = typeRepository.save(newType);
             // Assign the saved Type to the RoomType
@@ -95,9 +90,6 @@ public class RoomTypeService implements IRoomTypeService {
         if (roomTypeDTO.getRoomPrice() != null) {
             roomType.setRoomPrice(roomTypeDTO.getRoomPrice());
         }
-//        if (roomTypeDTO.getStatus() != null) {
-//            roomType.setStatus(roomTypeDTO.getStatus());
-//        }
 
         if (roomTypeDTO.getTypes() != null) {
             TypeRoomDTO typeRoomDTO = roomTypeDTO.getTypes(); // Assuming getTypes() returns a single TypeRoomDTO object
@@ -150,7 +142,7 @@ public class RoomTypeService implements IRoomTypeService {
     }
 
     @Override
-    public void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException {
+    public void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException {
         RoomType roomType = IRoomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND));
         roomType.setStatus(newStatus);
