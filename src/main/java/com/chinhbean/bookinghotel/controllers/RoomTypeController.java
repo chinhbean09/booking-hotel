@@ -58,20 +58,20 @@ public class RoomTypeController {
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "10") int size) throws DataNotFoundException {
 
-            Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId, page, size);
-            if (roomTypes.isEmpty())
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
-                        .status(HttpStatus.NOT_FOUND)
-                        .message(MessageKeys.ROOM_TYPE_NOT_FOUND)
-                        .data(null)
-                        .build());
-            else {
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
-                        .status(HttpStatus.OK)
-                        .data(roomTypes)
-                        .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
-                        .build());
-            }
+        Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId, page, size);
+        if (roomTypes.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message(MessageKeys.ROOM_TYPE_NOT_FOUND)
+                    .data(null)
+                    .build());
+        else {
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(roomTypes)
+                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                    .build());
+        }
     }
 
     @GetMapping("/get-all-room-status/{hotelId}")

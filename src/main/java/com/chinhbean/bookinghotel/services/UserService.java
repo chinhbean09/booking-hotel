@@ -9,12 +9,15 @@ import com.chinhbean.bookinghotel.dtos.ChangePasswordDTO;
 import com.chinhbean.bookinghotel.dtos.DataMailDTO;
 import com.chinhbean.bookinghotel.dtos.UserDTO;
 import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
+import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.entities.Role;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
+import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.InvalidParamException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
+import com.chinhbean.bookinghotel.repositories.IHotelRepository;
 import com.chinhbean.bookinghotel.repositories.IRoleRepository;
 import com.chinhbean.bookinghotel.repositories.ITokenRepository;
 import com.chinhbean.bookinghotel.repositories.IUserRepository;
@@ -31,6 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -54,6 +58,7 @@ public class UserService implements IUserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtils jwtTokenUtils;
     private final AuthenticationManager authenticationManager;
+    private final IHotelRepository hotelRepository;
     private final AmazonS3 amazonS3;
     private final MailService mailService;
     private final ITokenRepository ITokenRepository;
@@ -151,11 +156,6 @@ public class UserService implements IUserService {
         return IUserRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found"));
     }
 
-    private boolean isEmail(String emailOrPhone) {
-        return emailOrPhone.contains("@");
-    }
-
-
     @Override
     public User getUserDetailsFromToken(String token) throws Exception {
         if (jwtTokenUtils.isTokenExpired(token)) {
@@ -209,7 +209,7 @@ public class UserService implements IUserService {
                 IUserRepository.save(user);
                 return user;
             } catch (IOException e) {
-                logger.error("Failed to upload avatar for user with ID " + id, e);
+                logger.error("Failed to upload avatar for user with ID {}", id, e);
             }
         }
         return null;
@@ -237,7 +237,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public User changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException {
         User exsistingUser = IUserRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
@@ -267,6 +267,14 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         existingUser.setActive(active);
         IUserRepository.save(existingUser);
+        if (!active && existingUser.getRole().getRoleName().equals(Role.PARTNER)) {
+            Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+            List<Hotel> hotels = hotelRepository.findHotelsByPartnerId(userId, pageable).getContent();
+            for (Hotel hotel : hotels) {
+                hotel.setStatus(HotelStatus.CLOSED);
+                hotelRepository.save(hotel);
+            }
+        }
     }
 
     @Override
