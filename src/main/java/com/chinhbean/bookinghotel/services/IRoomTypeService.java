@@ -28,5 +28,5 @@ public interface IRoomTypeService {
 
     void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException;
 
-    Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size);
+    Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size) throws DataNotFoundException;
 }

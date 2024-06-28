@@ -79,18 +79,18 @@ public class RoomTypeController {
                                                                   @RequestParam(defaultValue = "0") int page,
                                                                   @RequestParam(defaultValue = "10") int size) {
 
-        Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByStatus(hotelId, page, size);
-        if (roomTypes.isEmpty())
+        try {
+            Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByStatus(hotelId, page, size);
+
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(roomTypes)
+                        .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                        .build());
+        } catch(Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
-                    .message(MessageKeys.ROOM_TYPE_NOT_FOUND)
-                    .data(null)
-                    .build());
-        else {
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(roomTypes)
-                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                    .message(e.getMessage())
                     .build());
         }
     }
@@ -219,12 +219,13 @@ public class RoomTypeController {
                         .status(HttpStatus.NOT_FOUND)
                         .message(MessageKeys.NO_ROOMS_FOUND)
                         .build());
+            } else {
+                return ResponseEntity.ok().body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(roomTypeResponses)
+                        .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                        .build());
             }
-            return ResponseEntity.ok().body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(roomTypeResponses)
-                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
-                    .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
