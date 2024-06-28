@@ -1,6 +1,5 @@
 package com.chinhbean.bookinghotel.services;
 
-import com.amazonaws.services.s3.AmazonS3;
 import com.chinhbean.bookinghotel.components.LocalizationUtils;
 import com.chinhbean.bookinghotel.dtos.ConvenienceDTO;
 import com.chinhbean.bookinghotel.dtos.HotelDTO;
@@ -18,7 +17,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,14 +36,7 @@ public class HotelService implements IHotelService {
     private final IHotelRepository hotelRepository;
     private final LocalizationUtils localizationUtils;
     private final IConvenienceRepository convenienceRepository;
-    private final AmazonS3 amazonS3;
-
     private static final Logger logger = LoggerFactory.getLogger(HotelService.class);
-    @Value("${amazonProperties.bucketName}")
-    private String bucketName;
-
-    @Value("${amazonProperties.uploadDir}")
-    private String uploadDir;
 
     @Transactional
     @Override

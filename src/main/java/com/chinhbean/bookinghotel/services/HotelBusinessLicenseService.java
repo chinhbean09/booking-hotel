@@ -41,7 +41,6 @@ public class HotelBusinessLicenseService implements IHotelBusinessLicenseService
     @Override
     public HotelResponse uploadBusinessLicense(List<MultipartFile> images, Long hotelId) throws IOException, DataNotFoundException {
 
-        List<String> imageUrls = new ArrayList<>();
         List<HotelBusinessLicenseResponse> hotelBusinessLicenseResponses = new ArrayList<>();
         if (hotelRepository.findById(hotelId).isEmpty()) {
             throw new IllegalArgumentException(MessageKeys.HOTEL_DOES_NOT_EXISTS);
@@ -49,8 +48,7 @@ public class HotelBusinessLicenseService implements IHotelBusinessLicenseService
 
         for (MultipartFile image : images) {
             validateImageFile(image);
-            String imageName = image.getOriginalFilename();
-            String key = uploadDir + hotelId + "/" + imageName;
+            String key = getImageKey(image, hotelId);
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(image.getContentType());
             metadata.setContentLength(image.getSize());
@@ -60,7 +58,6 @@ public class HotelBusinessLicenseService implements IHotelBusinessLicenseService
             if (IHotelBusinessLicenseRepository.findByBusinessLicenseAndHotelId(imageUrl, hotelId).isPresent()) {
                 throw new DuplicateKeyException("License URL already exists for this hotel " + hotelId);
             }
-            imageUrls.add(imageUrl);
 
             // Create RoomImage entity and save it to the database
             HotelBusinessLicense hotelBusinessLicense = HotelBusinessLicense.builder()
@@ -88,5 +85,10 @@ public class HotelBusinessLicenseService implements IHotelBusinessLicenseService
         if (!mediaType.isCompatibleWith(MediaType.IMAGE_JPEG) && !mediaType.isCompatibleWith(MediaType.IMAGE_PNG)) {
             throw new IllegalArgumentException(localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE));
         }
+    }
+
+    private String getImageKey(MultipartFile image, Long hotelId) {
+        String imageName = image.getOriginalFilename();
+        return uploadDir + hotelId + "/" + imageName;
     }
 }

@@ -22,9 +22,9 @@ public interface IUserService {
 
     User updateUserAvatar(long id, MultipartFile avatar);
 
-    public void sendMailForRegisterSuccess(String email, String password, long userId);
+    void sendMailForRegisterSuccess(String email, String password, long userId);
 
-    User changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException;
+    void changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException;
 
     void updatePassword(String email, String password) throws DataNotFoundException;
 
@@ -36,7 +36,7 @@ public interface IUserService {
 
     void deleteUser(Long userId);
 
-    User updateUser(UserDTO userDTO) throws Exception;
+    void updateUser(UserDTO userDTO) throws Exception;
 
     User getUserDetailsFromRefreshToken(String refreshToken) throws Exception;
 

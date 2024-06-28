@@ -28,8 +28,6 @@ public interface IHotelService {
 
     void updateStatus(Long hotelId, HotelStatus newStatus) throws DataNotFoundException, PermissionDenyException;
 
-    //Hotel uploadBusinessLicense(Long hotelId, MultipartFile file) throws IOException, DataNotFoundException, PermissionDenyException;
-
     Hotel getHotelById(Long hotelId) throws DataNotFoundException;
 
     Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size);

@@ -11,6 +11,8 @@ import com.chinhbean.bookinghotel.utils.MailTemplate;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -28,6 +30,7 @@ public class ForgotPasswordService implements IForgotPasswordService {
     private final MailService mailService;
     private final IUserRepository IUserRepository;
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private static final Logger logger = LoggerFactory.getLogger(ForgotPasswordService.class);
 
     // Method to generate OTP
     private Integer otpGenerator() {
@@ -43,9 +46,11 @@ public class ForgotPasswordService implements IForgotPasswordService {
 
             Map<String, Object> props = new HashMap<>();
             props.put("otp", forgotPassword.getOtp());
+            dataMailDTO.setProps(props); // Set props to dataMailDTO
+
             mailService.sendHtmlMail(dataMailDTO, MailTemplate.SEND_MAIL_TEMPLATE.OTP_SEND_TEMPLATE);
         } catch (MessagingException e) {
-            e.printStackTrace();
+            logger.error("Failed to send OTP email", e);
         }
     }
 

@@ -110,7 +110,7 @@ public class UserService implements IUserService {
 
     @Override
     public String login(UserLoginDTO userLoginDTO) throws Exception {
-        Optional<User> optionalUser = Optional.empty();
+        Optional<User> optionalUser;
 //        String subject = null;
         String subject = userLoginDTO.getLoginIdentifier();
 
@@ -232,13 +232,13 @@ public class UserService implements IUserService {
 
             mailService.sendHtmlMail(dataMail, MailTemplate.SEND_MAIL_TEMPLATE.USER_REGISTER);
         } catch (MessagingException exp) {
-            exp.printStackTrace();
+            logger.error("Failed to send registration success email", exp);
         }
     }
 
     @Override
     @Transactional
-    public User changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException {
+    public void changePassword(Long id, ChangePasswordDTO changePasswordDTO) throws DataNotFoundException {
         User exsistingUser = IUserRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), exsistingUser.getPassword())) {
@@ -249,7 +249,6 @@ public class UserService implements IUserService {
         }
         exsistingUser.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
         IUserRepository.save(exsistingUser);
-        return exsistingUser;
     }
 
     @Override
@@ -278,7 +277,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User updateUser(UserDTO userDTO) throws Exception {
+    public void updateUser(UserDTO userDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
         currentUser.setEmail(userDTO.getEmail());
@@ -287,8 +286,7 @@ public class UserService implements IUserService {
         currentUser.setAddress(userDTO.getAddress());
         currentUser.setDateOfBirth(userDTO.getDateOfBirth());
         currentUser.setGender(userDTO.getGender());
-        return IUserRepository.save(currentUser);
-
+        IUserRepository.save(currentUser);
     }
 
     @Override

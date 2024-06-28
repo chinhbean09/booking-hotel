@@ -13,6 +13,8 @@ import com.chinhbean.bookinghotel.responses.RoomImageResponse;
 import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.MediaType;
@@ -30,33 +32,26 @@ public class RoomImageService implements IRoomImageService {
     private final AmazonS3 amazonS3;
     private final IRoomTypeRepository IRoomTypeRepository;
     private final LocalizationUtils localizationUtils;
+    private static final Logger logger = LoggerFactory.getLogger(RoomImageService.class);
 
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
 
     @Override
     public RoomTypeResponse uploadImages(List<MultipartFile> images, Long roomTypeId) throws IOException {
-        List<String> imageUrls = new ArrayList<>();
-        List<RoomImageResponse> roomImageResponses = new ArrayList<>();
         if (IRoomTypeRepository.findById(roomTypeId).isEmpty()) {
             throw new IllegalArgumentException(MessageKeys.ROOM_DOES_NOT_EXISTS);
         }
 
+        List<RoomImageResponse> roomImageResponses = new ArrayList<>();
+
+
         for (MultipartFile image : images) {
-            validateImageFile(image);
-            String imageName = image.getOriginalFilename();
-            String key = "room_images/" + roomTypeId + "/" + imageName;
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(image.getContentType());
-            metadata.setContentLength(image.getSize());
-            amazonS3.putObject(bucketName, key, image.getInputStream(), metadata);
-            String imageUrl = amazonS3.getUrl(bucketName, key).toString();
+            String imageUrl = uploadImage(image, roomTypeId);
             // Check if the image URL already exists
             if (roomImageRepository.findByImageUrlsAndRoomTypeId(imageUrl, roomTypeId).isPresent()) {
                 throw new DuplicateKeyException("Image URL already exists for this room " + roomTypeId);
             }
-            imageUrls.add(imageUrl);
-
             // Create RoomImage entity and save it to the database
             RoomImage roomImage = RoomImage.builder()
                     .imageUrls(imageUrl)
@@ -92,6 +87,9 @@ public class RoomImageService implements IRoomImageService {
             Integer imageIndex = entry.getKey();
             MultipartFile imageFile = entry.getValue();
 
+            if (imageIndex == null) {
+                throw new IllegalArgumentException("Image index cannot be null");
+            }
             // Validate image file
             validateImageFile(imageFile);
 
@@ -101,11 +99,11 @@ public class RoomImageService implements IRoomImageService {
             if (optionalRoomImage.isPresent()) {
                 RoomImage existingImage = optionalRoomImage.get();
 
-                // Upload new image to S3
-                String imageUrl = uploadImageToS3(imageFile, roomTypeId);
-
                 // Delete previous image from S3
                 deleteImageFromS3(existingImage.getImageUrls());
+
+                // Upload new image to S3
+                String imageUrl = uploadImage(imageFile, roomTypeId);
 
                 // Update existing image URL
                 existingImage.setImageUrls(imageUrl);
@@ -127,19 +125,24 @@ public class RoomImageService implements IRoomImageService {
     }
 
 
-    private String uploadImageToS3(MultipartFile imageFile, Long roomId) throws IOException {
-        String imageName = imageFile.getOriginalFilename();
-        String key = "room_images/" + roomId + "/" + imageName;
+    private String uploadImage(MultipartFile image, Long roomId) throws IOException {
+        validateImageFile(image);
+        String key = getImageKey(image, roomId);
+        String imageUrl = amazonS3.getUrl(bucketName, key).toString();
+        // Check if the image URL already exists before uploading to S3
+        if (roomImageRepository.findByImageUrlsAndRoomTypeId(imageUrl, roomId).isPresent()) {
+            throw new DuplicateKeyException("Image URL already exists for this room " + roomId);
+        }
         ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType(imageFile.getContentType());
-        metadata.setContentLength(imageFile.getSize());
-        amazonS3.putObject(bucketName, key, imageFile.getInputStream(), metadata);
-        return amazonS3.getUrl(bucketName, key).toString();
+        metadata.setContentType(image.getContentType());
+        metadata.setContentLength(image.getSize());
+        amazonS3.putObject(bucketName, key, image.getInputStream(), metadata);
+        return imageUrl;
     }
 
     private void validateImageFile(MultipartFile imageFile) {
         MediaType mediaType = MediaType.parseMediaType(Objects.requireNonNull(imageFile.getContentType()));
-        if (!mediaType.isCompatibleWith(MediaType.IMAGE_JPEG) && !mediaType.isCompatibleWith(MediaType.IMAGE_PNG)) {
+        if (!mediaType.isCompatibleWith(MediaType.IMAGE_JPEG) && !mediaType.isCompatibleWith(MediaType.IMAGE_PNG) && !mediaType.isCompatibleWith(MediaType.IMAGE_GIF)) {
             throw new IllegalArgumentException(localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE));
         }
     }
@@ -148,10 +151,18 @@ public class RoomImageService implements IRoomImageService {
         try {
             String key = imageUrl.substring(imageUrl.indexOf(bucketName) + bucketName.length() + 1);
             amazonS3.deleteObject(bucketName, key);
+            if (amazonS3.doesObjectExist(bucketName, key)) {
+                throw new AmazonS3Exception("Failed to delete image from S3");
+            }
         } catch (AmazonS3Exception e) {
-            // Log or handle the exception
-            System.err.println("Error deleting image from S3: " + e.getMessage());
+            logger.error("Error deleting image from S3: ", e);
         }
+    }
+
+
+    private String getImageKey(MultipartFile image, Long roomId) {
+        String imageName = image.getOriginalFilename();
+        return "room_images/" + roomId + "/" + imageName;
     }
 
 }
