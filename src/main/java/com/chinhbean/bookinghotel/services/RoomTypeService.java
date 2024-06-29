@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -63,19 +64,26 @@ public class RoomTypeService implements IRoomTypeService {
     }
 
 
-    @Override
-    public Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException {
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<RoomType> roomTypes = IRoomTypeRepository.findWithTypesAndRoomConveniencesByHotelId(hotelId, pageable);
-
+//    @Override
+//    public Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException {
+//
+//        Pageable pageable = PageRequest.of(page, size);
+//        Page<RoomType> roomTypes = IRoomTypeRepository.findAvailableRoomsByHotelIdAndDates(hotelId, pageable);
+//
+//        if (roomTypes.isEmpty()) {
+//            throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
+//        } else {
+//            return roomTypes.map(RoomTypeResponse::fromType);
+//        }
+//    }
+    public Page<RoomTypeResponse> getAvailableRoomTypesByHotelIdAndDates(Long hotelId, LocalDate checkIn, LocalDate checkOut, Pageable pageable) throws DataNotFoundException {
+        Page<RoomType> roomTypes =  IRoomTypeRepository.findAvailableRoomsByHotelIdAndDates(hotelId, checkIn, checkOut, pageable);
         if (roomTypes.isEmpty()) {
             throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
         } else {
             return roomTypes.map(RoomTypeResponse::fromType);
         }
     }
-
     @Override
     @Transactional
     public RoomTypeResponse updateRoomType(Long roomTypeId, RoomTypeDTO roomTypeDTO) throws DataNotFoundException {

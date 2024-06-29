@@ -6,14 +6,16 @@ import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IRoomTypeService {
 
     RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException, PermissionDenyException;
 
-    Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException;
+//    Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException;
 
     RoomTypeResponse updateRoomType(Long roomTypeId, RoomTypeDTO roomTypeDTO) throws DataNotFoundException;
 
@@ -29,4 +31,7 @@ public interface IRoomTypeService {
     void updateStatus(Long roomTypeId, RoomTypeStatus newStatus) throws DataNotFoundException, PermissionDenyException;
 
     Page<RoomTypeResponse> getAllRoomTypesByStatus(Long hotelId, int page, int size) throws DataNotFoundException;
+     Page<RoomTypeResponse> getAvailableRoomTypesByHotelIdAndDates(Long hotelId, LocalDate checkIn, LocalDate checkOut, Pageable pageable) throws DataNotFoundException;
+
+
 }

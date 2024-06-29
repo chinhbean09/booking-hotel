@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -27,10 +28,10 @@ public class BookingResponse {
     private BigDecimal totalPrice;
 
     @JsonProperty("checkInDate")
-    private Date checkInDate;
+    private LocalDate checkInDate;
 
     @JsonProperty("checkOutDate")
-    private Date checkOutDate;
+    private LocalDate checkOutDate;
 
     @JsonProperty("status")
     private BookingStatus status;
