@@ -72,4 +72,7 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
     );
 
     Page<RoomType> findAllByStatusAndHotelId(RoomTypeStatus roomTypeStatus, Pageable pageable, Long hotelId);
+
+    @Query("SELECT DISTINCT r FROM RoomType r LEFT JOIN FETCH r.type LEFT JOIN FETCH r.roomConveniences WHERE r.hotel.id = :hotelId")
+    Page<RoomType> findWithTypesAndRoomConveniencesByHotelId(Long hotelId, Pageable pageable);
 }
