@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -117,14 +118,23 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<ResponseObject> login(
             @Valid @RequestBody UserLoginDTO userLoginDTO,
-            HttpServletRequest request
-    ) throws Exception {
+            HttpServletRequest request,
+            OAuth2AuthenticationToken authentication) throws Exception {
+
+        // Xử lý đăng nhập thông thường
         String token = userService.login(userLoginDTO);
         String userAgent = request.getHeader("User-Agent");
 
         User userDetail = userService.getUserDetailsFromToken(token);
 
         Token jwtToken = tokenService.addToken(userDetail, token, isMobileDevice(userAgent));
+
+        // Xử lý đăng nhập bằng Google
+        if (authentication != null) {
+            token = userService.handleGoogleLogin(authentication);
+            userDetail = userService.getUserDetailsFromToken(token);
+            jwtToken = tokenService.addToken(userDetail, token, isMobileDevice(userAgent));
+        }
 
         LoginResponse loginResponse = LoginResponse.builder()
                 .message(MessageKeys.LOGIN_SUCCESSFULLY)

@@ -8,6 +8,7 @@ import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.responses.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -41,4 +42,6 @@ public interface IUserService {
     User getUserDetailsFromRefreshToken(String refreshToken) throws Exception;
 
     List<UserResponse> getAllUsers(Long roleId);
+
+    String handleGoogleLogin(OAuth2AuthenticationToken authentication) throws Exception;
 }

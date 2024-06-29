@@ -30,13 +30,20 @@
             margin-top: 20px;
         }
     </style>
+    <script type="text/javascript">
+        window.onload = function () {
+            document.getElementById('activateButton').addEventListener('click', function () {
+                window.location.href = '/login';
+            });
+        };
+    </script>
 </head>
 <body>
 <div class="container">
     <h2>Welcome, <span th:text="${email}"></span></h2>
     <p>We hope you have a great experience using our service.</p>
     <p>Click the button below to activate your account:</p>
-    <a href="http://localhost:8080/api/v1/users/block-or-enable/{userId}/1"
+    <a id="activateButton" href="http://localhost:8080/api/v1/users/block-or-enable/{userId}/1"
        class="button">
         Activate Your Account
     </a>

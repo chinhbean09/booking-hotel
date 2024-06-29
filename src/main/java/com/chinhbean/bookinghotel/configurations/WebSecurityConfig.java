@@ -53,7 +53,10 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                         .anyRequest()
                         .authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()));
+                .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
+                .oauth2Login(oauth2Login -> oauth2Login
+                        .defaultSuccessUrl("/loginSuccess")
+                        .failureUrl("/loginFailure"));
         return http.build();
     }
 
