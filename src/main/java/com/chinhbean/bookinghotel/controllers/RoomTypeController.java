@@ -80,7 +80,7 @@ public class RoomTypeController {
                     .build());
         }
     }
-}
+
 
     @GetMapping("/get-all-room-status/{hotelId}")
     public ResponseEntity<ResponseObject> getAllRoomTypesByStatus(@PathVariable Long hotelId,
