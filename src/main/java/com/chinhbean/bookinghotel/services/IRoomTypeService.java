@@ -15,7 +15,7 @@ public interface IRoomTypeService {
 
     RoomTypeResponse createRoomType(RoomTypeDTO roomTypeDTO) throws DataNotFoundException, PermissionDenyException;
 
-//    Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException;
+    Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException;
 
     RoomTypeResponse updateRoomType(Long roomTypeId, RoomTypeDTO roomTypeDTO) throws DataNotFoundException;
 
