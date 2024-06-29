@@ -4,9 +4,11 @@ import com.chinhbean.bookinghotel.entities.Hotel;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Date;
-
 public class HotelSpecification {
+
+    public static Specification<Hotel> hasStatus(HotelStatus status) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("status"), status);
+    }
 
     public static Specification<Hotel> hasRating(Integer rating) {
         return (root, query, cb) -> cb.equal(root.get("rating"), rating);
@@ -43,4 +45,5 @@ public class HotelSpecification {
     public static Specification<Hotel> hasLaundry(Boolean laundry) {
         return (root, query, cb) -> cb.equal(root.get("conveniences").get("laundry"), laundry);
     }
+
 }

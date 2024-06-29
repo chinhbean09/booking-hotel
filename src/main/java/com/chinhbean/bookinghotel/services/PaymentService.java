@@ -13,6 +13,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentService {
     private final VNPAYConfig vnPayConfig;
+
     public PaymentDTO.VNPayResponse createVnPayPayment(HttpServletRequest request) {
         long amount = Integer.parseInt(request.getParameter("amount")) * 100L;
         String bankCode = request.getParameter("bankCode");
