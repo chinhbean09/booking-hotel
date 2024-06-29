@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -31,10 +32,10 @@ public class Booking {
     private BigDecimal totalPrice;
 
     @Column(name = "check_in_date", nullable = false)
-    private Date checkInDate;
+    private LocalDate checkInDate;
 
     @Column(name = "check_out_date", nullable = false)
-    private Date checkOutDate;
+    private LocalDate checkOutDate;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

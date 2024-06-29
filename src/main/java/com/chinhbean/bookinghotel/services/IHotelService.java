@@ -10,7 +10,7 @@ import com.chinhbean.bookinghotel.responses.HotelResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Service
 public interface IHotelService {
@@ -30,7 +30,7 @@ public interface IHotelService {
 
     Hotel getHotelById(Long hotelId) throws DataNotFoundException;
 
-    Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size);
+    Page<HotelResponse> findHotelsByProvinceAndDatesAndCapacity(String province, int numPeople, LocalDate checkInDate, LocalDate checkOutDate, int page, int size);
 
     Page<HotelResponse> filterHotelsByConveniencesAndRating(Integer rating, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size);
 
