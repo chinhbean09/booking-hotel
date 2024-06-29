@@ -23,9 +23,13 @@ public class LoginResponse {
     //user's detail
     private Long id;
 
-    private String username;
+    private String fullName;
 
     private List<String> roles;
 
     private String avatar;
+
+    private String phoneNumber;
+
+    private String email;
 }

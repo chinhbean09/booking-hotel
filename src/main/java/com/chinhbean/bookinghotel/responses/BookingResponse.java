@@ -43,7 +43,7 @@ public class BookingResponse {
     private String note;
 
     @JsonProperty("bookingDate")
-    private Date bookingDate;
+    private LocalDateTime bookingDate;
 
     @JsonProperty("paymentMethod")
     private String paymentMethod;
@@ -69,7 +69,6 @@ public class BookingResponse {
                 .bookingDate(booking.getBookingDate())
                 .paymentMethod(booking.getPaymentMethod())
                 .expirationDate(booking.getExpirationDate())
-                .extendExpirationDate(booking.getExtendExpirationDate())
                 .build();
     }
 }

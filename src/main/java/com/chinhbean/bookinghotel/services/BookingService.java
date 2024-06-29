@@ -19,13 +19,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@EnableAsync
 public class BookingService implements IBookingService {
 
     private final IBookingRepository bookingRepository;
@@ -34,6 +42,50 @@ public class BookingService implements IBookingService {
     private final IRoomTypeRepository roomTypeRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+    @Transactional
+    @Override
+    public Booking createBooking(BookingDTO bookingDTO) {
+        User user = null;
+        Booking booking = null;
+        if (bookingDTO.getUserId() != null) {
+            user = IUserRepository.findById(bookingDTO.getUserId()).orElse(null);
+            booking = getBooking(bookingDTO, user);
+            if (user == null) {
+                logger.error("User with ID: {} does not exist.", bookingDTO.getUserId());
+                return null;
+            }
+        } else {
+            user = IUserRepository.findByFullName("guest").orElse(null);
+            booking = getBooking(bookingDTO, user);
+        }
+
+        Set<BookingDetails> bookingDetails = bookingDTO.getBookingDetails().stream()
+                .map(this::convertToEntity)
+                .collect(Collectors.toSet());
+        booking.setBookingDetails(bookingDetails);
+
+        // Set expiration date to current time + 300 seconds
+        booking.setExpirationDate(LocalDateTime.now().plusSeconds(30));
+
+        Booking savedBooking = bookingRepository.save(booking);
+
+        // Schedule a task to delete the booking after 300 seconds if still PENDING
+        scheduler.schedule(() -> deleteBookingIfPending(savedBooking.getBookingId()), 300, TimeUnit.SECONDS);
+
+        return booking;
+    }
+
+    @Async
+    public CompletableFuture<Void> deleteBookingIfPending(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId).orElse(null);
+        if (booking != null && BookingStatus.PENDING.equals(booking.getStatus())) {
+            bookingRepository.delete(booking);
+            logger.info("Deleted expired booking with ID: {}", bookingId);
+        }
+        return CompletableFuture.completedFuture(null);
+    }
 
     @Transactional
     @Override
@@ -62,23 +114,22 @@ public class BookingService implements IBookingService {
         return bookings.map(BookingResponse::fromBooking);
     }
 
-    @Transactional
-    @Override
-    public Booking createBooking(BookingDTO bookingDTO, String token) {
-        logger.info("Creating a new booking.");
-        Long userId = jwtTokenUtils.extractUserId(token);
-        User user = IUserRepository.findById(userId).orElse(null);
-
-        Booking booking = getBooking(bookingDTO, user);
-
-        Set<BookingDetails> bookingDetails = bookingDTO.getBookingDetails().stream()
-                .map(this::convertToEntity)
-                .collect(Collectors.toSet());
-
-        booking.setBookingDetails(bookingDetails);
-
-        logger.info("Booking created successfully.");
-        return bookingRepository.save(booking);
+    private static Booking getBooking(BookingDTO bookingDTO, User user) {
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setEmail(bookingDTO.getEmail());
+        booking.setPhoneNumber(bookingDTO.getPhoneNumber());
+        booking.setFullName(bookingDTO.getFullName());
+        booking.setTotalPrice(bookingDTO.getTotalPrice());
+        booking.setCheckInDate(bookingDTO.getCheckInDate());
+        booking.setCheckOutDate(bookingDTO.getCheckOutDate());
+        booking.setStatus(BookingStatus.PENDING);
+        booking.setCouponId(bookingDTO.getCouponId());
+        booking.setNote(bookingDTO.getNote());
+        booking.setPaymentMethod(bookingDTO.getPaymentMethod());
+        booking.setExpirationDate(LocalDateTime.now().plusSeconds(300)); // Set expiration date to current time + 300 seconds
+        booking.setBookingDate(LocalDateTime.now());
+        return booking;
     }
 
     @Transactional
@@ -122,12 +173,7 @@ public class BookingService implements IBookingService {
         if (bookingDTO.getPaymentMethod() != null) {
             booking.setPaymentMethod(bookingDTO.getPaymentMethod());
         }
-        if (bookingDTO.getExpirationDate() != null) {
-            booking.setExpirationDate(bookingDTO.getExpirationDate());
-        }
-        if (bookingDTO.getExtendExpirationDate() != null) {
-            booking.setExtendExpirationDate(bookingDTO.getExtendExpirationDate());
-        }
+
 
         if (bookingDTO.getBookingDetails() != null) {
             Set<BookingDetails> bookingDetails = bookingDTO.getBookingDetails().stream()
@@ -166,21 +212,6 @@ public class BookingService implements IBookingService {
         }
         bookingRepository.save(booking);
         logger.info("Status for booking with ID: {} updated successfully.", bookingId);
-    }
-
-    private static Booking getBooking(BookingDTO bookingDTO, User user) {
-        Booking booking = new Booking();
-        booking.setUser(user);
-        booking.setTotalPrice(bookingDTO.getTotalPrice());
-        booking.setCheckInDate(bookingDTO.getCheckInDate());
-        booking.setCheckOutDate(bookingDTO.getCheckOutDate());
-        booking.setStatus(BookingStatus.PENDING);
-        booking.setCouponId(bookingDTO.getCouponId());
-        booking.setNote(bookingDTO.getNote());
-        booking.setPaymentMethod(bookingDTO.getPaymentMethod());
-        booking.setExpirationDate(bookingDTO.getExpirationDate());
-        booking.setExtendExpirationDate(bookingDTO.getExtendExpirationDate());
-        return booking;
     }
 
     private BookingDetails convertToEntity(BookingDetailDTO detailDTO) {

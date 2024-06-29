@@ -131,7 +131,9 @@ public class UserController {
                 .token(jwtToken.getToken())
                 .tokenType(jwtToken.getTokenType())
                 .refreshToken(jwtToken.getRefreshToken())
-                .username(userDetail.getUsername())
+                .fullName(userDetail.getFullName())
+                .email(userDetail.getEmail())
+                .phoneNumber(userDetail.getPhoneNumber())
                 .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                 .id(userDetail.getId())
                 .build();
@@ -294,14 +296,17 @@ public class UserController {
             User userDetail = userService.getUserDetailsFromRefreshToken(refreshTokenDTO.getRefreshToken());
             Token jwtToken = tokenService.refreshToken(refreshTokenDTO.getRefreshToken(), userDetail);
             return ResponseEntity.ok(LoginResponse.builder()
-                    .message("Refresh token successfully")
+                    .message(MessageKeys.LOGIN_SUCCESSFULLY)
                     .token(jwtToken.getToken())
                     .tokenType(jwtToken.getTokenType())
                     .refreshToken(jwtToken.getRefreshToken())
-                    .username(userDetail.getUsername())
+                    .fullName(userDetail.getFullName())
+                    .email(userDetail.getEmail())
+                    .phoneNumber(userDetail.getPhoneNumber())
                     .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                     .id(userDetail.getId())
                     .build());
+
         } catch (Exception e) {
             String errorMessage = "Error occurred during token refresh: " + e.getMessage();
             LoginResponse errorResponse = LoginResponse.builder()

@@ -22,6 +22,16 @@ import org.springframework.web.bind.annotation.*;
 public class BookingController {
     private final IBookingService bookingService;
 
+    @PostMapping("/create-booking")
+    public ResponseEntity<ResponseObject> createBooking(@RequestBody BookingDTO bookingDTO) {
+        Booking newBooking = bookingService.createBooking(bookingDTO);
+        return ResponseEntity.ok().body(ResponseObject.builder()
+                .status(HttpStatus.OK)
+                .data(newBooking)
+                .message(MessageKeys.CREATE_BOOKING_SUCCESSFULLY)
+                .build());
+    }
+
     @GetMapping("/get-bookings")
     public ResponseEntity<ResponseObject> getListBookings(@RequestHeader("Authorization") String authHeader,
                                                           @RequestParam(defaultValue = "0") int page,
@@ -54,16 +64,6 @@ public class BookingController {
         }
     }
 
-    @PostMapping("/create-booking")
-    public ResponseEntity<ResponseObject> createBooking(@RequestBody BookingDTO bookingDTO, @RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.substring(7);
-        Booking newBooking = bookingService.createBooking(bookingDTO, token);
-        return ResponseEntity.ok().body(ResponseObject.builder()
-                .status(HttpStatus.OK)
-                .data(newBooking)
-                .message(MessageKeys.CREATE_BOOKING_SUCCESSFULLY)
-                .build());
-    }
 
     @GetMapping("/get-booking-detail/{bookingId}")
     public ResponseEntity<ResponseObject> getBookingDetail(@PathVariable Long bookingId) {
