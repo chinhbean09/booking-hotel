@@ -52,8 +52,7 @@ public class RoomTypeController {
     }
 
     @GetMapping("/get-all-room/{hotelId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
     public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@PathVariable Long hotelId,
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "10") int size) throws DataNotFoundException {

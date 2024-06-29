@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class BookingController {
     private final IBookingService bookingService;
 
-    @GetMapping("/getListBookings")
+    @GetMapping("/get-bookings")
     public ResponseEntity<ResponseObject> getListBookings(@RequestHeader("Authorization") String authHeader,
                                                           @RequestParam(defaultValue = "0") int page,
                                                           @RequestParam(defaultValue = "10") int size) {
@@ -54,7 +54,7 @@ public class BookingController {
         }
     }
 
-    @PostMapping("/createBooking")
+    @PostMapping("/create-booking")
     public ResponseEntity<ResponseObject> createBooking(@RequestBody BookingDTO bookingDTO, @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         Booking newBooking = bookingService.createBooking(bookingDTO, token);
@@ -65,7 +65,7 @@ public class BookingController {
                 .build());
     }
 
-    @GetMapping("/getBookingDetail/{bookingId}")
+    @GetMapping("/get-booking-detail/{bookingId}")
     public ResponseEntity<ResponseObject> getBookingDetail(@PathVariable Long bookingId) {
         try {
             BookingResponse booking = bookingService.getBookingDetail(bookingId);
@@ -82,7 +82,7 @@ public class BookingController {
         }
     }
 
-    @PutMapping("/updateBooking/{bookingId}")
+    @PutMapping("/update-booking/{bookingId}")
     public ResponseEntity<ResponseObject> updateBooking(@PathVariable Long bookingId, @RequestBody BookingDTO bookingDTO, @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         try {
@@ -100,7 +100,7 @@ public class BookingController {
         }
     }
 
-    @PutMapping("/updateStatus/{bookingId}")
+    @PutMapping("/update-status/{bookingId}")
     public ResponseEntity<ResponseObject> updateStatus(@PathVariable Long bookingId, @RequestBody BookingStatus newStatus, @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         try {

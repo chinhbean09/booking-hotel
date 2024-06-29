@@ -60,6 +60,7 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking")
     private Set<BookingDetails> bookingDetails = new LinkedHashSet<>();
+
 }
 
 
