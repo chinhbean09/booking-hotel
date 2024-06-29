@@ -81,12 +81,10 @@ public class RoomTypeController {
         }
     }
 
-
     @GetMapping("/get-all-room-status/{hotelId}")
     public ResponseEntity<ResponseObject> getAllRoomTypesByStatus(@PathVariable Long hotelId,
                                                                   @RequestParam(defaultValue = "0") int page,
                                                                   @RequestParam(defaultValue = "10") int size) {
-
         try {
             Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByStatus(hotelId, page, size);
 
