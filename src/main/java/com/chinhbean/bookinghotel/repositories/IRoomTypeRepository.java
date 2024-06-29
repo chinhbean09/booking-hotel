@@ -29,7 +29,7 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
             "  JOIN bd.booking b " +
             "  WHERE bd.roomType.id = rt.id " +
             "  AND b.checkOutDate > :checkIn " +
-            "  AND b.checkInDate < :checkOut" +
+            "  AND :checkIn < :checkOut" +
             ")")
     Page<RoomType> findAvailableRoomsByHotelIdAndDates(@Param("hotelId") Long hotelId,
                                                        @Param("checkIn") LocalDate checkIn,
@@ -55,7 +55,7 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
             "(rc.kitchen = :kitchen OR :kitchen IS NULL) AND " +
             "(rt.roomPrice >= :minPrice OR :minPrice IS NULL) AND " +
             "(rt.roomPrice <= :maxPrice OR :maxPrice IS NULL) AND " +
-            "rt.status = AVAILABLE")
+            "rt.status = 'AVAILABLE'")
     List<RoomType> findByTypeAndConveniencesAndPriceAndHotel(
             @Param("hotelId") Long hotelId,
             @Param("luxury") Boolean luxury,
