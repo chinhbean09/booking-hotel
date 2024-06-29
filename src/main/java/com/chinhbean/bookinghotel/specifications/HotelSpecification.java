@@ -8,25 +8,6 @@ import java.util.Date;
 
 public class HotelSpecification {
 
-    public static Specification<Hotel> hasProvince(String province) {
-        return (root, query, cb) -> cb.equal(root.get("location").get("province"), province);
-    }
-
-    public static Specification<Hotel> hasStatus(HotelStatus status) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("status"), status);
-    }
-
-    public static Specification<Hotel> hasCapacityPerRoom(int numPeople) {
-        return (root, query, cb) -> cb.equal(root.get("roomTypes").get("capacityPerRoom"), numPeople);
-    }
-
-    public static Specification<Hotel> hasAvailability(Date checkInDate, Date checkOutDate) {
-        return (root, query, cb) -> cb.and(
-                cb.lessThanOrEqualTo(root.get("roomTypes").get("checkInDate"), checkInDate),
-                cb.greaterThanOrEqualTo(root.get("roomTypes").get("checkOutDate"), checkOutDate)
-        );
-    }
-
     public static Specification<Hotel> hasRating(Integer rating) {
         return (root, query, cb) -> cb.equal(root.get("rating"), rating);
     }
@@ -62,5 +43,4 @@ public class HotelSpecification {
     public static Specification<Hotel> hasLaundry(Boolean laundry) {
         return (root, query, cb) -> cb.equal(root.get("conveniences").get("laundry"), laundry);
     }
-
 }

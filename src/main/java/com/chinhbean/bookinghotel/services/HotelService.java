@@ -25,7 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -230,17 +230,14 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Page<HotelResponse> findByProvinceAndCapacityPerRoomAndAvailability(String province, int numPeople, Date checkInDate, Date checkOutDate, int page, int size) {
-        if (checkInDate.after(checkOutDate)) {
-            throw new IllegalArgumentException("Check-in date must be before check-out date");
-        }
-        Pageable pageable = PageRequest.of(page, size);
-        Specification<Hotel> spec = Specification.where(HotelSpecification.hasProvince(province))
-                .and(HotelSpecification.hasCapacityPerRoom(numPeople))
-                .and(HotelSpecification.hasAvailability(checkInDate, checkOutDate));
-        Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
-        return hotels.map(HotelResponse::fromHotel);
+    public Page<HotelResponse> findHotelsByProvinceAndDatesAndCapacity(String province, int numPeople, LocalDate checkInDate, LocalDate checkOutDate, int page, int size) {
+    if (checkInDate.isAfter(checkOutDate)) {
+        throw new IllegalArgumentException("Check-in date must be before check-out date");
     }
+    Pageable pageable = PageRequest.of(page, size);
+    Page<Hotel> hotels = hotelRepository.findHotelsByProvinceAndDatesAndCapacity(province, checkInDate, checkOutDate, numPeople, pageable);
+    return hotels.map(HotelResponse::fromHotel);
+}
 
     @Override
     public Page<HotelResponse> filterHotelsByConveniencesAndRating(Integer rating, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
