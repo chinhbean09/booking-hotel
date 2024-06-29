@@ -63,7 +63,6 @@ public class RoomTypeService implements IRoomTypeService {
         return RoomTypeResponse.fromType(savedRoomType);
     }
 
-
     @Override
     public Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException {
 
@@ -77,13 +76,14 @@ public class RoomTypeService implements IRoomTypeService {
         }
     }
     public Page<RoomTypeResponse> getAvailableRoomTypesByHotelIdAndDates(Long hotelId, LocalDate checkIn, LocalDate checkOut, Pageable pageable) throws DataNotFoundException {
-        Page<RoomType> roomTypes =  IRoomTypeRepository.findAvailableRoomsByHotelIdAndDates(hotelId, checkIn, checkOut, pageable);
+        Page<RoomType> roomTypes = IRoomTypeRepository.findAvailableRoomsByHotelIdAndDates(hotelId, checkIn, checkOut, pageable);
         if (roomTypes.isEmpty()) {
             throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
         } else {
             return roomTypes.map(RoomTypeResponse::fromType);
         }
     }
+
     @Override
     @Transactional
     public RoomTypeResponse updateRoomType(Long roomTypeId, RoomTypeDTO roomTypeDTO) throws DataNotFoundException {

@@ -37,7 +37,6 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
                                                        Pageable pageable);
 
 
-
     @EntityGraph(attributePaths = {"type", "roomConveniences", "roomImages"})
     Optional<RoomType> findWithTypesAndRoomConveniencesById(Long id);
 
