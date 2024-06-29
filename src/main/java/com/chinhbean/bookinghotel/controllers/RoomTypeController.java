@@ -12,6 +12,9 @@ import com.chinhbean.bookinghotel.services.IRoomTypeService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,27 +55,32 @@ public class RoomTypeController {
         }
     }
 
-    @GetMapping("/get-all-room/{hotelId}")
+    @GetMapping("/get-all-room")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
-    public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@PathVariable Long hotelId,
+    public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@RequestParam Long hotelId,
                                                                    @RequestParam(defaultValue = "0") int page,
-                                                                   @RequestParam(defaultValue = "10") int size) throws DataNotFoundException {
+                                                                   @RequestParam(defaultValue = "10") int size,
+                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
+                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut) throws DataNotFoundException {
 
-        Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId, page, size);
-        if (roomTypes.isEmpty())
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RoomTypeResponse> roomTypes = roomTypeService.getAvailableRoomTypesByHotelIdAndDates(hotelId, checkIn, checkOut, pageable);
+
+        if (roomTypes.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
-                    .message(MessageKeys.ROOM_TYPE_NOT_FOUND)
+                    .message("Room types not found")
                     .data(null)
                     .build());
-        else {
+        } else {
             return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .data(roomTypes)
-                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                    .message("Retrieved room types successfully")
                     .build());
         }
     }
+}
 
     @GetMapping("/get-all-room-status/{hotelId}")
     public ResponseEntity<ResponseObject> getAllRoomTypesByStatus(@PathVariable Long hotelId,
