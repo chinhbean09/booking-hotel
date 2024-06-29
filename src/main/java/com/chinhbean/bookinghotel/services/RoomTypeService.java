@@ -64,18 +64,18 @@ public class RoomTypeService implements IRoomTypeService {
     }
 
 
-//    @Override
-//    public Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException {
-//
-//        Pageable pageable = PageRequest.of(page, size);
-//        Page<RoomType> roomTypes = IRoomTypeRepository.findAvailableRoomsByHotelIdAndDates(hotelId, pageable);
-//
-//        if (roomTypes.isEmpty()) {
-//            throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
-//        } else {
-//            return roomTypes.map(RoomTypeResponse::fromType);
-//        }
-//    }
+    @Override
+    public Page<RoomTypeResponse> getAllRoomTypesByHotelId(Long hotelId, int page, int size) throws DataNotFoundException {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RoomType> roomTypes = IRoomTypeRepository.findWithTypesAndRoomConveniencesByHotelId(hotelId, pageable);
+
+        if (roomTypes.isEmpty()) {
+            throw new DataNotFoundException(MessageKeys.ROOM_TYPE_NOT_FOUND);
+        } else {
+            return roomTypes.map(RoomTypeResponse::fromType);
+        }
+    }
     public Page<RoomTypeResponse> getAvailableRoomTypesByHotelIdAndDates(Long hotelId, LocalDate checkIn, LocalDate checkOut, Pageable pageable) throws DataNotFoundException {
         Page<RoomType> roomTypes =  IRoomTypeRepository.findAvailableRoomsByHotelIdAndDates(hotelId, checkIn, checkOut, pageable);
         if (roomTypes.isEmpty()) {
