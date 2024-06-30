@@ -7,6 +7,7 @@ import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.BookingStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
+import com.chinhbean.bookinghotel.repositories.IBookingDetailRepository;
 import com.chinhbean.bookinghotel.repositories.IBookingRepository;
 import com.chinhbean.bookinghotel.repositories.IRoomTypeRepository;
 import com.chinhbean.bookinghotel.repositories.IUserRepository;
@@ -24,6 +25,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -40,42 +43,59 @@ public class BookingService implements IBookingService {
     private final IUserRepository IUserRepository;
     private final JwtTokenUtils jwtTokenUtils;
     private final IRoomTypeRepository roomTypeRepository;
-
+    private final IBookingDetailRepository bookingDetailRepository;
     private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Transactional
     @Override
-    public Booking createBooking(BookingDTO bookingDTO) {
+    public Booking createBooking(BookingDTO bookingDTO) throws Exception {
         User user = null;
         Booking booking = null;
+
         if (bookingDTO.getUserId() != null) {
             user = IUserRepository.findById(bookingDTO.getUserId()).orElse(null);
-            booking = getBooking(bookingDTO, user);
             if (user == null) {
                 logger.error("User with ID: {} does not exist.", bookingDTO.getUserId());
                 return null;
             }
         } else {
             user = IUserRepository.findByFullName("guest").orElse(null);
-            booking = getBooking(bookingDTO, user);
         }
 
-        Set<BookingDetails> bookingDetails = bookingDTO.getBookingDetails().stream()
-                .map(this::convertToEntity)
-                .collect(Collectors.toSet());
-        booking.setBookingDetails(bookingDetails);
+        booking = getBooking(bookingDTO, user);
+        booking.setExpirationDate(LocalDateTime.now().plusSeconds(300)); // Set expiration date to current time + 300 seconds
 
-        // Set expiration date to current time + 300 seconds
-        booking.setExpirationDate(LocalDateTime.now().plusSeconds(30));
-
+        // Save the booking first
         Booking savedBooking = bookingRepository.save(booking);
+
+        List<BookingDetails> bookingDetails = new ArrayList<>();
+        for (BookingDetailDTO bookingDetailDTO : bookingDTO.getBookingDetails()) {
+            BookingDetails bookingDetail = new BookingDetails();
+            bookingDetail.setBooking(savedBooking);
+
+            Long roomTypeId = bookingDetailDTO.getRoomTypeId();
+            RoomType roomType = roomTypeRepository.findById(roomTypeId).orElse(null);
+            if (roomType == null) {
+                logger.error("Room type with ID: {} does not exist.", roomTypeId);
+                return null;
+            }
+
+            bookingDetail.setRoomType(roomType);
+            bookingDetail.setPrice(bookingDetailDTO.getPrice());
+            bookingDetail.setNumberOfRooms(bookingDetailDTO.getNumberOfRooms());
+            bookingDetail.setTotalMoney(bookingDetailDTO.getTotalMoney());
+            bookingDetails.add(bookingDetail);
+        }
+
+        bookingDetailRepository.saveAll(bookingDetails);
 
         // Schedule a task to delete the booking after 300 seconds if still PENDING
         scheduler.schedule(() -> deleteBookingIfPending(savedBooking.getBookingId()), 300, TimeUnit.SECONDS);
 
-        return booking;
+        return savedBooking;
     }
+
 
     @Async
     public CompletableFuture<Void> deleteBookingIfPending(Long bookingId) {
@@ -176,7 +196,7 @@ public class BookingService implements IBookingService {
 
 
         if (bookingDTO.getBookingDetails() != null) {
-            Set<BookingDetails> bookingDetails = bookingDTO.getBookingDetails().stream()
+            List<BookingDetails> bookingDetails = (List<BookingDetails>) bookingDTO.getBookingDetails().stream()
                     .map(this::convertToEntity)
                     .collect(Collectors.toSet());
             booking.setBookingDetails(bookingDetails);

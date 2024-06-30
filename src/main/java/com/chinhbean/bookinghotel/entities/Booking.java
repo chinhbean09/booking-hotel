@@ -1,6 +1,7 @@
 package com.chinhbean.bookinghotel.entities;
 
 import com.chinhbean.bookinghotel.enums.BookingStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -57,8 +59,9 @@ public class Booking {
     @Column(name = "expiration_date")
     private LocalDateTime expirationDate;
 
-    @OneToMany(mappedBy = "booking")
-    private Set<BookingDetails> bookingDetails = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<BookingDetails> bookingDetails;
 
     private String fullName;
 

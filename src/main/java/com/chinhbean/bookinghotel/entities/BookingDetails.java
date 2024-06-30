@@ -1,5 +1,6 @@
 package com.chinhbean.bookinghotel.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class BookingDetails {
 
     @ManyToOne
     @JoinColumn(name = "booking_id", nullable = false)
+    @JsonBackReference
     private Booking booking;
 
     @ManyToOne
