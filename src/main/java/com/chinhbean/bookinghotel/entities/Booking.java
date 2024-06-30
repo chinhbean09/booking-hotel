@@ -1,13 +1,16 @@
 package com.chinhbean.bookinghotel.entities;
 
 import com.chinhbean.bookinghotel.enums.BookingStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -27,14 +30,15 @@ public class Booking {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
 
     @Column(name = "check_in_date", nullable = false)
-    private Date checkInDate;
+    private LocalDate checkInDate;
 
     @Column(name = "check_out_date", nullable = false)
-    private Date checkOutDate;
+    private LocalDate checkOutDate;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -47,7 +51,7 @@ public class Booking {
     private String note;
 
     @Column(name = "booking_date", nullable = false)
-    private Date bookingDate;
+    private LocalDateTime bookingDate;
 
     @Column(name = "payment_method", nullable = false)
     private String paymentMethod;
@@ -55,11 +59,16 @@ public class Booking {
     @Column(name = "expiration_date")
     private LocalDateTime expirationDate;
 
-    @Column(name = "extend_expiration_date")
-    private LocalDateTime extendExpirationDate;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<BookingDetails> bookingDetails;
 
-    @OneToMany(mappedBy = "booking")
-    private Set<BookingDetails> bookingDetails = new LinkedHashSet<>();
+    private String fullName;
+
+    private Long phoneNumber;
+
+    private String email;
+
 }
 
 

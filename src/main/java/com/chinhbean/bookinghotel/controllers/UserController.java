@@ -10,14 +10,15 @@ import com.chinhbean.bookinghotel.dtos.UserLoginDTO;
 import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
-import com.chinhbean.bookinghotel.repositories.UserRepository;
-import com.chinhbean.bookinghotel.responses.LoginResponse;
+import com.chinhbean.bookinghotel.repositories.IUserRepository;
+import com.chinhbean.bookinghotel.responses.user.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
-import com.chinhbean.bookinghotel.responses.UserListResponse;
-import com.chinhbean.bookinghotel.responses.UserResponse;
-import com.chinhbean.bookinghotel.services.ITokenService;
-import com.chinhbean.bookinghotel.services.IUserService;
+import com.chinhbean.bookinghotel.responses.user.UserListResponse;
+import com.chinhbean.bookinghotel.responses.user.UserResponse;
+import com.chinhbean.bookinghotel.services.token.ITokenService;
+import com.chinhbean.bookinghotel.services.user.IUserService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import com.chinhbean.bookinghotel.utils.ValidationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -50,7 +50,7 @@ public class UserController {
     private final ITokenService tokenService;
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
-    private final UserRepository userRepository;
+    private final IUserRepository IUserRepository;
 
     @GetMapping("/generate-secret-key")
     public ResponseEntity<?> generateSecretKey() {
@@ -74,7 +74,25 @@ public class UserController {
                     .message(errorMessages.toString())
                     .build());
         }
-        if(userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
+        if (userDTO.getEmail() == null || userDTO.getEmail().trim().isBlank()) {
+            if (userDTO.getPhoneNumber() == null || userDTO.getPhoneNumber().trim().isBlank()) {
+                return ResponseEntity.badRequest().body(ResponseObject.builder()
+                        .status(HttpStatus.BAD_REQUEST)
+                        .data(null)
+                        .message("At least email or phone number is required")
+                        .build());
+
+            } else {
+                if (!ValidationUtils.isValidPhoneNumber(userDTO.getPhoneNumber())) {
+                    throw new Exception("Invalid phone number");
+                }
+            }
+        } else {
+            if (!ValidationUtils.isValidEmail(userDTO.getEmail())) {
+                throw new Exception("Invalid email");
+            }
+        }
+        if (IUserRepository.existsByPhoneNumber(userDTO.getPhoneNumber())) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .status(HttpStatus.BAD_REQUEST)
                     .data(null)
@@ -90,7 +108,7 @@ public class UserController {
         }
         User user = userService.registerUser(userDTO);
         return ResponseEntity.ok(ResponseObject.builder()
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .data(UserResponse.fromUser(user))
                 .message(MessageKeys.REGISTER_SUCCESSFULLY)
                 .build());
@@ -101,10 +119,7 @@ public class UserController {
             @Valid @RequestBody UserLoginDTO userLoginDTO,
             HttpServletRequest request
     ) throws Exception {
-        String token = userService.login(
-                userLoginDTO.getEmailOrPhone(),
-                userLoginDTO.getPassword()
-        );
+        String token = userService.login(userLoginDTO);
         String userAgent = request.getHeader("User-Agent");
 
         User userDetail = userService.getUserDetailsFromToken(token);
@@ -116,7 +131,9 @@ public class UserController {
                 .token(jwtToken.getToken())
                 .tokenType(jwtToken.getTokenType())
                 .refreshToken(jwtToken.getRefreshToken())
-                .username(userDetail.getUsername())
+                .fullName(userDetail.getFullName())
+                .email(userDetail.getEmail())
+                .phoneNumber(userDetail.getPhoneNumber())
                 .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                 .id(userDetail.getId())
                 .build();
@@ -126,6 +143,7 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .build());
     }
+
     @PostMapping("/logout")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
     public ResponseEntity<?> logout(HttpServletRequest request) {
@@ -142,6 +160,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("An error occurred during logout: " + e.getMessage());
         }
     }
+
     private boolean isMobileDevice(String userAgent) {
         return userAgent.toLowerCase().contains("mobile");
     }
@@ -178,7 +197,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/block-or-enable/{userId}/{active}")
+    @PutMapping("/block-or-enable/{userId}/{active}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
 
     public ResponseEntity<String> blockOrEnable(
@@ -194,11 +213,12 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @GetMapping("/get-all-user")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
     public ResponseEntity<UserListResponse> getAllUsers(
             @RequestParam(defaultValue = "") String keyword,
-            @NonNull @RequestParam("page") int page ,
+            @NonNull @RequestParam("page") int page,
             @RequestParam("limit") int limit) {
         try {
             PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("fullName").ascending());
@@ -242,10 +262,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
     @Transactional
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
-    public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) throws DataNotFoundException {
+    public ResponseEntity<String> deleteUser(@PathVariable("id") Long id) {
         try {
             userService.deleteUser(id);
             return ResponseEntity.ok("Delete User Successfully");
@@ -256,7 +277,7 @@ public class UserController {
 
     @Transactional
     @PutMapping("/update-profile")
-    public ResponseEntity<?> updateUser(@RequestBody UserDTO userDTO) throws DataNotFoundException {
+    public ResponseEntity<?> updateUser(@RequestBody UserDTO userDTO) {
         try {
             userService.updateUser(userDTO);
             return ResponseEntity.ok("Update Successfully");
@@ -275,14 +296,17 @@ public class UserController {
             User userDetail = userService.getUserDetailsFromRefreshToken(refreshTokenDTO.getRefreshToken());
             Token jwtToken = tokenService.refreshToken(refreshTokenDTO.getRefreshToken(), userDetail);
             return ResponseEntity.ok(LoginResponse.builder()
-                    .message("Refresh token successfully")
+                    .message(MessageKeys.LOGIN_SUCCESSFULLY)
                     .token(jwtToken.getToken())
                     .tokenType(jwtToken.getTokenType())
                     .refreshToken(jwtToken.getRefreshToken())
-                    .username(userDetail.getUsername())
+                    .fullName(userDetail.getFullName())
+                    .email(userDetail.getEmail())
+                    .phoneNumber(userDetail.getPhoneNumber())
                     .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                     .id(userDetail.getId())
                     .build());
+
         } catch (Exception e) {
             String errorMessage = "Error occurred during token refresh: " + e.getMessage();
             LoginResponse errorResponse = LoginResponse.builder()

@@ -32,4 +32,29 @@ public class Type {
 
     @OneToMany(mappedBy = "type", cascade = CascadeType.ALL)
     private Set<RoomType> roomTypes;
+
+    // Setter to ensure that only select one type bedroom
+    public void setSingleBedroom(Boolean singleBedroom) {
+        if (singleBedroom != null && singleBedroom) {
+            this.twinBedroom = false;
+            this.doubleBedroom = false;
+        }
+        this.singleBedroom = singleBedroom;
+    }
+
+    public void setTwinBedroom(Boolean twinBedroom) {
+        if (twinBedroom != null && twinBedroom) {
+            this.singleBedroom = false;
+            this.doubleBedroom = false;
+        }
+        this.twinBedroom = twinBedroom;
+    }
+
+    public void setDoubleBedroom(Boolean doubleBedroom) {
+        if (doubleBedroom != null && doubleBedroom) {
+            this.singleBedroom = false;
+            this.twinBedroom = false;
+        }
+        this.doubleBedroom = doubleBedroom;
+    }
 }

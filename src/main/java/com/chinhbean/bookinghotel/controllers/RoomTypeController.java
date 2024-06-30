@@ -2,13 +2,19 @@ package com.chinhbean.bookinghotel.controllers;
 
 
 import com.chinhbean.bookinghotel.dtos.RoomTypeDTO;
+import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
+import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
-import com.chinhbean.bookinghotel.responses.RoomTypeResponse;
-import com.chinhbean.bookinghotel.services.IRoomImageService;
-import com.chinhbean.bookinghotel.services.IRoomTypeService;
+import com.chinhbean.bookinghotel.responses.room.RoomTypeResponse;
+import com.chinhbean.bookinghotel.services.room.IRoomImageService;
+import com.chinhbean.bookinghotel.services.room.IRoomTypeService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,20 +55,70 @@ public class RoomTypeController {
         }
     }
 
-    @GetMapping("/get-all-room/{hotelId}")
+    @GetMapping("/get-all-room")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER','ROLE_CUSTOMER')")
+    public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@RequestParam Long hotelId,
+                                                                   @RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "10") int size,
+                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
+                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut) throws DataNotFoundException {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RoomTypeResponse> roomTypes = roomTypeService.getAvailableRoomTypesByHotelIdAndDates(hotelId, checkIn, checkOut, pageable);
+
+        if (roomTypes.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message("Room types not found")
+                    .data(null)
+                    .build());
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(roomTypes)
+                    .message("Retrieved room types successfully")
+                    .build());
+        }
+    }
+
+    @GetMapping("/get-all-room-partner/{hotelId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
 
-    public ResponseEntity<ResponseObject> getAllRoomTypesByHotelId(@PathVariable Long hotelId) {
+    public ResponseEntity<ResponseObject> getAllRoomTypesByHotelIdForPartner(@PathVariable Long hotelId,
+                                                                   @RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "10") int size) throws DataNotFoundException {
+
+        Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId, page, size);
+        if (roomTypes.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message(MessageKeys.ROOM_TYPE_NOT_FOUND)
+                    .data(null)
+                    .build());
+        else {
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .data(roomTypes)
+                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                    .build());
+        }
+    }
+
+    @GetMapping("/get-all-room-status/{hotelId}")
+    public ResponseEntity<ResponseObject> getAllRoomTypesByStatus(@PathVariable Long hotelId,
+                                                                  @RequestParam(defaultValue = "0") int page,
+                                                                  @RequestParam(defaultValue = "10") int size) {
         try {
-            List<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId);
+            Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByStatus(hotelId, page, size);
+
             return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
                     .status(HttpStatus.OK)
                     .data(roomTypes)
                     .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                    .status(HttpStatus.NOT_FOUND)
                     .message(e.getMessage())
                     .build());
         }
@@ -122,7 +179,8 @@ public class RoomTypeController {
 
     @PostMapping("/upload-images/{roomTypeId}")
     @Transactional
-    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("roomTypeId") Long roomTypeId) throws IOException {
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<ResponseObject> uploadRoomImages(@RequestParam("images") List<MultipartFile> images, @PathVariable("roomTypeId") Long roomTypeId) {
         try {
             RoomTypeResponse roomImageResponses = roomImageService.uploadImages(images, roomTypeId);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseObject.builder()
@@ -185,14 +243,39 @@ public class RoomTypeController {
         try {
             List<RoomTypeResponse> roomTypeResponses = roomTypeService.filterRoomType(hotelId, luxury, singleBedroom, twinBedroom,
                     doubleBedroom, wardrobe, airConditioning, tv, wifi, toiletries, kitchen, minPrice, maxPrice);
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(roomTypeResponses)
-                    .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
-                    .build());
+            if (roomTypeResponses.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
+                        .status(HttpStatus.NOT_FOUND)
+                        .message(MessageKeys.NO_ROOMS_FOUND)
+                        .build());
+            } else {
+                return ResponseEntity.ok().body(ResponseObject.builder()
+                        .status(HttpStatus.OK)
+                        .data(roomTypeResponses)
+                        .message(MessageKeys.RETRIEVED_ROOM_TYPES_SUCCESSFULLY)
+                        .build());
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @PutMapping("/updateStatus/{roomTypeId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<ResponseObject> updateStatus(@PathVariable Long roomTypeId, @RequestBody RoomTypeStatus newStatus) {
+        try {
+            roomTypeService.updateStatus(roomTypeId, newStatus);
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .status(HttpStatus.OK)
+                    .message(MessageKeys.UPDATED_ROOM_STATUS_SUCCESSFULLY)
+                    .build());
+        } catch (DataNotFoundException | PermissionDenyException e) {
+            HttpStatus status = e instanceof DataNotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+            return ResponseEntity.status(status).body(ResponseObject.builder()
+                    .status(status)
                     .message(e.getMessage())
                     .build());
         }
