@@ -20,7 +20,7 @@ public class RoomType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Sử dụng LAZY để trì hoãn tải
     @JoinColumn(name = "type_id", nullable = false)
     private Type type;
 
@@ -39,12 +39,12 @@ public class RoomType {
     @Column(name = "room_type_name", nullable = false)
     private String roomTypeName;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL) // Sử dụng LAZY và CASCADE để quản lý phòng
     @JoinColumn(name = "room_type_id")
     private Set<RoomImage> roomImages;
 
     @NotEmpty(message = "At least one convenience must be selected")
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY) // Sử dụng LAZY để trì hoãn tải
     @JoinTable(
             name = "room_conveniences",
             joinColumns = @JoinColumn(name = "room_type_id"),
@@ -52,7 +52,7 @@ public class RoomType {
     )
     private Set<RoomConvenience> roomConveniences;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Sử dụng LAZY để trì hoãn tải
     @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 

@@ -49,14 +49,14 @@ public class BookingService implements IBookingService {
 
     @Transactional
     @Override
-    public Booking createBooking(BookingDTO bookingDTO) throws Exception {
+    public BookingResponse createBooking(BookingDTO bookingDTO) throws Exception {
         User user = null;
         Booking booking = null;
 
         if (bookingDTO.getUserId() != null) {
             user = IUserRepository.findById(bookingDTO.getUserId()).orElse(null);
             if (user == null) {
-                logger.error("User with ID: {} does not exist.", bookingDTO.getUserId());
+                logger.error("Người dùng với ID: {} không tồn tại.", bookingDTO.getUserId());
                 return null;
             }
         } else {
@@ -64,9 +64,9 @@ public class BookingService implements IBookingService {
         }
 
         booking = getBooking(bookingDTO, user);
-        booking.setExpirationDate(LocalDateTime.now().plusSeconds(300)); // Set expiration date to current time + 300 seconds
+        booking.setExpirationDate(LocalDateTime.now().plusSeconds(300)); // Đặt ngày hết hạn là thời gian hiện tại + 300 giây
 
-        // Save the booking first
+        // Lưu booking trước
         Booking savedBooking = bookingRepository.save(booking);
 
         List<BookingDetails> bookingDetails = new ArrayList<>();
@@ -77,9 +77,12 @@ public class BookingService implements IBookingService {
             Long roomTypeId = bookingDetailDTO.getRoomTypeId();
             RoomType roomType = roomTypeRepository.findById(roomTypeId).orElse(null);
             if (roomType == null) {
-                logger.error("Room type with ID: {} does not exist.", roomTypeId);
+                logger.error("Loại phòng với ID: {} không tồn tại.", roomTypeId);
                 return null;
             }
+
+            // Initialize lazy-loaded fields
+            roomType.getType().getId();
 
             bookingDetail.setRoomType(roomType);
             bookingDetail.setPrice(bookingDetailDTO.getPrice());
@@ -87,14 +90,24 @@ public class BookingService implements IBookingService {
             bookingDetail.setTotalMoney(bookingDetailDTO.getTotalMoney());
             bookingDetails.add(bookingDetail);
         }
-
+        savedBooking.setBookingDetails(bookingDetails);
         bookingDetailRepository.saveAll(bookingDetails);
 
-        // Schedule a task to delete the booking after 300 seconds if still PENDING
+        // Khởi tạo các bộ sưu tập nạp chậm
+        savedBooking.getBookingDetails().forEach(detail -> {
+            RoomType roomType = detail.getRoomType();
+            roomType.getRoomImages().size();
+            roomType.getRoomConveniences().size();
+            roomType.getType().getId(); // Initialize lazy-loaded field
+        });
+
+        // Lên lịch một tác vụ để xóa booking sau 300 giây nếu vẫn đang PENDING
         scheduler.schedule(() -> deleteBookingIfPending(savedBooking.getBookingId()), 300, TimeUnit.SECONDS);
 
-        return savedBooking;
+        // Chuyển đổi savedBooking thành BookingResponse
+        return BookingResponse.fromBooking(savedBooking);
     }
+
 
 
     @Async

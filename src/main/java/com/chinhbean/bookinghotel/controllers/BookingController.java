@@ -45,10 +45,9 @@ public class BookingController {
     }
     @PostMapping("/create-booking")
     public ResponseEntity<ResponseObject> createBooking(
-            @Valid  @RequestBody BookingDTO bookingDTO,
-            BindingResult result)
-            throws Exception{
-        if(result.hasErrors()) {
+            @Valid @RequestBody BookingDTO bookingDTO,
+            BindingResult result) throws Exception {
+        if (result.hasErrors()) {
             List<String> errorMessages = result.getFieldErrors()
                     .stream()
                     .map(FieldError::getDefaultMessage)
@@ -59,13 +58,14 @@ public class BookingController {
                             .status(HttpStatus.BAD_REQUEST)
                             .build());
         }
-        Booking bookingResponse = bookingService.createBooking(bookingDTO);
+        BookingResponse bookingResponse = bookingService.createBooking(bookingDTO);
         return ResponseEntity.ok().body(ResponseObject.builder()
                 .status(HttpStatus.OK)
                 .data(bookingResponse)
                 .message(MessageKeys.CREATE_BOOKING_SUCCESSFULLY)
                 .build());
     }
+
 
 
 

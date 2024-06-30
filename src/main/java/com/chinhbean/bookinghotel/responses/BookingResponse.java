@@ -1,5 +1,6 @@
 package com.chinhbean.bookinghotel.responses;
 
+import com.chinhbean.bookinghotel.dtos.BookingDetailDTO;
 import com.chinhbean.bookinghotel.entities.Booking;
 import com.chinhbean.bookinghotel.enums.BookingStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,48 +12,48 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class BookingResponse {
-    @JsonProperty("bookingId")
+    @JsonProperty("booking-id")
     private Long bookingId;
 
     @JsonProperty("user")
     private UserResponse user;
 
-    @JsonProperty("totalPrice")
+    @JsonProperty("total-price")
     private BigDecimal totalPrice;
 
-    @JsonProperty("checkInDate")
+    @JsonProperty("check-in-date")
     private LocalDate checkInDate;
 
-    @JsonProperty("checkOutDate")
+    @JsonProperty("check-out-date")
     private LocalDate checkOutDate;
 
     @JsonProperty("status")
     private BookingStatus status;
 
-    @JsonProperty("couponId")
+    @JsonProperty("coupon-id")
     private Long couponId;
 
     @JsonProperty("note")
     private String note;
 
-    @JsonProperty("bookingDate")
+    @JsonProperty("booking-date")
     private LocalDateTime bookingDate;
 
-    @JsonProperty("paymentMethod")
+    @JsonProperty("payment-method")
     private String paymentMethod;
 
-    @JsonProperty("expirationDate")
+    @JsonProperty("expiration-date")
     private LocalDateTime expirationDate;
 
-    @JsonProperty("extendExpirationDate")
-    private LocalDateTime extendExpirationDate;
+    @JsonProperty("booking-details")
+    private List<BookingDetailDTO> bookingDetails;
 
     public static BookingResponse fromBooking(Booking booking) {
         UserResponse userResponse = UserResponse.fromUser(booking.getUser());
@@ -69,6 +70,9 @@ public class BookingResponse {
                 .bookingDate(booking.getBookingDate())
                 .paymentMethod(booking.getPaymentMethod())
                 .expirationDate(booking.getExpirationDate())
+                .bookingDetails(booking.getBookingDetails().stream()
+                        .map(BookingDetailDTO::fromBookingDetail)
+                        .toList())
                 .build();
     }
 }

@@ -12,7 +12,7 @@ public interface IBookingService {
 
     Page<BookingResponse> getListBooking(String token, int page, int size) throws DataNotFoundException, PermissionDenyException;
 
-    Booking createBooking(BookingDTO bookingDTO) throws Exception;
+    BookingResponse createBooking(BookingDTO bookingDTO) throws Exception;
 
     BookingResponse getBookingDetail(Long bookingId) throws DataNotFoundException;
 
