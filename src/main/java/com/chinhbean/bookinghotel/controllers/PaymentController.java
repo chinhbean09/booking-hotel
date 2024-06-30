@@ -1,8 +1,8 @@
 package com.chinhbean.bookinghotel.controllers;
 
 import com.chinhbean.bookinghotel.dtos.PaymentDTO;
-import com.chinhbean.bookinghotel.responses.PaymentResponse;
-import com.chinhbean.bookinghotel.services.PaymentService;
+import com.chinhbean.bookinghotel.responses.payment.PaymentResponse;
+import com.chinhbean.bookinghotel.services.payment.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
