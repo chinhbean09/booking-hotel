@@ -105,10 +105,15 @@ public class BookingService implements IBookingService {
         return BookingResponse.fromBooking(savedBooking);
     }
 
+
     @Async
     public CompletableFuture<Void> deleteBookingIfPending(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId).orElse(null);
         if (booking != null && BookingStatus.PENDING.equals(booking.getStatus())) {
+            List<BookingDetails> bookingDetails = bookingDetailRepository.findByBookingId(bookingId);
+            for (BookingDetails bookingDetail : bookingDetails) {
+                roomTypeRepository.incrementRoomQuantity(bookingDetail.getRoomType().getId(), bookingDetail.getNumberOfRooms());
+            }
             bookingRepository.delete(booking);
             logger.info("Deleted expired booking with ID: {}", bookingId);
         }
