@@ -18,6 +18,8 @@ public interface IUserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByPhoneNumber(String phone);
 
+    Optional<User> findByFullName(String fullName);
+
     boolean existsByPhoneNumber(String phoneNumber);
 
     @Query("UPDATE User u SET u.avatar = ?2 WHERE u.id = ?1")

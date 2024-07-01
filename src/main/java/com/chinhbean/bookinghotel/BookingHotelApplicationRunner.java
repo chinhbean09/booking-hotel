@@ -27,14 +27,27 @@ public class BookingHotelApplicationRunner implements ApplicationRunner {
     @Value("${bookinghotel.admin.email}")
     private String email;
 
+    @Value("${bookinghotel.guest.email}")
+    private String guestEmail;
+
     @Value("${bookinghotel.admin.fullName}")
     private String fullName;
+
+    @Value("${bookinghotel.guest.fullName}")
+    private String guestFullName;
 
     @Value("${bookinghotel.admin.address}")
     private String address;
 
+    @Value("${bookinghotel.guest.address}")
+    private String guestAddress;
+
     @Value("${bookinghotel.admin.phoneNumber}")
     private String phoneNumber;
+
+    @Value("${bookinghotel.guest.phoneNumber}")
+    private String guestPhoneNumber;
+
 
     @Value("${bookinghotel.admin.gender}")
     private String gender;
@@ -49,6 +62,7 @@ public class BookingHotelApplicationRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         Optional<User> findAccountResult = IUserRepository.findByPhoneNumber(phoneNumber);
         Optional<Role> existRolePermission = IRoleRepository.findById((long) 1);
+        Optional<User> findAccountGuest = IUserRepository.findByPhoneNumber(guestPhoneNumber);
 
 
         Role AdminRole = Role.builder()
@@ -66,7 +80,6 @@ public class BookingHotelApplicationRunner implements ApplicationRunner {
 
         if (existRolePermission.isEmpty()) {
             System.out.println("There is no role Initialing...!");
-
         }
 
         IRoleRepository.save(AdminRole);
@@ -91,6 +104,24 @@ public class BookingHotelApplicationRunner implements ApplicationRunner {
             System.out.println("Admin initialized!");
         }
 
-        System.out.println("Hello There I'm System Manager!");
+        if (findAccountGuest.isEmpty()) {
+            String encodedPassword = passwordEncoder.encode(password);
+
+            User user = new User();
+            user.setEmail(guestEmail);
+            user.setGender(gender);
+            user.setAddress(guestAddress);
+            user.setPassword(encodedPassword);
+            user.setActive(active);
+            user.setFullName(guestFullName);
+            user.setPhoneNumber(guestPhoneNumber);
+            user.setRole(CustomerRole);
+            user.setActive(true);
+            user.setDateOfBirth(new Date());
+            IUserRepository.save(user);
+            System.out.println("Guest initialized!");
+        }
+
+        System.out.println("Hello, I'm System Manager!");
     }
 }

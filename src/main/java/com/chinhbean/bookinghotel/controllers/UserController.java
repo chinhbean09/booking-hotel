@@ -11,12 +11,12 @@ import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.repositories.IUserRepository;
-import com.chinhbean.bookinghotel.responses.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
-import com.chinhbean.bookinghotel.responses.UserListResponse;
-import com.chinhbean.bookinghotel.responses.UserResponse;
-import com.chinhbean.bookinghotel.services.ITokenService;
-import com.chinhbean.bookinghotel.services.IUserService;
+import com.chinhbean.bookinghotel.responses.user.LoginResponse;
+import com.chinhbean.bookinghotel.responses.user.UserListResponse;
+import com.chinhbean.bookinghotel.responses.user.UserResponse;
+import com.chinhbean.bookinghotel.services.token.ITokenService;
+import com.chinhbean.bookinghotel.services.user.IUserService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import com.chinhbean.bookinghotel.utils.ValidationUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,8 +31,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -133,7 +131,9 @@ public class UserController {
                 .token(jwtToken.getToken())
                 .tokenType(jwtToken.getTokenType())
                 .refreshToken(jwtToken.getRefreshToken())
-                .username(userDetail.getUsername())
+                .fullName(userDetail.getFullName())
+                .email(userDetail.getEmail())
+                .phoneNumber(userDetail.getPhoneNumber())
                 .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                 .id(userDetail.getId())
                 .build();
@@ -296,14 +296,17 @@ public class UserController {
             User userDetail = userService.getUserDetailsFromRefreshToken(refreshTokenDTO.getRefreshToken());
             Token jwtToken = tokenService.refreshToken(refreshTokenDTO.getRefreshToken(), userDetail);
             return ResponseEntity.ok(LoginResponse.builder()
-                    .message("Refresh token successfully")
+                    .message(MessageKeys.LOGIN_SUCCESSFULLY)
                     .token(jwtToken.getToken())
                     .tokenType(jwtToken.getTokenType())
                     .refreshToken(jwtToken.getRefreshToken())
-                    .username(userDetail.getUsername())
+                    .fullName(userDetail.getFullName())
+                    .email(userDetail.getEmail())
+                    .phoneNumber(userDetail.getPhoneNumber())
                     .roles(userDetail.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                     .id(userDetail.getId())
                     .build());
+
         } catch (Exception e) {
             String errorMessage = "Error occurred during token refresh: " + e.getMessage();
             LoginResponse errorResponse = LoginResponse.builder()
@@ -343,7 +346,7 @@ public class UserController {
                     .token(jwtToken.getToken())
                     .tokenType(jwtToken.getTokenType())
                     .refreshToken(jwtToken.getRefreshToken())
-                    .username(user.getUsername())
+                    .fullName(user.getUsername())
                     .roles(user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                     .id(user.getId())
                     .build();

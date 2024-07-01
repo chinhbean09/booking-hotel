@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -52,11 +53,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         if ((phoneNumber != null || email != null)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             User userDetails;
-            if (email != null) {
-                userDetails = (User) userDetailsService.loadUserByUsername(email);
-            } else {
-                userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
-            }
+            userDetails = (User) userDetailsService.loadUserByUsername(Objects.requireNonNullElse(email, phoneNumber));
             if (jwtTokenUtils.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
@@ -81,7 +78,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of(String.format("%s/room-types/filter/**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/room-types/get-room/**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/room-types/get-all-room-status/**", apiPrefix), "GET"),
-                Pair.of(String.format("%s/users/oauth2/success", apiPrefix), "GET"),
+                Pair.of(String.format("%s/bookings/create-booking", apiPrefix), "POST"),
+                Pair.of(String.format("%s/payment/**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/users/oauth2/token", apiPrefix), "GET"),
                 Pair.of("/api-docs", "GET"),
                 Pair.of("/api-docs/**", "GET"),
                 Pair.of("/swagger-resources", "GET"),
@@ -94,6 +93,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of("/oauth2/**", "GET"),
                 Pair.of("/login", "GET"),
                 Pair.of("/login-error", "GET")
+
         );
         String requestPath = request.getServletPath();
         String requestMethod = request.getMethod();
