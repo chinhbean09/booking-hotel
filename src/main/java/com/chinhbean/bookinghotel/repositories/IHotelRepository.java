@@ -38,4 +38,34 @@ public interface IHotelRepository extends JpaRepository<Hotel, Long>, JpaSpecifi
             @Param("checkOut") LocalDate checkOut,
             @Param("capacity") int capacity,
             Pageable pageable);
+
+
+    @Query("SELECT h FROM Hotel h " +
+            "JOIN FETCH h.conveniences c " +
+            "JOIN FETCH h.roomTypes rt " +
+            "JOIN FETCH rt.type t " +
+            "JOIN FETCH rt.roomConveniences rc " +
+            "JOIN FETCH rt.roomImages " +
+            "JOIN FETCH h.location l " +
+            "WHERE (h.rating = :rating OR :rating IS NULL) AND " +
+            "(c.freeBreakfast = :freeBreakfast OR :freeBreakfast IS NULL) AND " +
+            "(c.pickUpDropOff = :pickUpDropOff OR :pickUpDropOff IS NULL) AND " +
+            "(c.restaurant = :restaurant OR :restaurant IS NULL) AND " +
+            "(c.bar = :bar OR :bar IS NULL) AND " +
+            "(c.pool = :pool OR :pool IS NULL) AND " +
+            "(c.freeInternet = :freeInternet OR :freeInternet IS NULL) AND " +
+            "(c.reception24h = :reception24h OR :reception24h IS NULL) AND " +
+            "(c.laundry = :laundry OR :laundry IS NULL) AND " +
+            "h.status = 'ACTIVE'")
+    Page<Hotel> filterHotelWithConvenience(Integer rating,
+                                           Boolean freeBreakfast,
+                                           Boolean pickUpDropOff,
+                                           Boolean restaurant,
+                                           Boolean bar,
+                                           Boolean pool,
+                                           Boolean freeInternet,
+                                           Boolean reception24h,
+                                           Boolean laundry,
+                                           Pageable pageable);
+
 }
