@@ -98,6 +98,11 @@ public class HotelController {
                     .status(HttpStatus.NOT_FOUND)
                     .message(MessageKeys.NO_HOTELS_FOUND)
                     .build());
+        } catch (PermissionDenyException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseObject.builder()
+                    .status(HttpStatus.FORBIDDEN)
+                    .message(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_VIEW_HOTEL)
+                    .build());
         }
     }
 

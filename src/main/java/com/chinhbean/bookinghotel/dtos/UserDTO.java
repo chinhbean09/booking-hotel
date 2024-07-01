@@ -53,6 +53,6 @@ public class UserDTO {
     private int facebookAccountId;
 
     @JsonProperty("google_account_id")
-    private int googleAccountId;
+    private String googleAccountId;
 
 }

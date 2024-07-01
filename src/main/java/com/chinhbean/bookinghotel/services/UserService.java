@@ -25,30 +25,25 @@ import com.chinhbean.bookinghotel.responses.UserResponse;
 import com.chinhbean.bookinghotel.services.sendmails.MailService;
 import com.chinhbean.bookinghotel.utils.MailTemplate;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
-import io.micrometer.common.util.StringUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -68,7 +63,6 @@ public class UserService implements IUserService {
     private final AmazonS3 amazonS3;
     private final MailService mailService;
     private final ITokenRepository ITokenRepository;
-    private final OAuth2AuthorizedClientService authorizedClientService;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
@@ -104,7 +98,7 @@ public class UserService implements IUserService {
         newUser.setRole(role);
 
         // Kiểm tra nếu có accountId, không yêu cầu password
-        if (userDTO.getFacebookAccountId() == 0 && userDTO.getGoogleAccountId() == 0) {
+        if (userDTO.getFacebookAccountId() == 0) {
             String password = userDTO.getPassword();
             String encodedPassword = passwordEncoder.encode(password);
             newUser.setPassword(encodedPassword);
@@ -132,8 +126,11 @@ public class UserService implements IUserService {
         }
         User existingUser = optionalUser.get();
 
-        if (existingUser.getFacebookAccountId() == 0
-                && existingUser.getGoogleAccountId() == 0) {
+        if (existingUser.getGoogleAccountId() != null && !existingUser.getGoogleAccountId().isEmpty()) {
+            return jwtTokenUtils.generateToken(existingUser);
+        }
+
+        if (existingUser.getFacebookAccountId() == 0) {
             if (!passwordEncoder.matches(userLoginDTO.getPassword(), existingUser.getPassword())) {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
@@ -308,61 +305,26 @@ public class UserService implements IUserService {
         return users.stream().map(UserResponse::fromUser).toList();
     }
 
+    @Transactional
     @Override
-    public String handleGoogleLogin(OAuth2AuthenticationToken authentication) throws Exception {
-        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
-                authentication.getAuthorizedClientRegistrationId(),
-                authentication.getName());
-
-        String userInfoEndpointUri = authorizedClient.getClientRegistration()
-                .getProviderDetails().getUserInfoEndpoint().getUri();
-
-        if (!StringUtils.isEmpty(userInfoEndpointUri)) {
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + authorizedClient.getAccessToken().getTokenValue());
-
-            HttpEntity<String> entity = new HttpEntity<>("", headers);
-            ResponseEntity<Map<String, Object>> responses = restTemplate.exchange(userInfoEndpointUri, HttpMethod.GET, entity, new ParameterizedTypeReference<>() {
-            });
-            Map<String, Object> userAttributes = responses.getBody();
-            assert userAttributes != null;
-            String email = (String) userAttributes.get("email");
-
-            // Kiểm tra xem người dùng đã tồn tại trong cơ sở dữ liệu chưa
-            Optional<User> user = IUserRepository.findByEmail(email);
-            // Nếu không, tạo một tài khoản mới với mật khẩu mặc định
-            User newUser = new User();
-            newUser.setEmail(email);
-            newUser.setPassword(passwordEncoder.encode("12345")); // Mật khẩu mặc định, nên được mã hóa
-            IUserRepository.save(newUser);
-
-            // Gửi email thông báo cho người dùng và yêu cầu họ thay đổi mật khẩu
-            sendPasswordResetLink(email);
-
-            // Tạo và trả về token đăng nhập
-            assert user.orElse(null) != null;
-            return jwtTokenUtils.generateToken(user.orElse(null));
+    public User findOrCreateUserFromOAuth2(OAuth2User oauth2User) {
+        String email = oauth2User.getAttribute("email");
+        logger.info("Attempting to find or create user with email: {}", email);
+        User user = IUserRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            user = User.builder()
+                    .email(email)
+                    .fullName(oauth2User.getAttribute("name"))
+                    .googleAccountId(oauth2User.getAttribute("sub"))
+                    .active(true)
+                    .role(IRoleRepository.findByRoleName(Role.CUSTOMER))
+                    .build();
+            user = IUserRepository.save(user);
+        } else {
+            user.setFullName(oauth2User.getAttribute("name"));
+            user.setGoogleAccountId(oauth2User.getAttribute("sub"));
+            user = IUserRepository.save(user);
         }
-
-        throw new Exception("Failed to login with Google");
-    }
-
-    private void sendPasswordResetLink(String email) {
-        try {
-            DataMailDTO dataMail = new DataMailDTO();
-            dataMail.setTo(email);
-            dataMail.setSubject(MailTemplate.SEND_MAIL_SUBJECT.CHANGE_PASSWORD);
-
-            Map<String, Object> props = new HashMap<>();
-            props.put("email", email);
-            props.put("password", "12345");
-            props.put("link", "http://localhost:8080/api/v1/forgot-password/change-password/{email}");
-            dataMail.setProps(props);
-
-            mailService.sendHtmlMail(dataMail, MailTemplate.SEND_MAIL_TEMPLATE.CHANGE_PASSWORD);
-        } catch (MessagingException exp) {
-            logger.error("Failed to send registration success email", exp);
-        }
+        return user;
     }
 }

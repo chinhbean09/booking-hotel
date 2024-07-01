@@ -83,13 +83,22 @@ public class HotelService implements IHotelService {
 
     @Transactional
     @Override
-    public HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException {
+    public HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException, PermissionDenyException {
         logger.info("Fetching details for hotel with ID: {}", hotelId);
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> {
                     logger.error("Hotel with ID: {} does not exist.", hotelId);
                     return new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.HOTEL_DOES_NOT_EXISTS));
                 });
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
+        // Check if the current user is the owner of the hotel or an admin
+        if (!currentUser.getId().equals(hotel.getPartner().getId()) && !currentUser.getRole().getRoleName().equals(Role.ADMIN)) {
+            throw new PermissionDenyException(localizationUtils.getLocalizedMessage(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_VIEW_HOTEL));
+        }
+
         logger.info("Successfully retrieved details for hotel with ID: {}", hotelId);
         return HotelResponse.fromHotel(hotel);
     }
@@ -117,7 +126,7 @@ public class HotelService implements IHotelService {
         location.setAddress(hotelDTO.getLocation().getAddress());
         location.setProvince(hotelDTO.getLocation().getProvince());
         Set<Convenience> conveniences = hotelDTO.getConveniences().stream()
-                .map(this::convertToConvenienceEntity)
+                .map(this::createNewConvenience)
                 .collect(Collectors.toSet());
         Hotel hotel = Hotel.builder()
                 .hotelName(hotelDTO.getHotelName())

@@ -36,7 +36,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         if (isBypassToken(request)) {
-            filterChain.doFilter(request, response); //enable bypass
+            filterChain.doFilter(request, response);
             return;
         }
         final String authHeader = request.getHeader("Authorization");
@@ -48,16 +48,23 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
         final String token = authHeader.substring(7);
         final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
-        if (phoneNumber != null
+        final String email = jwtTokenUtils.extractEmail(token);
+        if ((phoneNumber != null || email != null)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
+            User userDetails;
+            if (email != null) {
+                userDetails = (User) userDetailsService.loadUserByUsername(email);
+            } else {
+                userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
+            }
             if (jwtTokenUtils.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }
-        filterChain.doFilter(request, response); //enable bypass
+        filterChain.doFilter(request, response);
     }
 
 
@@ -74,6 +81,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of(String.format("%s/room-types/filter/**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/room-types/get-room/**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/room-types/get-all-room-status/**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/users/oauth2/success", apiPrefix), "GET"),
                 Pair.of("/api-docs", "GET"),
                 Pair.of("/api-docs/**", "GET"),
                 Pair.of("/swagger-resources", "GET"),
@@ -82,7 +90,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of("/configuration/security", "GET"),
                 Pair.of("/swagger-ui/**", "GET"),
                 Pair.of("/swagger-ui.html", "GET"),
-                Pair.of("/swagger-ui/index.html", "GET")
+                Pair.of("/swagger-ui/index.html", "GET"),
+                Pair.of("/oauth2/**", "GET"),
+                Pair.of("/login", "GET"),
+                Pair.of("/login-error", "GET")
         );
         String requestPath = request.getServletPath();
         String requestMethod = request.getMethod();

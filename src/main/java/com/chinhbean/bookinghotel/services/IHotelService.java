@@ -20,7 +20,7 @@ public interface IHotelService {
 
     Page<HotelResponse> getPartnerHotels(int page, int size, User userDetails);
 
-    HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException;
+    HotelResponse getHotelDetail(Long hotelId) throws DataNotFoundException, PermissionDenyException;
 
     HotelResponse createHotel(HotelDTO hotelDTO) throws DataNotFoundException, PermissionDenyException;
 

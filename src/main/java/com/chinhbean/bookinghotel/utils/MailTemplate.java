@@ -6,7 +6,7 @@ public class MailTemplate {
 
         public final static String OTP_SEND = "MÃ OTP XÁC THỰC";
 
-        public final static String CHANGE_PASSWORD = "ĐỔI MẬT KHẨU";
+        public final static String NEW_PASSWORD = "YOUR NEW PASSWORD";
     }
 
     public final static class SEND_MAIL_TEMPLATE {
@@ -14,6 +14,6 @@ public class MailTemplate {
 
         public final static String OTP_SEND_TEMPLATE = "otp-sent";
 
-        public final static String CHANGE_PASSWORD = "change-password";
+        public final static String NEW_PASSWORD = "your-new-password";
     }
 }

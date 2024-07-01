@@ -31,7 +31,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -118,23 +119,14 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<ResponseObject> login(
             @Valid @RequestBody UserLoginDTO userLoginDTO,
-            HttpServletRequest request,
-            OAuth2AuthenticationToken authentication) throws Exception {
-
-        // Xử lý đăng nhập thông thường
+            HttpServletRequest request
+    ) throws Exception {
         String token = userService.login(userLoginDTO);
         String userAgent = request.getHeader("User-Agent");
 
         User userDetail = userService.getUserDetailsFromToken(token);
 
         Token jwtToken = tokenService.addToken(userDetail, token, isMobileDevice(userAgent));
-
-        // Xử lý đăng nhập bằng Google
-        if (authentication != null) {
-            token = userService.handleGoogleLogin(authentication);
-            userDetail = userService.getUserDetailsFromToken(token);
-            jwtToken = tokenService.addToken(userDetail, token, isMobileDevice(userAgent));
-        }
 
         LoginResponse loginResponse = LoginResponse.builder()
                 .message(MessageKeys.LOGIN_SUCCESSFULLY)
@@ -337,4 +329,30 @@ public class UserController {
         }
     }
 
+    @GetMapping("/oauth2/token")
+    public ResponseEntity<LoginResponse> handleOAuth2Token(
+            @RequestParam String token,
+            HttpServletRequest request) {
+        try {
+            User user = userService.getUserDetailsFromToken(token);
+            String userAgent = request.getHeader("User-Agent");
+            Token jwtToken = tokenService.addToken(user, token, isMobileDevice(userAgent));
+
+            LoginResponse loginResponse = LoginResponse.builder()
+                    .message("OAuth2 login successful")
+                    .token(jwtToken.getToken())
+                    .tokenType(jwtToken.getTokenType())
+                    .refreshToken(jwtToken.getRefreshToken())
+                    .username(user.getUsername())
+                    .roles(user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
+                    .id(user.getId())
+                    .build();
+            return ResponseEntity.ok(loginResponse);
+        } catch (Exception e) {
+            LoginResponse errorResponse = LoginResponse.builder()
+                    .message("OAuth2 login failed: " + e.getMessage())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }
