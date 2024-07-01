@@ -4,7 +4,7 @@ import com.chinhbean.bookinghotel.entities.RoomType;
 import com.chinhbean.bookinghotel.enums.RoomTypeStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.repositories.IRoomTypeRepository;
-import com.chinhbean.bookinghotel.services.RoomTypeService;
+import com.chinhbean.bookinghotel.services.room.RoomTypeService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
