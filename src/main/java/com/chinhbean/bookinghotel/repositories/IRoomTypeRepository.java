@@ -25,6 +25,7 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
     @Query("SELECT DISTINCT rt FROM RoomType rt " +
             "LEFT JOIN FETCH rt.type " +
             "LEFT JOIN FETCH rt.roomConveniences " +
+            "LEFT JOIN FETCH rt.roomImages " +
             "WHERE rt.hotel.id = :hotelId " +
             "AND NOT EXISTS (" +
             "  SELECT bd FROM BookingDetails bd " +
@@ -42,8 +43,11 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
     @EntityGraph(attributePaths = {"type", "roomConveniences", "roomImages"})
     Optional<RoomType> findWithTypesAndRoomConveniencesById(Long id);
 
-    @Query("SELECT rt FROM RoomType rt JOIN rt.type t JOIN rt.roomConveniences rc WHERE " +
-            "rt.hotel.id = :hotelId AND " +
+    @Query("SELECT DISTINCT rt FROM RoomType rt " +
+            "LEFT JOIN FETCH rt.type t " +
+            "LEFT JOIN FETCH rt.roomConveniences rc " +
+            "LEFT JOIN FETCH rt.roomImages " +
+            "WHERE rt.hotel.id = :hotelId AND " +
             "(t.luxury = :luxury OR :luxury IS NULL) AND " +
             "(t.singleBedroom = :singleBedroom OR :singleBedroom IS NULL) AND " +
             "(t.twinBedroom = :twinBedroom OR :twinBedroom IS NULL) AND " +
@@ -73,9 +77,11 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
             @Param("maxPrice") Double maxPrice
     );
 
+
+    @Query("SELECT DISTINCT r FROM RoomType r LEFT JOIN FETCH r.type LEFT JOIN FETCH r.roomConveniences LEFT JOIN FETCH r.roomImages WHERE r.hotel.id = :hotelId AND r.status = :roomTypeStatus")
     Page<RoomType> findAllByStatusAndHotelId(RoomTypeStatus roomTypeStatus, Pageable pageable, Long hotelId);
 
-    @Query("SELECT DISTINCT r FROM RoomType r LEFT JOIN FETCH r.type LEFT JOIN FETCH r.roomConveniences WHERE r.hotel.id = :hotelId")
+    @Query("SELECT DISTINCT r FROM RoomType r LEFT JOIN FETCH r.type LEFT JOIN FETCH r.roomConveniences LEFT JOIN FETCH r.roomImages WHERE r.hotel.id = :hotelId")
     Page<RoomType> findWithTypesAndRoomConveniencesByHotelId(Long hotelId, Pageable pageable);
 
     @Modifying
