@@ -125,11 +125,8 @@ public class UserService implements IUserService {
         }
         User existingUser = optionalUser.get();
 
-        if (existingUser.getGoogleAccountId() != null && !existingUser.getGoogleAccountId().isEmpty()) {
-            return jwtTokenUtils.generateToken(existingUser);
-        }
-
-        if (existingUser.getFacebookAccountId() == 0) {
+        if (existingUser.getFacebookAccountId() == 0
+                && existingUser.getGoogleAccountId().isEmpty()) {
             if (!passwordEncoder.matches(userLoginDTO.getPassword(), existingUser.getPassword())) {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }

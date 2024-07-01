@@ -279,8 +279,7 @@ public class HotelService implements IHotelService {
         if (laundry != null) {
             spec = spec.and(HotelSpecification.hasLaundry(laundry));
         }
-        Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
-        return hotels.map(HotelResponse::fromHotel);
+        return hotelRepository.findAll(spec, pageable).map(HotelResponse::fromHotel);
     }
 
     @Override
