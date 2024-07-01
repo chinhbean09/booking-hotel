@@ -18,13 +18,11 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @GetMapping("/vn-pay")
-    @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER','ROLE_ADMIN')")
     public PaymentResponse<PaymentDTO.VNPayResponse> pay(HttpServletRequest request) {
         return new PaymentResponse<>(HttpStatus.OK, "Success", paymentService.createVnPayPayment(request));
     }
 
     @GetMapping("/vn-pay-callback")
-    @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER','ROLE_ADMIN')")
     public PaymentResponse<PaymentDTO.VNPayResponse> payCallbackHandler(HttpServletRequest request) {
         String status = request.getParameter("vnp_ResponseCode");
         if (status.equals("00")) {
