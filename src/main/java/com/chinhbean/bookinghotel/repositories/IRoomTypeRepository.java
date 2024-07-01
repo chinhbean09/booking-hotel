@@ -89,5 +89,9 @@ public interface IRoomTypeRepository extends JpaRepository<RoomType, Long> {
     @Query("UPDATE RoomType r SET r.numberOfRoom = r.numberOfRoom - :numberOfRooms WHERE r.id = :roomTypeId AND r.numberOfRoom >= :numberOfRooms")
     int decrementRoomQuantity(Long roomTypeId, int numberOfRooms);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE RoomType r SET r.numberOfRoom = r.numberOfRoom + :numberOfRooms WHERE r.id = :roomTypeId")
+    int incrementRoomQuantity(Long roomTypeId, int numberOfRooms);
 
 }
