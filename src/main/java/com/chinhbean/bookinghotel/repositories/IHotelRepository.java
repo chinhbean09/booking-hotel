@@ -41,12 +41,12 @@ public interface IHotelRepository extends JpaRepository<Hotel, Long>, JpaSpecifi
 
 
     @Query("SELECT h FROM Hotel h " +
-            "JOIN FETCH h.conveniences c " +
-            "JOIN FETCH h.roomTypes rt " +
-            "JOIN FETCH rt.type t " +
-            "JOIN FETCH rt.roomConveniences rc " +
-            "JOIN FETCH rt.roomImages " +
-            "JOIN FETCH h.location l " +
+            "LEFT JOIN FETCH h.conveniences c " +
+            "LEFT JOIN FETCH h.roomTypes rt " +
+            "LEFT JOIN FETCH rt.type t " +
+            "LEFT JOIN FETCH rt.roomConveniences rc " +
+            "LEFT JOIN FETCH rt.roomImages " +
+            "LEFT JOIN FETCH h.location l " +
             "WHERE (h.rating = :rating OR :rating IS NULL) AND " +
             "(c.freeBreakfast = :freeBreakfast OR :freeBreakfast IS NULL) AND " +
             "(c.pickUpDropOff = :pickUpDropOff OR :pickUpDropOff IS NULL) AND " +
