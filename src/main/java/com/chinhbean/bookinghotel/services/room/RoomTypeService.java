@@ -100,6 +100,14 @@ public class RoomTypeService implements IRoomTypeService {
             roomType.setRoomPrice(roomTypeDTO.getRoomPrice());
         }
 
+        if (roomTypeDTO.getRoomTypeName() != null) {
+            roomType.setRoomTypeName(roomTypeDTO.getRoomTypeName());
+        }
+
+        if (roomTypeDTO.getCapacityPerRoom() != 0 && roomTypeDTO.getCapacityPerRoom() > 0) {
+            roomType.setCapacityPerRoom(roomTypeDTO.getCapacityPerRoom());
+        }
+
         if (roomTypeDTO.getTypes() != null) {
             TypeRoomDTO typeRoomDTO = roomTypeDTO.getTypes(); // Assuming getTypes() returns a single TypeRoomDTO object
             Type type = convertToTypeEntity(typeRoomDTO);
