@@ -240,37 +240,10 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public Page<HotelResponse> filterHotelsByConveniencesAndRating(Integer rating, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) {
+    public Page<HotelResponse> filterHotelsByConveniencesAndRating(Integer rating, Boolean freeBreakfast, Boolean pickUpDropOff, Boolean restaurant, Boolean bar, Boolean pool, Boolean freeInternet, Boolean reception24h, Boolean laundry, int page, int size) throws DataNotFoundException {
         Pageable pageable = PageRequest.of(page, size);
-        Specification<Hotel> spec = Specification.where(HotelSpecification.hasStatus(HotelStatus.ACTIVE));
-        if (rating != null) {
-            spec = spec.and(HotelSpecification.hasRating(rating));
-        }
-        if (freeBreakfast != null) {
-            spec = spec.and(HotelSpecification.hasFreeBreakfast(freeBreakfast));
-        }
-        if (pickUpDropOff != null) {
-            spec = spec.and(HotelSpecification.hasPickUpDropOff(pickUpDropOff));
-        }
-        if (restaurant != null) {
-            spec = spec.and(HotelSpecification.hasRestaurant(restaurant));
-        }
-        if (bar != null) {
-            spec = spec.and(HotelSpecification.hasBar(bar));
-        }
-        if (pool != null) {
-            spec = spec.and(HotelSpecification.hasPool(pool));
-        }
-        if (freeInternet != null) {
-            spec = spec.and(HotelSpecification.hasFreeInternet(freeInternet));
-        }
-        if (reception24h != null) {
-            spec = spec.and(HotelSpecification.hasReception24h(reception24h));
-        }
-        if (laundry != null) {
-            spec = spec.and(HotelSpecification.hasLaundry(laundry));
-        }
-        return hotelRepository.findAll(spec, pageable).map(HotelResponse::fromHotel);
+        Page<Hotel> hotels = hotelRepository.filterHotelWithConvenience(rating, freeBreakfast, pickUpDropOff, restaurant, bar, pool, freeInternet, reception24h, laundry, pageable);
+        return hotels.map(HotelResponse::fromHotel);
     }
 
     @Override

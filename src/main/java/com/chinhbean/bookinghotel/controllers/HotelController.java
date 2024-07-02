@@ -244,7 +244,7 @@ public class HotelController {
         return getHotelsResponse(hotelService.findHotelsByProvinceAndDatesAndCapacity(province, numPeople, checkInDate, checkOutDate, page, size));
     }
 
-    @PostMapping("/filter")
+    @GetMapping("/filter")
     public ResponseEntity<ResponseObject> filterHotels(@RequestBody HotelFilterDTO filterDTO) {
         try {
             if (filterDTO.getPage() < 0 || filterDTO.getSize() <= 0) {
