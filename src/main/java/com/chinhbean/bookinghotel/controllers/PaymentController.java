@@ -4,12 +4,15 @@ import com.chinhbean.bookinghotel.dtos.PaymentDTO;
 import com.chinhbean.bookinghotel.responses.payment.PaymentResponse;
 import com.chinhbean.bookinghotel.services.payment.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("api/v1/payment")
@@ -36,16 +39,16 @@ public class PaymentController {
     }
 
     @GetMapping("/vn-pay-callback")
-    public PaymentResponse<PaymentDTO.VNPayResponse> payCallbackHandler(HttpServletRequest request) {
+    public void payCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String status = request.getParameter("vnp_ResponseCode");
         String bookingId = request.getParameter("vnp_TxnRef");
 
         if ("00".equals(status)) {
             paymentService.updatePaymentTransactionStatus(bookingId, true);
-            return new PaymentResponse<>(HttpStatus.OK, "Success", new PaymentDTO.VNPayResponse("00", "Success", ""));
+            response.sendRedirect("http://localhost:3000/payment-return/success");
         } else {
             paymentService.updatePaymentTransactionStatus(bookingId, false);
-            return new PaymentResponse<>(HttpStatus.BAD_REQUEST, "Failed", null);
+            response.sendRedirect("http://localhost:3000/payment-return/failed");
         }
     }
 }

@@ -75,6 +75,12 @@ public class BookingService implements IBookingService {
             RoomType roomType = roomTypeRepository.findById(roomTypeId)
                     .orElseThrow(() -> new IllegalArgumentException("Room type with ID: " + roomTypeId + " does not exist."));
 
+            if (bookingDetailDTO.getNumberOfRooms() < 1) {
+
+                throw new IllegalArgumentException("Number of rooms must be greater than 0");
+            }
+
+
             // Decrease room quantity
             int updatedRows = roomTypeRepository.decrementRoomQuantity(roomTypeId, bookingDetailDTO.getNumberOfRooms());
             if (updatedRows == 0) {
