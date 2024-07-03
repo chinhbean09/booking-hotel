@@ -41,4 +41,6 @@ public interface IUserService {
     User getUserDetailsFromRefreshToken(String refreshToken) throws Exception;
 
     List<UserResponse> getAllUsers(Long roleId);
+
+    User processGoogleUser(String email, String name, String googleId);
 }

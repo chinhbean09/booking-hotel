@@ -5,8 +5,8 @@ import com.chinhbean.bookinghotel.entities.Booking;
 import com.chinhbean.bookinghotel.enums.BookingStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
-import com.chinhbean.bookinghotel.responses.booking.BookingResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
+import com.chinhbean.bookinghotel.responses.booking.BookingResponse;
 import com.chinhbean.bookinghotel.services.booking.IBookingService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.validation.Valid;
@@ -43,45 +43,46 @@ public class BookingController {
                     .build());
         }
     }
-        @PostMapping("/create-booking")
-        public ResponseEntity<ResponseObject> createBooking(
-                @Valid @RequestBody BookingDTO bookingDTO,
-                BindingResult result) {
-            try {
-                if (result.hasErrors()) {
-                    List<String> errorMessages = result.getFieldErrors()
-                            .stream()
-                            .map(FieldError::getDefaultMessage)
-                            .toList();
-                    return ResponseEntity.badRequest().body(
-                            ResponseObject.builder()
-                                    .message(String.join(";", errorMessages))
-                                    .status(HttpStatus.BAD_REQUEST)
-                                    .build());
-                }
-                BookingResponse bookingResponse = bookingService.createBooking(bookingDTO);
-                return ResponseEntity.ok().body(
+
+    @PostMapping("/create-booking")
+    public ResponseEntity<ResponseObject> createBooking(
+            @Valid @RequestBody BookingDTO bookingDTO,
+            BindingResult result) {
+        try {
+            if (result.hasErrors()) {
+                List<String> errorMessages = result.getFieldErrors()
+                        .stream()
+                        .map(FieldError::getDefaultMessage)
+                        .toList();
+                return ResponseEntity.badRequest().body(
                         ResponseObject.builder()
-                                .status(HttpStatus.OK)
-                                .data(bookingResponse)
-                                .message(MessageKeys.CREATE_BOOKING_SUCCESSFULLY)
-                                .build());
-            } catch (IllegalArgumentException | IllegalStateException e) {
-                // Xử lý các loại exception ném ra từ BookingService
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                        ResponseObject.builder()
-                                .message(e.getMessage())
-                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .build());
-            } catch (Exception e) {
-                // Xử lý các exception khác
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                        ResponseObject.builder()
-                                .message("Failed to create booking.")
-                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .message(String.join(";", errorMessages))
+                                .status(HttpStatus.BAD_REQUEST)
                                 .build());
             }
+            BookingResponse bookingResponse = bookingService.createBooking(bookingDTO);
+            return ResponseEntity.ok().body(
+                    ResponseObject.builder()
+                            .status(HttpStatus.OK)
+                            .data(bookingResponse)
+                            .message(MessageKeys.CREATE_BOOKING_SUCCESSFULLY)
+                            .build());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // Xử lý các loại exception ném ra từ BookingService
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ResponseObject.builder()
+                            .message(e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .build());
+        } catch (Exception e) {
+            // Xử lý các exception khác
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ResponseObject.builder()
+                            .message("Failed to create booking.")
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .build());
         }
+    }
 
     @GetMapping("/get-bookings")
     public ResponseEntity<ResponseObject> getListBookings(@RequestHeader("Authorization") String authHeader,

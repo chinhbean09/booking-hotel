@@ -19,9 +19,14 @@ import com.chinhbean.bookinghotel.services.token.ITokenService;
 import com.chinhbean.bookinghotel.services.user.IUserService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import com.chinhbean.bookinghotel.utils.ValidationUtils;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -51,6 +56,9 @@ public class UserController {
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
     private final IUserRepository IUserRepository;
+
+    @Value("${google.client-id}")
+    private String googleClientId;
 
     @GetMapping("/generate-secret-key")
     public ResponseEntity<?> generateSecretKey() {
@@ -333,24 +341,39 @@ public class UserController {
     }
 
     @GetMapping("/oauth2/token")
-    public ResponseEntity<LoginResponse> handleOAuth2Token(
-            @RequestParam String token,
-            HttpServletRequest request) {
+    public ResponseEntity<LoginResponse> handleOAuth2Token(@RequestParam String token, HttpServletRequest request) {
         try {
-            User user = userService.getUserDetailsFromToken(token);
-            String userAgent = request.getHeader("User-Agent");
-            Token jwtToken = tokenService.addToken(user, token, isMobileDevice(userAgent));
-
-            LoginResponse loginResponse = LoginResponse.builder()
-                    .message("OAuth2 login successful")
-                    .token(jwtToken.getToken())
-                    .tokenType(jwtToken.getTokenType())
-                    .refreshToken(jwtToken.getRefreshToken())
-                    .fullName(user.getUsername())
-                    .roles(user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
-                    .id(user.getId())
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    .setAudience(Collections.singletonList(googleClientId))
                     .build();
-            return ResponseEntity.ok(loginResponse);
+
+            GoogleIdToken idToken = verifier.verify(token);
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                String email = payload.getEmail();
+                String name = (String) payload.get("name");
+                String googleId = payload.getSubject();
+
+                User user = userService.processGoogleUser(email, name, googleId);
+
+                String userAgent = request.getHeader("User-Agent");
+                Token jwtToken = tokenService.addToken(user, token, isMobileDevice(userAgent));
+
+                LoginResponse loginResponse = LoginResponse.builder()
+                        .message("OAuth2 login successful")
+                        .token(jwtToken.getToken())
+                        .tokenType(jwtToken.getTokenType())
+                        .refreshToken(jwtToken.getRefreshToken())
+                        .fullName(user.getFullName())
+                        .email(user.getEmail())
+                        .phoneNumber(user.getPhoneNumber())
+                        .roles(user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
+                        .id(user.getId())
+                        .build();
+                return ResponseEntity.ok(loginResponse);
+            } else {
+                throw new IllegalArgumentException("Invalid ID token.");
+            }
         } catch (Exception e) {
             LoginResponse errorResponse = LoginResponse.builder()
                     .message("OAuth2 login failed: " + e.getMessage())

@@ -62,6 +62,7 @@ public class UserService implements IUserService {
     private final AmazonS3 amazonS3;
     private final MailService mailService;
     private final ITokenRepository ITokenRepository;
+    private final IRoleRepository roleRepository;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
@@ -125,7 +126,7 @@ public class UserService implements IUserService {
         }
         User existingUser = optionalUser.get();
 
-        if (existingUser.getFacebookAccountId() == null && existingUser.getGoogleAccountId() == null){
+        if (existingUser.getFacebookAccountId() == null && existingUser.getGoogleAccountId() == null) {
             if (!passwordEncoder.matches(userLoginDTO.getPassword(), existingUser.getPassword())) {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
@@ -298,6 +299,44 @@ public class UserService implements IUserService {
     public List<UserResponse> getAllUsers(Long roleId) {
         List<User> users = IUserRepository.findByRoleId(roleId);
         return users.stream().map(UserResponse::fromUser).toList();
+    }
+
+    @Override
+    public User processGoogleUser(String email, String name, String googleId) {
+        Optional<User> existingUser = IUserRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            return existingUser.get();
+        } else {
+            String randomPassword = generateRandomPassword();
+            User newUser = User.builder()
+                    .email(email)
+                    .fullName(name)
+                    .googleAccountId(googleId)
+                    .password(passwordEncoder.encode(randomPassword))
+                    .active(true)
+                    .role(roleRepository.findByRoleName(Role.CUSTOMER))
+                    .build();
+            User savedUser = IUserRepository.save(newUser);
+            sendPasswordEmail(email, randomPassword);
+            return savedUser;
+        }
+    }
+
+    private String generateRandomPassword() {
+        return UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    private void sendPasswordEmail(String email, String password) {
+        Map<String, Object> props = new HashMap<>();
+        props.put("password", password);
+
+        DataMailDTO mailData = new DataMailDTO(email, MailTemplate.SEND_MAIL_SUBJECT.NEW_PASSWORD, "", props);
+
+        try {
+            mailService.sendHtmlMail(mailData, MailTemplate.SEND_MAIL_TEMPLATE.NEW_PASSWORD);
+        } catch (MessagingException e) {
+            logger.error("Error sending new password", e);
+        }
     }
 
 }

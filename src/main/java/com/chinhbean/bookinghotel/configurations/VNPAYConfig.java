@@ -1,6 +1,5 @@
 package com.chinhbean.bookinghotel.configurations;
 
-import com.chinhbean.bookinghotel.utils.VNPayUtil;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
