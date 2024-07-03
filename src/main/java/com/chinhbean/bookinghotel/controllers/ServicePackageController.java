@@ -3,13 +3,12 @@ package com.chinhbean.bookinghotel.controllers;
 import com.chinhbean.bookinghotel.entities.ServicePackage;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
 import com.chinhbean.bookinghotel.services.pack.PackageService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
 
 import java.util.List;
 
