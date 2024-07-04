@@ -44,6 +44,7 @@ public class JwtTokenUtils {
         claims.put("phoneNumber", user.getPhoneNumber());
         claims.put("userId", user.getId());
         claims.put("role", user.getRole().getRoleName());
+        claims.put("email", user.getEmail() == null ? "" : user.getEmail());
 
         try {
             return Jwts.builder()
@@ -102,6 +103,10 @@ public class JwtTokenUtils {
                 .parseClaimsJws(token)
                 .getBody();
         return Long.parseLong(claims.get("userId").toString());
+    }
+
+    public String extractEmail(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
     }
 
     public String extractUserRole(String token) {

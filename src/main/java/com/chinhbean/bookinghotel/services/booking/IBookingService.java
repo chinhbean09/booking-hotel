@@ -14,11 +14,13 @@ public interface IBookingService {
 
     BookingResponse getBookingDetail(Long bookingId) throws DataNotFoundException;
 
-    Page<BookingResponse> getListBooking(String token, int page, int size) throws DataNotFoundException, PermissionDenyException;
+    Page<BookingResponse> getListBooking(int page, int size) throws DataNotFoundException, PermissionDenyException;
 
-     Booking updateBooking(Long bookingId, BookingDTO bookingDTO, String token) throws DataNotFoundException;
+     Booking updateBooking(Long bookingId, BookingDTO bookingDTO) throws DataNotFoundException;
 
-     void updateStatus(Long bookingId, BookingStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException;
+     void updateStatus(Long bookingId, BookingStatus newStatus) throws DataNotFoundException, PermissionDenyException;
+    Page<BookingResponse> getBookingsByHotel(Long hotelId, int page, int size) throws DataNotFoundException, PermissionDenyException;
+
 
      void sendMailNotificationForBookingPayment(BookingResponse booking);
 }

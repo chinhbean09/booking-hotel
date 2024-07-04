@@ -56,10 +56,11 @@ public class PaymentController {
             } catch (DataNotFoundException e) {
                 throw new RuntimeException(e);
             }
-            response.sendRedirect("http://localhost:3000/payment-return");
+            response.sendRedirect("http://localhost:3000/payment-return/success");
+
         } else {
             paymentService.updatePaymentTransactionStatus(bookingId, false);
-            response.sendRedirect("http://localhost:3000/payment-return");
+            response.sendRedirect("http://localhost:3000/payment-return/failed");
         }
     }
 }

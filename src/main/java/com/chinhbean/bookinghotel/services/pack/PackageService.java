@@ -33,7 +33,7 @@ public class PackageService implements IPackageService {
         existingPackage.setName(updatedPackage.getName());
         existingPackage.setDescription(updatedPackage.getDescription());
         existingPackage.setPrice(updatedPackage.getPrice());
-        existingPackage.setDurationInMonths(updatedPackage.getDurationInMonths());
+            existingPackage.setDuration(updatedPackage.getDuration());
         return servicePackageRepository.save(existingPackage);
     }
 
@@ -51,47 +51,16 @@ public class PackageService implements IPackageService {
             throw new IllegalArgumentException("Package price must be greater than 0");
         }
 
-        if (servicePackage.getDurationInMonths() == null || servicePackage.getDurationInMonths() <= 0) {
+        if (servicePackage.getDuration() == null) {
             throw new IllegalArgumentException("Package duration must be greater than 0");
         }
 
-        if (servicePackage.getRegistrationDate() == null) {
-            throw new IllegalArgumentException("Package registration date cannot be null");
-        }
 
-        if (servicePackage.getExpirationDate() == null) {
-            throw new IllegalArgumentException("Package expiration date cannot be null");
-        }
-
-        if (servicePackage.getExpirationDate().isBefore(servicePackage.getRegistrationDate())) {
-            throw new IllegalArgumentException("Package expiration date cannot be before registration date");
-        }
-
-        if (servicePackage.getExpirationDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Package expiration date cannot be in the past");
-        }
-
-        if (servicePackage.getDurationInMonths() > 12) {
+        if (servicePackage.getDuration() > 12) {
             throw new IllegalArgumentException("Package duration cannot exceed 12 months");
         }
 
-        if (servicePackage.getDurationInMonths() < 1) {
-            throw new IllegalArgumentException("Package duration must be at least 1 month");
-        }
-
-        if (servicePackage.getRegistrationDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Package registration date cannot be in the past");
-        }
-
-        if (servicePackage.getRegistrationDate().isAfter(servicePackage.getExpirationDate())) {
-            throw new IllegalArgumentException("Package registration date cannot be after expiration date");
-        }
-
-        if (servicePackage.getRegistrationDate().isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("Package registration date cannot be in the future");
-        }
-
-        if (servicePackage.getDurationInMonths() < 1) {
+        if (servicePackage.getDuration() < 1) {
             throw new IllegalArgumentException("Package duration must be at least 1 month");
         }
 

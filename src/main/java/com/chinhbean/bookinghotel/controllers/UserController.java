@@ -11,17 +11,25 @@ import com.chinhbean.bookinghotel.entities.Token;
 import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.repositories.IUserRepository;
-import com.chinhbean.bookinghotel.responses.user.LoginResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
+import com.chinhbean.bookinghotel.responses.user.LoginResponse;
 import com.chinhbean.bookinghotel.responses.user.UserListResponse;
 import com.chinhbean.bookinghotel.responses.user.UserResponse;
+import com.chinhbean.bookinghotel.services.oauth2.IOAuth2Service;
 import com.chinhbean.bookinghotel.services.token.ITokenService;
 import com.chinhbean.bookinghotel.services.user.IUserService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import com.chinhbean.bookinghotel.utils.ValidationUtils;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -51,6 +59,12 @@ public class UserController {
     private final JwtTokenUtils jwtTokenUtils;
     private final LocalizationUtils localizationUtils;
     private final IUserRepository IUserRepository;
+    private final IOAuth2Service oAuth2Service;
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
+    @Value("${google.client-id}")
+    private String googleClientId;
+
 
     @GetMapping("/generate-secret-key")
     public ResponseEntity<?> generateSecretKey() {
@@ -329,6 +343,67 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error retrieving users: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/oauth2/token")
+    public ResponseEntity<LoginResponse> handleOAuth2Token(@RequestParam String token, HttpServletRequest request) {
+        try {
+            if (token == null || token.isEmpty()) {
+                String authHeader = request.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    token = authHeader.substring(7);
+                }
+            }
+
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.badRequest().body(LoginResponse.builder().message("Token is required").build());
+            }
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            logger.info("Attempting to verify token with Google...");
+            GoogleIdToken idToken = verifier.verify(token);
+
+            if (idToken != null) {
+                logger.info("Token verified successfully");
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                String email = payload.getEmail();
+                String name = (String) payload.get("name");
+                String googleId = payload.getSubject();
+
+                User user = oAuth2Service.processGoogleUser(email, name, googleId);
+
+                String userAgent = request.getHeader("User-Agent");
+                String jwtToken = jwtTokenUtils.generateToken(user);
+                Token savedToken = tokenService.addToken(user, jwtToken, isMobileDevice(userAgent));
+
+                LoginResponse loginResponse = LoginResponse.builder()
+                        .message("OAuth2 login successful")
+                        .token(savedToken.getToken())
+                        .tokenType(savedToken.getTokenType())
+                        .refreshToken(savedToken.getRefreshToken())
+                        .fullName(user.getFullName())
+                        .email(user.getEmail())
+                        .phoneNumber(user.getPhoneNumber())
+                        .roles(user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
+                        .id(user.getId())
+                        .build();
+                return ResponseEntity.ok(loginResponse);
+            } else {
+                logger.error("Invalid ID token. Token could not be verified.");
+                LoginResponse errorResponse = LoginResponse.builder()
+                        .message("Invalid ID token")
+                        .build();
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+        } catch (Exception e) {
+            logger.error("Error during OAuth2 token verification: ", e);
+            LoginResponse errorResponse = LoginResponse.builder()
+                    .message("OAuth2 login failed: " + e.getMessage())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 

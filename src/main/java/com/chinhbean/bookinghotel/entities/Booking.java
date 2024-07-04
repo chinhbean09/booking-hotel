@@ -9,10 +9,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "bookings")
@@ -70,9 +67,9 @@ public class Booking {
 
     private String email;
 
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private PaymentTransaction paymentTransaction;
+    @ManyToOne
+    @JoinColumn(name = "hotel_id", nullable = false)
+    private Hotel hotel;
 
 }
 

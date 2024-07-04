@@ -1,6 +1,5 @@
 package com.chinhbean.bookinghotel.dtos;
 
-import com.chinhbean.bookinghotel.enums.BookingStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,5 +46,8 @@ public class BookingDTO {
 
     @JsonProperty("booking-details")
     private List<BookingDetailDTO> bookingDetails;
+
+    @JsonProperty("hotel-id")
+    private Long hotelId;  // Add hotelId
 
 }

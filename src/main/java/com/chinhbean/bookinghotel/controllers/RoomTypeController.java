@@ -85,8 +85,8 @@ public class RoomTypeController {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
 
     public ResponseEntity<ResponseObject> getAllRoomTypesByHotelIdForPartner(@PathVariable Long hotelId,
-                                                                   @RequestParam(defaultValue = "0") int page,
-                                                                   @RequestParam(defaultValue = "10") int size) throws DataNotFoundException {
+                                                                             @RequestParam(defaultValue = "0") int page,
+                                                                             @RequestParam(defaultValue = "10") int size) throws DataNotFoundException {
 
         Page<RoomTypeResponse> roomTypes = roomTypeService.getAllRoomTypesByHotelId(hotelId, page, size);
         if (roomTypes.isEmpty())

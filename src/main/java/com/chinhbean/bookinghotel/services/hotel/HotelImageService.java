@@ -13,8 +13,6 @@ import com.chinhbean.bookinghotel.repositories.IHotelImageRepository;
 import com.chinhbean.bookinghotel.repositories.IHotelRepository;
 import com.chinhbean.bookinghotel.responses.hotel.HotelImageResponse;
 import com.chinhbean.bookinghotel.responses.hotel.HotelResponse;
-import com.chinhbean.bookinghotel.services.hotel.IHotelImageService;
-import com.chinhbean.bookinghotel.services.hotel.IHotelService;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

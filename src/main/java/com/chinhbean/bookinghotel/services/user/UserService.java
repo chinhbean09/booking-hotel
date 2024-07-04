@@ -97,7 +97,7 @@ public class UserService implements IUserService {
         newUser.setRole(role);
 
         // Kiểm tra nếu có accountId, không yêu cầu password
-        if (userDTO.getFacebookAccountId() == 0 && userDTO.getGoogleAccountId() == 0) {
+        if (userDTO.getFacebookAccountId() == null) {
             String password = userDTO.getPassword();
             String encodedPassword = passwordEncoder.encode(password);
             newUser.setPassword(encodedPassword);
@@ -125,8 +125,7 @@ public class UserService implements IUserService {
         }
         User existingUser = optionalUser.get();
 
-        if (existingUser.getFacebookAccountId() == 0
-                && existingUser.getGoogleAccountId() == 0) {
+        if (existingUser.getFacebookAccountId() == null && existingUser.getGoogleAccountId() == null) {
             if (!passwordEncoder.matches(userLoginDTO.getPassword(), existingUser.getPassword())) {
                 throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
@@ -252,8 +251,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void updatePassword(String phone, String password) throws DataNotFoundException {
-        User user = IUserRepository.findByPhoneNumber(phone)
+    public void updatePassword(String email, String password) throws DataNotFoundException {
+        User user = IUserRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.USER_NOT_FOUND));
         user.setPassword(passwordEncoder.encode(password));
         IUserRepository.save(user);
@@ -300,4 +299,5 @@ public class UserService implements IUserService {
         List<User> users = IUserRepository.findByRoleId(roleId);
         return users.stream().map(UserResponse::fromUser).toList();
     }
+
 }

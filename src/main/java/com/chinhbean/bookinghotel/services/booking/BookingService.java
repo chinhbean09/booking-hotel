@@ -8,10 +8,7 @@ import com.chinhbean.bookinghotel.entities.*;
 import com.chinhbean.bookinghotel.enums.BookingStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
-import com.chinhbean.bookinghotel.repositories.IBookingDetailRepository;
-import com.chinhbean.bookinghotel.repositories.IBookingRepository;
-import com.chinhbean.bookinghotel.repositories.IRoomTypeRepository;
-import com.chinhbean.bookinghotel.repositories.IUserRepository;
+import com.chinhbean.bookinghotel.repositories.*;
 import com.chinhbean.bookinghotel.responses.booking.BookingResponse;
 import com.chinhbean.bookinghotel.services.sendmails.IMailService;
 import com.chinhbean.bookinghotel.utils.MailTemplate;
@@ -19,13 +16,17 @@ import com.chinhbean.bookinghotel.utils.MessageKeys;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -50,6 +51,7 @@ public class BookingService implements IBookingService {
     private final IRoomTypeRepository roomTypeRepository;
     private final IBookingDetailRepository bookingDetailRepository;
     private final IMailService mailService;
+    private final IHotelRepository hotelRepository;
     private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -66,8 +68,10 @@ public class BookingService implements IBookingService {
             user = IUserRepository.findByFullName("guest")
                     .orElseThrow(() -> new IllegalArgumentException("Guest user does not exist."));
         }
+        Hotel hotel = hotelRepository.findById(bookingDTO.getHotelId())
+                .orElseThrow(() -> new IllegalArgumentException("Hotel with ID: " + bookingDTO.getHotelId() + " does not exist."));
 
-        booking = getBooking(bookingDTO, user);
+        booking = getBooking(bookingDTO, user, hotel);
         booking.setExpirationDate(LocalDateTime.now().plusSeconds(300)); // Set expiration date to current time + 300 seconds
 
         // Save booking first
@@ -133,9 +137,10 @@ public class BookingService implements IBookingService {
         return CompletableFuture.completedFuture(null);
     }
 
-    private static Booking getBooking(BookingDTO bookingDTO, User user) {
+    private static Booking getBooking(BookingDTO bookingDTO, User user, Hotel hotel) {
         Booking booking = new Booking();
         booking.setUser(user);
+        booking.setHotel(hotel);
         booking.setEmail(bookingDTO.getEmail());
         booking.setPhoneNumber(bookingDTO.getPhoneNumber());
         booking.setFullName(bookingDTO.getFullName());
@@ -146,30 +151,24 @@ public class BookingService implements IBookingService {
         booking.setCouponId(bookingDTO.getCouponId());
         booking.setNote(bookingDTO.getNote());
         booking.setPaymentMethod(bookingDTO.getPaymentMethod());
-        booking.setExpirationDate(LocalDateTime.now().plusSeconds(300)); // Set expiration date to current time + 300 seconds
+        booking.setExpirationDate(LocalDateTime.now().plusSeconds(300));
         booking.setBookingDate(LocalDateTime.now());
         return booking;
     }
 
+
     @Transactional
     @Override
-    public Page<BookingResponse> getListBooking(String token, int page, int size) throws DataNotFoundException, PermissionDenyException {
+    public Page<BookingResponse> getListBooking(int page, int size) throws DataNotFoundException, PermissionDenyException {
         logger.info("Fetching all bookings from the database.");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
         Pageable pageable = PageRequest.of(page, size);
+
         Page<Booking> bookings;
-        String userRole = jwtTokenUtils.extractUserRole(token);
-        if (Role.ADMIN.equals(userRole)) {
-            bookings = bookingRepository.findAll(pageable);
-        } else if (Role.PARTNER.equals(userRole)) {
-            Long userId = jwtTokenUtils.extractUserId(token);
-            bookings = bookingRepository.findAllByPartnerId(userId, pageable);
-        } else if (Role.CUSTOMER.equals(userRole)) {
-            Long userId = jwtTokenUtils.extractUserId(token);
-            bookings = bookingRepository.findAllByUserId(userId, pageable);
-        } else {
-            logger.error("User does not have permission to view bookings.");
-            throw new PermissionDenyException(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_VIEW_BOOKINGS);
-        }
+        bookings = bookingRepository.findAllByUserId(currentUser.getId(), pageable);
+
         if (bookings.isEmpty()) {
             logger.warn("No bookings found in the database.");
             throw new DataNotFoundException(MessageKeys.NO_BOOKINGS_FOUND);
@@ -177,17 +176,39 @@ public class BookingService implements IBookingService {
         logger.info("Successfully retrieved all bookings.");
         return bookings.map(BookingResponse::fromBooking);
     }
+@Transactional
+    @Override
+    public Page<BookingResponse> getBookingsByHotel(Long hotelId, int page, int size) throws DataNotFoundException, PermissionDenyException {
+        logger.info("Fetching bookings for hotel with ID: {}", hotelId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
 
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Booking> bookings;
+        bookings = bookingRepository.findByHotel_IdAndHotel_Partner_Id(hotelId, currentUser.getId(), pageable);
+
+        if (bookings.isEmpty()) {
+            logger.warn("No bookings found for hotel with ID: {}", hotelId);
+            throw new DataNotFoundException(MessageKeys.NO_BOOKINGS_FOUND);
+        }
+        logger.info("Successfully retrieved bookings for hotel with ID: {}", hotelId);
+
+        bookings.forEach(booking -> Hibernate.initialize(booking.getBookingDetails()));
+
+        List<BookingResponse> bookingResponses = bookings.stream()
+                .map(BookingResponse::fromBooking)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(bookingResponses, pageable, bookings.getTotalElements());
+    }
     @Transactional
     @Override
-    public Booking updateBooking(Long bookingId, BookingDTO bookingDTO, String token) throws DataNotFoundException {
+    public Booking updateBooking(Long bookingId, BookingDTO bookingDTO) throws DataNotFoundException {
         logger.info("Updating booking with ID: {}", bookingId);
-        Long userId = jwtTokenUtils.extractUserId(token);
-        User user = IUserRepository.findById(userId).orElse(null);
+
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.NO_BOOKINGS_FOUND));
-
-        booking.setUser(user);
         if (bookingDTO.getTotalPrice() != null) {
             booking.setTotalPrice(bookingDTO.getTotalPrice());
         }
@@ -207,7 +228,6 @@ public class BookingService implements IBookingService {
             booking.setPaymentMethod(bookingDTO.getPaymentMethod());
         }
 
-
         if (bookingDTO.getBookingDetails() != null) {
             List<BookingDetails> bookingDetails = bookingDTO.getBookingDetails().stream()
                     .map(this::convertToEntity)
@@ -221,27 +241,17 @@ public class BookingService implements IBookingService {
 
     @Transactional
     @Override
-    public void updateStatus(Long bookingId, BookingStatus newStatus, String token) throws DataNotFoundException, PermissionDenyException {
+    public void updateStatus(Long bookingId, BookingStatus newStatus) throws DataNotFoundException, PermissionDenyException {
         logger.info("Updating status for booking with ID: {}", bookingId);
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new DataNotFoundException(MessageKeys.NO_BOOKINGS_FOUND));
-        String userRole = jwtTokenUtils.extractUserRole(token);
-        if (Role.ADMIN.equals(userRole)) {
-            booking.setStatus(newStatus);
-        } else if (Role.CUSTOMER.equals(userRole)) {
-            if (newStatus == BookingStatus.CANCELLED) {
-                booking.setStatus(newStatus);
-            } else {
-                throw new PermissionDenyException("User cannot change status to " + newStatus.toString());
-            }
-        } else if (Role.PARTNER.equals(userRole)) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
+        if (Role.PARTNER.equals(currentUser.getRole().getRoleName())) {
             if (newStatus == BookingStatus.CONFIRMED) {
                 booking.setStatus(newStatus);
-            } else {
-                throw new PermissionDenyException("User cannot change status to " + newStatus.toString());
             }
-        } else {
-            throw new PermissionDenyException("User does not have permission to change status.");
         }
         bookingRepository.save(booking);
         logger.info("Status for booking with ID: {} updated successfully.", bookingId);

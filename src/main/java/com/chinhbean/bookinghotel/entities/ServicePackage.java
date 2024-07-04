@@ -3,7 +3,6 @@ package com.chinhbean.bookinghotel.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -28,18 +27,6 @@ public class ServicePackage {
     private Double price;
 
     @Column(name = "duration")
-    private Integer durationInMonths; // Thay đổi thành Integer để biểu thị số tháng
+    private Integer duration; // Thay đổi thành Integer để biểu thị số tháng
 
-    @Column(name = "registration_date")
-    private LocalDate registrationDate; // Ngày đăng ký gói
-
-    @Transient
-    public LocalDate getExpirationDate() {
-        if (registrationDate != null && durationInMonths != null) {
-            return registrationDate.plusMonths(durationInMonths);
-        }
-        return null; // Hoặc bạn có thể xử lý trả về một ngày mặc định khác nếu cần
-    }
-
-    // Constructors, getters, setters
 }

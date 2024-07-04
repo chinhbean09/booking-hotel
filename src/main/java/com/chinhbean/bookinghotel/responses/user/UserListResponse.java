@@ -1,6 +1,5 @@
 package com.chinhbean.bookinghotel.responses.user;
 
-import com.chinhbean.bookinghotel.responses.user.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

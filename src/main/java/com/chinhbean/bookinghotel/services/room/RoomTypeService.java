@@ -75,6 +75,7 @@ public class RoomTypeService implements IRoomTypeService {
             return roomTypes.map(RoomTypeResponse::fromType);
         }
     }
+
     public Page<RoomTypeResponse> getAvailableRoomTypesByHotelIdAndDates(Long hotelId, LocalDate checkIn, LocalDate checkOut, Pageable pageable) throws DataNotFoundException {
         Page<RoomType> roomTypes = IRoomTypeRepository.findAvailableRoomsByHotelIdAndDates(hotelId, checkIn, checkOut, pageable);
         if (roomTypes.isEmpty()) {
@@ -183,7 +184,7 @@ public class RoomTypeService implements IRoomTypeService {
         Hotel hotel = new Hotel();
         hotel.setId(roomTypeDTO.getHotelId());
         Set<RoomConvenience> roomConveniences = roomTypeDTO.getConveniences().stream()
-                .map(this::convertToRoomConvenienceEntity)
+                .map(this::createNewRoomConvenience)
                 .collect(Collectors.toSet());
 
         Set<RoomImage> roomImages = Collections.emptySet();

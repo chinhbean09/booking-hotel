@@ -24,13 +24,13 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @Column(name = "full_name", length = 100)
     private String fullName;
 
-    @Column(name = "phone_number", length = 10, nullable = true)
+    @Column(name = "phone_number", length = 10)
     private String phoneNumber;
 
     @Column(name = "address", length = 200)
     private String address;
 
-    @Column(name = "email", length = 255, nullable = true)
+    @Column(name = "email")
     private String email;
 
     @Column(name = "password", length = 200, nullable = false)
@@ -52,14 +52,18 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @JoinColumn(name = "role_id", columnDefinition = "bigint")
     private Role role;
 
+    @ManyToOne
+    @JoinColumn(name = "package_id", columnDefinition = "bigint")
+    private ServicePackage servicePackage;
+
     @Column(name = "modified_by")
     private String modifiedBy;
 
     @Column(name = "facebook_account_id")
-    private int facebookAccountId;
+    private String facebookAccountId;
 
     @Column(name = "google_account_id")
-    private int googleAccountId;
+    private String googleAccountId;
     @Column(name = "avatar")
     private String avatar;
 
@@ -111,6 +115,6 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return getAttribute("fullname");
+        return getAttribute("fullName");
     }
 }

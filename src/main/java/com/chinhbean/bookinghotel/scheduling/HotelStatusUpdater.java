@@ -22,18 +22,21 @@ public class HotelStatusUpdater {
     public void updateHotelStatus() {
         List<Hotel> hotels = hotelRepository.findAll();
         for (Hotel hotel : hotels) {
-            boolean allRoomTypesAreUnavailable = hotel.getRoomTypes().stream()
-                    .allMatch(roomType -> roomType.getStatus() == RoomTypeStatus.UNAVAILABLE);
-            boolean allRoomTypesAreDisabled = hotel.getRoomTypes().stream()
-                    .allMatch(roomType -> roomType.getStatus() == RoomTypeStatus.DISABLED);
-            if (allRoomTypesAreUnavailable && hotel.getStatus() != HotelStatus.CLOSED) {
-                hotel.setStatus(HotelStatus.CLOSED);
-            } else if (allRoomTypesAreDisabled && hotel.getStatus() != HotelStatus.APPROVED) {
-                hotel.setStatus(HotelStatus.APPROVED);
-            } else if ((hotel.getStatus() == HotelStatus.CLOSED || hotel.getStatus() == HotelStatus.APPROVED) && !allRoomTypesAreUnavailable && !allRoomTypesAreDisabled) {
-                hotel.setStatus(HotelStatus.ACTIVE);
+            if (hotel.getStatus() != HotelStatus.PENDING && hotel.getStatus() != HotelStatus.REJECTED && hotel.getStatus() != HotelStatus.INACTIVE) {
+                if (hotel.getRoomTypes().isEmpty()) {
+                    hotel.setStatus(HotelStatus.APPROVED);
+                } else {
+                    boolean allRoomTypesAreNotAvailable = hotel.getRoomTypes().stream()
+                            .allMatch(roomType -> roomType.getStatus() == RoomTypeStatus.UNAVAILABLE || roomType.getStatus() == RoomTypeStatus.DISABLED);
+
+                    if (allRoomTypesAreNotAvailable) {
+                        hotel.setStatus(HotelStatus.CLOSED);
+                    } else {
+                        hotel.setStatus(HotelStatus.ACTIVE);
+                    }
+                }
+                hotelRepository.save(hotel);
             }
-            hotelRepository.save(hotel);
         }
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         if (isBypassToken(request)) {
-            filterChain.doFilter(request, response); //enable bypass
+            filterChain.doFilter(request, response);
             return;
         }
         final String authHeader = request.getHeader("Authorization");
@@ -48,16 +49,19 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
         final String token = authHeader.substring(7);
         final String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
-        if (phoneNumber != null
+        final String email = jwtTokenUtils.extractEmail(token);
+        if ((phoneNumber != null || email != null)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User userDetails = (User) userDetailsService.loadUserByUsername(phoneNumber);
+            User userDetails;
+            userDetails = (User) userDetailsService.loadUserByUsername(Objects.requireNonNullElse(email, phoneNumber));
             if (jwtTokenUtils.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }
-        filterChain.doFilter(request, response); //enable bypass
+        filterChain.doFilter(request, response);
     }
 
 
@@ -76,6 +80,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of(String.format("%s/room-types/get-all-room-status/**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/bookings/create-booking", apiPrefix), "POST"),
                 Pair.of(String.format("%s/payment/**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/users/oauth2/token", apiPrefix), "GET"),
                 Pair.of("/api-docs", "GET"),
                 Pair.of("/api-docs/**", "GET"),
                 Pair.of("/swagger-resources", "GET"),
@@ -84,7 +89,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of("/configuration/security", "GET"),
                 Pair.of("/swagger-ui/**", "GET"),
                 Pair.of("/swagger-ui.html", "GET"),
-                Pair.of("/swagger-ui/index.html", "GET")
+                Pair.of("/swagger-ui/index.html", "GET"),
+                Pair.of("/oauth2/**", "GET"),
+                Pair.of("/login", "GET"),
+                Pair.of("/login-error", "GET")
+
         );
         String requestPath = request.getServletPath();
         String requestMethod = request.getMethod();

@@ -7,8 +7,8 @@ import com.chinhbean.bookinghotel.entities.User;
 import com.chinhbean.bookinghotel.enums.HotelStatus;
 import com.chinhbean.bookinghotel.exceptions.DataNotFoundException;
 import com.chinhbean.bookinghotel.exceptions.PermissionDenyException;
-import com.chinhbean.bookinghotel.responses.hotel.HotelResponse;
 import com.chinhbean.bookinghotel.responses.ResponseObject;
+import com.chinhbean.bookinghotel.responses.hotel.HotelResponse;
 import com.chinhbean.bookinghotel.services.hotel.IHotelBusinessLicenseService;
 import com.chinhbean.bookinghotel.services.hotel.IHotelImageService;
 import com.chinhbean.bookinghotel.services.hotel.IHotelService;
@@ -97,6 +97,11 @@ public class HotelController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseObject.builder()
                     .status(HttpStatus.NOT_FOUND)
                     .message(MessageKeys.NO_HOTELS_FOUND)
+                    .build());
+        } catch (PermissionDenyException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseObject.builder()
+                    .status(HttpStatus.FORBIDDEN)
+                    .message(MessageKeys.USER_DOES_NOT_HAVE_PERMISSION_TO_VIEW_HOTEL)
                     .build());
         }
     }
