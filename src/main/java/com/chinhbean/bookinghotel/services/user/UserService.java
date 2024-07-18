@@ -40,9 +40,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -122,13 +125,13 @@ public class UserService implements IUserService {
         String loginIdentifier = userLoginDTO.getLoginIdentifier();
         try {
             User existingUser = IUserRepository.findByEmailOrPhoneNumber(loginIdentifier, loginIdentifier)
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_NOT_FOUND)));
+                    .orElseThrow(() -> new UsernameNotFoundException(MessageKeys.USER_NOT_FOUND));
             if (!passwordEncoder.matches(userLoginDTO.getPassword(), existingUser.getPassword())) {
-                throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.WRONG_PHONE_PASSWORD));
+                throw new BadCredentialsException(MessageKeys.PASSWORD_NOT_MATCH);
             }
 
             if (!existingUser.isActive()) {
-                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKeys.USER_IS_LOCKED));
+                throw new LockedException(MessageKeys.USER_IS_LOCKED);
             }
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -138,6 +141,9 @@ public class UserService implements IUserService {
             return jwtTokenUtils.generateToken(existingUser);
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new DataIntegrityViolationException("Multiple users found with the same identifier: " + loginIdentifier);
+        } catch (AuthenticationException e) {
+            logger.warn("Authentication failed for user: {}", loginIdentifier, e);
+            throw e;
         }
     }
 

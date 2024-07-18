@@ -32,8 +32,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -42,6 +45,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
+
+import static org.hibernate.query.sqm.tree.SqmNode.log;
 
 @RestController
 @RequestMapping("${api.prefix}/users")
@@ -152,20 +157,26 @@ public class UserController {
                     .data(loginResponse)
                     .status(HttpStatus.OK)
                     .build());
-        } catch (DataNotFoundException | BadCredentialsException e) {
-            return ResponseEntity.badRequest().body(ResponseObject.builder()
-                    .status(HttpStatus.BAD_REQUEST)
+        } catch (UsernameNotFoundException | BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .status(HttpStatus.UNAUTHORIZED)
                     .message(e.getMessage())
                     .build());
-        } catch (DataIntegrityViolationException e) {
+        } catch (LockedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseObject.builder()
+                    .status(HttpStatus.FORBIDDEN)
+                    .message(e.getMessage())
+                    .build());
+        } catch (AuthenticationServiceException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(ResponseObject.builder()
                     .status(HttpStatus.CONFLICT)
                     .message(e.getMessage())
                     .build());
         } catch (Exception e) {
+            log.error("An unexpected error occurred during login", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseObject.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("An error occurred during login: " + e.getMessage())
+                    .message("An unexpected error occurred. Please try again later.")
                     .build());
         }
     }
