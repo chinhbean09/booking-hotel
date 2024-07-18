@@ -10,7 +10,7 @@ public interface IDashboardService {
 
     BigDecimal getTotalRevenueFromActivePackages();
 
-     Map<Long, BigDecimal> getTotalRevenueByPackage();
+    Map<Long, BigDecimal> getTotalRevenueByPackage();
 
 
-    }
+}

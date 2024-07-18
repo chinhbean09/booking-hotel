@@ -44,6 +44,6 @@ public interface IUserService {
     List<UserResponse> getAllUsers(Long roleId);
 
 
-     BigDecimal getTotalRevenueFromActivePackages();
+    BigDecimal getTotalRevenueFromActivePackages();
 
 }

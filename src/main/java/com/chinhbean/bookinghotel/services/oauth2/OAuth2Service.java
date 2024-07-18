@@ -25,7 +25,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -67,36 +70,37 @@ public class OAuth2Service implements IOAuth2Service {
     }
 
     @Transactional
-@Override
-public LoginResponse handleGoogleLogin(String accessToken, HttpServletRequest request) throws Exception {
-    try {
-        final String googleUserInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + accessToken;
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                googleUserInfoEndpoint,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<>() {}
-        );
+    @Override
+    public LoginResponse handleGoogleLogin(String accessToken, HttpServletRequest request) throws Exception {
+        try {
+            final String googleUserInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + accessToken;
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    googleUserInfoEndpoint,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {
+                    }
+            );
 
-        Map<String, Object> userAttributes = response.getBody();
+            Map<String, Object> userAttributes = response.getBody();
 
-        if (userAttributes != null && userAttributes.containsKey("sub")) { // "sub" is the user ID in Google's response
-            String googleId = (String) userAttributes.get("sub");
-            String email = (String) userAttributes.get("email");
-            String name = (String) userAttributes.get("name");
+            if (userAttributes != null && userAttributes.containsKey("sub")) { // "sub" is the user ID in Google's response
+                String googleId = (String) userAttributes.get("sub");
+                String email = (String) userAttributes.get("email");
+                String name = (String) userAttributes.get("name");
 
-            User user = processGoogleUser(email, name, googleId);
+                User user = processGoogleUser(email, name, googleId);
 
-            return generateLoginResponse(user, request, "Google login successful");
-        } else {
-            throw new Exception("Invalid Google access token");
+                return generateLoginResponse(user, request, "Google login successful");
+            } else {
+                throw new Exception("Invalid Google access token");
+            }
+        } catch (Exception e) {
+            logger.error("Google login error", e);
+            throw new Exception("Google login failed: " + e.getMessage());
         }
-    } catch (Exception e) {
-        logger.error("Google login error", e);
-        throw new Exception("Google login failed: " + e.getMessage());
     }
-}
 
     public User processFacebookUser(String email, String name, String facebookId) {
         return userRepository.findByEmail(email)

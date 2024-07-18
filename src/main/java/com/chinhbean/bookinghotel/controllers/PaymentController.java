@@ -14,7 +14,6 @@ import com.chinhbean.bookinghotel.services.pack.IPackageService;
 import com.chinhbean.bookinghotel.services.payment.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -78,7 +77,7 @@ public class PaymentController {
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String email = null;
         if (orderInfo != null) {
-            Pattern pattern = Pattern.compile("dich vu: (\\d+) cho user ([^\\s]+)");
+            Pattern pattern = Pattern.compile("dich vu: (\\d+) cho user (\\S+)");
             Matcher matcher = pattern.matcher(orderInfo);
             if (matcher.find()) {
                 packageId = matcher.group(1);

@@ -194,7 +194,6 @@ public class PackageService implements IPackageService {
                 NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
                 Map<String, Object> props = new HashMap<>();
                 props.put("fullName", paymentTransaction.getNameGuest());
-                props.put("packageId", servicePackage.getId());
                 props.put("packageName", servicePackage.getName());
                 props.put("packagePrice", currencyFormatter.format(servicePackage.getPrice()));
                 props.put("packageDuration", servicePackage.getDuration());
@@ -202,9 +201,9 @@ public class PackageService implements IPackageService {
                 dataMail.setProps(props);
                 logger.info("here mailService.sendHtmlMail");
                 mailService.sendHtmlMail(dataMail, MailTemplate.SEND_MAIL_TEMPLATE.PACKAGE_PAYMENT_SUCCESS_TEMPLATE);
-                logger.info("Email successfully sent to " + paymentTransaction.getEmailGuest());
+                logger.info("Email successfully sent to {}", paymentTransaction.getEmailGuest());
             } else {
-                logger.info("No payment transaction found for email: " + email);
+                logger.info("No payment transaction found for email: {}", email);
             }
         } catch (Exception exp) {
             exp.printStackTrace();

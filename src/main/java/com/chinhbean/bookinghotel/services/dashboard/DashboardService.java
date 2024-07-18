@@ -15,13 +15,14 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class DashboardService implements IDashboardService{
+public class DashboardService implements IDashboardService {
 
     private final IBookingRepository bookingRepository;
 
     private final IUserRepository userRepository;
 
     private final IPaymentTransactionRepository paymentTransactionRepository;
+
     @Override
     public BigDecimal getTotalRevenueFromPaidBookings() {
         return bookingRepository.findTotalRevenueByStatus(BookingStatus.PAID);
