@@ -12,4 +12,5 @@ public interface IOAuth2Service {
     LoginResponse handleGoogleLogin(String token, HttpServletRequest request) throws Exception;
 
     User processFacebookUser(String email, String name, String facebookId);
+
 }

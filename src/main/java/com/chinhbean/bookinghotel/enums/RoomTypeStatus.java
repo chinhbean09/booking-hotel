@@ -1,5 +1,12 @@
 package com.chinhbean.bookinghotel.enums;
 
 public enum RoomTypeStatus {
-    AVAILABLE, UNAVAILABLE, DISABLED
+    //AVAILABLE: Phong AVAILABLE.
+    AVAILABLE,
+
+    //UNAVAILABLE: Phong UNAVAILABLE .
+    UNAVAILABLE,
+
+    //DISABLED: Phong disable.
+    DISABLED
 }

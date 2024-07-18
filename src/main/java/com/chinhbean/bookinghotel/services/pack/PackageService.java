@@ -195,6 +195,7 @@ public class PackageService implements IPackageService {
                 Map<String, Object> props = new HashMap<>();
                 props.put("fullName", paymentTransaction.getNameGuest());
                 props.put("packageId", servicePackage.getId());
+                props.put("packageName", servicePackage.getName());
                 props.put("packagePrice", currencyFormatter.format(servicePackage.getPrice()));
                 props.put("packageDuration", servicePackage.getDuration());
                 props.put("description", servicePackage.getDescription());
