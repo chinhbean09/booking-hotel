@@ -26,6 +26,8 @@ import com.chinhbean.bookinghotel.responses.user.UserResponse;
 import com.chinhbean.bookinghotel.services.sendmails.MailService;
 import com.chinhbean.bookinghotel.utils.MailTemplate;
 import com.chinhbean.bookinghotel.utils.MessageKeys;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +71,7 @@ public class UserService implements IUserService {
     private final AmazonS3 amazonS3;
     private final MailService mailService;
     private final ITokenRepository ITokenRepository;
+    private final Cloudinary cloudinary;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     @Value("${amazonProperties.bucketName}")
     private String bucketName;
@@ -188,6 +191,42 @@ public class UserService implements IUserService {
         optionalUser.ifPresent(IUserRepository::delete);
     }
 
+//    @Override
+//    public User updateUserAvatar(long id, MultipartFile avatar) {
+//        User user = IUserRepository.findById(id).orElse(null);
+//        if (user != null && avatar != null && !avatar.isEmpty()) {
+//            try {
+//                // Check if the uploaded file is an image
+//                MediaType mediaType = MediaType.parseMediaType(Objects.requireNonNull(avatar.getContentType()));
+//                if (!mediaType.isCompatibleWith(MediaType.IMAGE_JPEG) &&
+//                        !mediaType.isCompatibleWith(MediaType.IMAGE_PNG)) {
+//                    throw new InvalidParamException(localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE));
+//                }
+//                // Get the original filename of the avatar
+//                String originalFileName = avatar.getOriginalFilename();
+//                // Construct the object key with the folder path and original filename
+//                String objectKey = "user_avatar/" + id + "/" + originalFileName;
+//                // Get the size of the file
+//                long contentLength = avatar.getSize();
+//                // Create object metadata and set the content length and content type
+//                ObjectMetadata metadata = new ObjectMetadata();
+//                metadata.setContentLength(contentLength);
+//                metadata.setContentType(avatar.getContentType()); // Set the content type here
+//                // Upload the avatar to AWS S3 bucket
+//                amazonS3.putObject(bucketName, objectKey, avatar.getInputStream(), metadata);
+//                // Set the avatar URL in the user entity
+//                String avatarUrl = amazonS3.getUrl(bucketName, objectKey).toString();
+//                user.setAvatar(avatarUrl);
+//                // Save the updated user entity
+//                IUserRepository.save(user);
+//                return user;
+//            } catch (IOException e) {
+//                logger.error("Failed to upload avatar for user with ID {}", id, e);
+//            }
+//        }
+//        return null;
+//    }
+
     @Override
     public User updateUserAvatar(long id, MultipartFile avatar) {
         User user = IUserRepository.findById(id).orElse(null);
@@ -199,21 +238,17 @@ public class UserService implements IUserService {
                         !mediaType.isCompatibleWith(MediaType.IMAGE_PNG)) {
                     throw new InvalidParamException(localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE));
                 }
-                // Get the original filename of the avatar
-                String originalFileName = avatar.getOriginalFilename();
-                // Construct the object key with the folder path and original filename
-                String objectKey = "user_avatar/" + id + "/" + originalFileName;
-                // Get the size of the file
-                long contentLength = avatar.getSize();
-                // Create object metadata and set the content length and content type
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentLength(contentLength);
-                metadata.setContentType(avatar.getContentType()); // Set the content type here
-                // Upload the avatar to AWS S3 bucket
-                amazonS3.putObject(bucketName, objectKey, avatar.getInputStream(), metadata);
+
+                // Upload the avatar to Cloudinary
+                Map uploadResult = cloudinary.uploader().upload(avatar.getBytes(),
+                        ObjectUtils.asMap("folder", "user_avatar/" + id));
+
+                // Extract the avatar URL from the upload result
+                String avatarUrl = uploadResult.get("url").toString();
+
                 // Set the avatar URL in the user entity
-                String avatarUrl = amazonS3.getUrl(bucketName, objectKey).toString();
                 user.setAvatar(avatarUrl);
+
                 // Save the updated user entity
                 IUserRepository.save(user);
                 return user;
@@ -223,6 +258,7 @@ public class UserService implements IUserService {
         }
         return null;
     }
+
 
 
     @Override
