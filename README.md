@@ -1,7 +1,7 @@
 [![Build Status](http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel)](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/)
 
 # Booking Hotel System:
-
+GitHub Pages Deployment: https://roadmap.sh/projects/github-actions-deployment-workflow 
 Project Rules:
 Commit Title:
 Each commit should have a clear title describing the change it introduces.
