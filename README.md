@@ -2,8 +2,6 @@
 
 # ⭐️ Booking Hotel System (Spring Boot
 GitHub Pages Deployment: https://roadmap.sh/projects/github-actions-deployment-workflow 
-[![Build Status](http://160.30.44.9:8080/buildStatus/icon?job=history-education)](http://160.30.44.9:8080/job/history-education/)
-Additional project from: https://roadmap.sh/projects/multi-container-service
 
 ## Project Content
 - This is a Spring Boot-based hotel booking platform that enables seamless room reservations with robust features and integrations.
