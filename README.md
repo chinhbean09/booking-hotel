@@ -1,28 +1,34 @@
 [![Build Status](http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel)](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/)
 
-# Booking Hotel System:
+# ⭐️ Booking Hotel System (Spring Boot
 GitHub Pages Deployment: https://roadmap.sh/projects/github-actions-deployment-workflow 
-Project Rules:
-Commit Title:
-Each commit should have a clear title describing the change it introduces.
-Titles should be written in English and follow Title Case.
-Avoid using slang, unprofessional language, or questions in the title.
+[![Build Status](http://160.30.44.9:8080/buildStatus/icon?job=history-education)](http://160.30.44.9:8080/job/history-education/)
+Additional project from: https://roadmap.sh/projects/multi-container-service
 
-Commit Content:
-Each commit should come with detailed content, providing a clear explanation of the changes made.
-Avoid large commits and break down changes into smaller, more specific commits, each addressing a distinct task.
-Refrain from committing unrelated files in a single commit.
+## Project Content
+- This is a Spring Boot-based hotel booking platform that enables seamless room reservations with robust features and integrations.
+- The Booking Hotel System project offers a comprehensive solution for managing hotel bookings, including:
+  - User authentication and management
+  - Room inventory and availability tracking
+  - Payment processing
+  - Email notifications
+  - Image uploads
+  -...
+Containerized deployments
+# Tech We Use
+- Spring Boot
+- Spring Security
+- PostgreSql
+- H2-Database
+- JPA
+- Swagger 2
+- API Calls
+- REST API
+- Mail Server
+- Cloudinary
+- Docker
+- Nginx
+- Jenkins
 
-Code Review:
-All new changes should undergo code review before merging into the main branch.
-At least one other team member must review and approve the code before merging.
-Address and resolve feedback received during the code review.
-
-Accept Changes from Other Branches:
-Avoid committing directly to the main/master branch.
-Use feature branches to develop new features and make changes.
-
-2. My demo database #13052024:
-   ![image](https://github.com/chinhbean09/booking-hotel/assets/112397448/bac66ad8-563f-4853-a8eb-6fc9eb90e683)
-
-
+# Contact
+If you have any questions, please email us at: chinh0726@gmail.com.
