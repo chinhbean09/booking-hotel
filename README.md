@@ -1,6 +1,6 @@
 [![Build Status](http://103.77.246.24:8080/buildStatus/icon?job=Action_in_lab%2Fbooking-hotel)](http://103.77.246.24/job/Action_in_lab/job/booking-hotel/)
 
-# ⭐️ Booking Hotel System (Spring Boot
+# ⭐️ Booking Hotel System (Spring Boot)
 GitHub Pages Deployment: https://roadmap.sh/projects/github-actions-deployment-workflow 
 
 ## Project Content
